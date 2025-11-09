@@ -1,24 +1,38 @@
+# Built application files
+*.apk
+*.aar
+*.ap_
+*.aab
+
+# Files for the ART/Dalvik VM
+*.dex
+*.class
+
+# Generated files
+bin/
+gen/
+out/
+
 # Gradle files
 .gradle/
 build/
+*/build/
 
-# Local configuration file (sdk path, etc)
+# Local configuration file (SDK path, etc.)
 local.properties
 
-# Log/OS Files
-*.log
-
-# Android Studio generated files and folders
-captures/
-.externalNativeBuild/
-.cxx/
-*.aab
-*.apk
-output-metadata.json
-
-# IntelliJ
-*.iml
+# Android Studio and IntelliJ IDEA files
 .idea/
+*.iml
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/gradle.xml
+.idea/assetWizardSettings.xml
+.idea/dictionaries
+.idea/libraries
+.idea/caches
+.idea/modules.xml
+.idea/navEditor.xml
 misc.xml
 deploymentTargetDropDown.xml
 render.experimental.xml
@@ -27,8 +41,27 @@ render.experimental.xml
 *.jks
 *.keystore
 
-# Google Services (e.g. APIs or Firebase)
+# Log files
+*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# NDK build files
+.externalNativeBuild
+.cxx/
+obj/
+
+# Proguard files
+proguard/
+
+# Google Services (e.g., APIs or Firebase)
 google-services.json
 
-# Android Profiling
+# Miscellaneous
+captures/
+.navigation/
+output.json
+output-metadata.json
 *.hprof

@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">HonNoMachi</string>
+    <string name="login">Login</string>
+    <string name="signup">Signup</string>
+    <string name="welcome">Welcome</string>
+    <string name="the_best_platform_to_buy_books">The best platform to buy books</string>
+    <string name="or">OR</string>
+    <string name="login_screen">Login Screen</string>
+    <string name="signup_screen">Signup Screen</string>
 </resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">HonNoMachi</string>
+    <string name="login">Prijava</string>
+    <string name="signup">Registracija</string>
+    <string name="welcome">Dobrodošli</string>
+    <string name="the_best_platform_to_buy_books">Najbolja platforma za kupnju knjiga</string>
+    <string name="or">ILI</string>
+    <string name="login_screen">Ekran za prijavu</string>
+    <string name="signup_screen">Ekran za registraciju</string>
+</resources>

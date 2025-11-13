@@ -3,9 +3,16 @@
     <string name="app_name">HonNoMachi</string>
     <string name="login">Prijava</string>
     <string name="signup">Registracija</string>
-    <string name="welcome">Dobrodošli</string>
+    <string name="welcome">Dobrodošli!</string>
     <string name="the_best_platform_to_buy_books">Najbolja platforma za kupnju knjiga</string>
     <string name="or">ILI</string>
     <string name="login_screen">Ekran za prijavu</string>
     <string name="signup_screen">Ekran za registraciju</string>
+    <string name="hallo_there">Zdravo!</string>
+    <string name="create_an_account">Kreiraj račun</string>
+    <string name="email_address">Email adresa</string>
+    <string name="name">Ime</string>
+    <string name="password">Lozinka</string>
+    <string name="welcome_back">Dobrodošao nazad!</string>
+    <string name="sign_in_your_account">Prijavite se na svoj račun</string>
 </resources>

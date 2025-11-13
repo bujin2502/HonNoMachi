@@ -2,9 +2,16 @@
     <string name="app_name">HonNoMachi</string>
     <string name="login">Login</string>
     <string name="signup">Signup</string>
-    <string name="welcome">Welcome</string>
+    <string name="welcome">Welcome!</string>
     <string name="the_best_platform_to_buy_books">The best platform to buy books</string>
     <string name="or">OR</string>
     <string name="login_screen">Login Screen</string>
     <string name="signup_screen">Signup Screen</string>
+    <string name="hallo_there">Hallo there!</string>
+    <string name="create_an_account">Create an account</string>
+    <string name="email_address">Email address</string>
+    <string name="name">Name</string>
+    <string name="password">Password</string>
+    <string name="welcome_back">Welcome back!</string>
+    <string name="sign_in_your_account">Sign in your account</string>
 </resources>

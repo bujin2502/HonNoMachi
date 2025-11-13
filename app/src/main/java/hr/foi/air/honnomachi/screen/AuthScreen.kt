@@ -41,6 +41,7 @@ fun AuthScreen(modifier: Modifier = Modifier, navcontroller: NavHostController) 
                 .fillMaxWidth()
                 .height(150.dp)
         )
+
         Spacer(modifier = Modifier.height(20.dp))
 
         Text(

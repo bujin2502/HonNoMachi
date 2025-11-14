@@ -27,20 +27,27 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.R
+import hr.foi.air.honnomachi.viewmodel.AuthViewModel
 
 @Composable
-fun SignupScreen(modifier: Modifier= Modifier) {
+fun SignupScreen(modifier: Modifier = Modifier, authViewModel: AuthViewModel = viewModel()) {
 
     var email by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+
+    var context = LocalContext.current
+
 
     val nameFocusRequester = remember { FocusRequester() }
     val passwordFocusRequester = remember { FocusRequester() }
@@ -60,7 +67,8 @@ fun SignupScreen(modifier: Modifier= Modifier) {
                 fontSize = 30.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily.Monospace
-            ))
+            )
+        )
 
         Spacer(modifier = Modifier.height(10.dp))
 
@@ -69,11 +77,13 @@ fun SignupScreen(modifier: Modifier= Modifier) {
             modifier = Modifier.fillMaxWidth(),
             style = TextStyle(
                 fontSize = 22.sp
-            ))
+            )
+        )
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        Image(painterResource(id = R.drawable.vecteezy_deconstructing_sign_up_and_log_in_49110285),
+        Image(
+            painterResource(id = R.drawable.vecteezy_deconstructing_sign_up_and_log_in_49110285),
             contentDescription = "signup_slika",
             modifier = Modifier
                 .fillMaxWidth()
@@ -84,8 +94,8 @@ fun SignupScreen(modifier: Modifier= Modifier) {
 
         OutlinedTextField(
             value = email, onValueChange = {
-            email = it
-        },
+                email = it
+            },
             label = { Text(stringResource(R.string.email_address)) },
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(
@@ -138,12 +148,20 @@ fun SignupScreen(modifier: Modifier= Modifier) {
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        Button(onClick = {
+        Button(
+            onClick = {
+                authViewModel.signup(email, name, password) { success, errorMessage ->
+                    if (success) {
 
-        },
+                    } else {
+                        AppUtil.showToast(context, errorMessage ?: "Something went wrong")
+                    }
+                }
+            },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(60.dp)) {
+                .height(60.dp)
+        ) {
             Text(stringResource(R.string.signup), fontSize = 22.sp)
         }
     }

@@ -27,22 +27,31 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.R
+import hr.foi.air.honnomachi.viewmodel.AuthViewModel
 
 @Composable
-fun LoginScreen(modifier: Modifier=Modifier){
+fun LoginScreen(modifier: Modifier=Modifier, navController: NavController, authViewModel: AuthViewModel=viewModel()){
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
     val passwordFocusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
+    var context = LocalContext.current
+
+    var isLoading by remember { mutableStateOf(false) }
+
 
     Column(
         modifier = modifier
@@ -118,12 +127,25 @@ fun LoginScreen(modifier: Modifier=Modifier){
         Spacer(modifier = Modifier.height(20.dp))
 
         Button(onClick = {
-
+            isLoading = true
+            authViewModel.login(email, password) { success, errorMessage ->
+                if (success) {
+                    isLoading = false
+                    navController.navigate("home") {
+                        popUpTo("auth") { inclusive = true }
+                    }
+                } else {
+                    isLoading = false
+                    AppUtil.showToast(context, errorMessage ?: "Something went wrong")
+                }
+            }
         },
+            enabled = !isLoading,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(60.dp)) {
-            Text(stringResource(R.string.login), fontSize = 22.sp)
+                .height(60.dp)
+        ) {
+            Text(text = if(isLoading) stringResource(R.string.logging_in) else stringResource(R.string.login), fontSize = 22.sp)
         }
     }
 }

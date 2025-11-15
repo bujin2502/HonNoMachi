@@ -35,18 +35,22 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.viewmodel.AuthViewModel
 
 @Composable
-fun SignupScreen(modifier: Modifier = Modifier, authViewModel: AuthViewModel = viewModel()) {
+fun SignupScreen(modifier: Modifier = Modifier, navController: NavController, authViewModel: AuthViewModel = viewModel()) {
 
     var email by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
     var context = LocalContext.current
+
+    var isLoading by remember { mutableStateOf(false) }
+
 
 
     val nameFocusRequester = remember { FocusRequester() }
@@ -150,19 +154,25 @@ fun SignupScreen(modifier: Modifier = Modifier, authViewModel: AuthViewModel = v
 
         Button(
             onClick = {
+                isLoading = true
                 authViewModel.signup(email, name, password) { success, errorMessage ->
                     if (success) {
-
+                        isLoading = false
+                        navController.navigate("home") {
+                            popUpTo("auth") { inclusive = true }
+                        }
                     } else {
+                        isLoading = false
                         AppUtil.showToast(context, errorMessage ?: "Something went wrong")
                     }
                 }
             },
+            enabled = !isLoading,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(60.dp)
         ) {
-            Text(stringResource(R.string.signup), fontSize = 22.sp)
+            Text(if (isLoading) stringResource(R.string.creating_account) else stringResource(R.string.signup), fontSize = 22.sp)
         }
     }
 }

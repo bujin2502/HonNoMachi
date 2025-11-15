@@ -14,4 +14,6 @@
     <string name="password">Password</string>
     <string name="welcome_back">Welcome back!</string>
     <string name="sign_in_your_account">Sign in your account</string>
+    <string name="creating_account">Creating account</string>
+    <string name="logging_in">Logging in</string>
 </resources>

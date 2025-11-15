@@ -15,4 +15,6 @@
     <string name="password">Lozinka</string>
     <string name="welcome_back">Dobrodošao nazad!</string>
     <string name="sign_in_your_account">Prijavite se na svoj račun</string>
+    <string name="creating_account">Kreiranje računa</string>
+    <string name="logging_in">Prijavljivanje</string>
 </resources>

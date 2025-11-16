@@ -28,4 +28,5 @@
     <string name="add_page">Dodaj novu knjigu</string>
     <string name="cart_page">Stranica košarice</string>
     <string name="profile_page">Stranica profila</string>
+    <string name="verification_email_sent">Verifikacijski email je poslan. Molimo provjerite svoj sandučić.</string>
 </resources>

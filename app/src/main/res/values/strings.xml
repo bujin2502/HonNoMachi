@@ -27,4 +27,5 @@
     <string name="add_page">Add Page</string>
     <string name="cart_page">Cart Page</string>
     <string name="profile_page">Profile Page</string>
+    <string name="verification_email_sent">Verification email sent. Please check your inbox.</string>
 </resources>

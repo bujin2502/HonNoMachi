@@ -9,5 +9,6 @@ data class UserModel(
     val street: String? = null,
     val city: String? = null,
     val postNumber: String? = null,
-    val phoneNumber: String? = null
+    val phoneNumber: String? = null,
+    val isVerified: Boolean = false
 )

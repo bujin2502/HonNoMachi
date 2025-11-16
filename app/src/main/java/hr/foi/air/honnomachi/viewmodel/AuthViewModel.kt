@@ -20,37 +20,67 @@ class AuthViewModel : ViewModel() {
         onResult: (Boolean, String?) -> Unit
     ) {
         auth.createUserWithEmailAndPassword(email, password)
-            .addOnCompleteListener {
-                if (it.isSuccessful) {
-                    var userId = it.result?.user?.uid
-
-                    val userModel = UserModel(name, email, userId!!)
-                    firestore.collection("users")
-                        .document(userId)
-                        .set(userModel)
-                        .addOnCompleteListener { dbTask ->
-                            if (dbTask.isSuccessful) {
-                                onResult(true, null)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val user = task.result?.user
+                    user?.sendEmailVerification()
+                        ?.addOnCompleteListener { verificationTask ->
+                            if (verificationTask.isSuccessful) {
+                                val userId = user.uid
+                                val userModel = UserModel(
+                                    name = name,
+                                    email = email,
+                                    uid = userId,
+                                    isVerified = false
+                                )
+                                firestore.collection("users")
+                                    .document(userId)
+                                    .set(userModel)
+                                    .addOnCompleteListener { dbTask ->
+                                        if (dbTask.isSuccessful) {
+                                            auth.signOut()
+                                            onResult(true, null)
+                                        } else {
+                                            onResult(false, "Database error.")
+                                        }
+                                    }
                             } else {
-                                onResult(false, "Something went wrong")
+                                onResult(false, "Failed to send verification email.")
                             }
                         }
-
                 } else {
-                    onResult(false, it.exception?.localizedMessage)
+                    onResult(false, task.exception?.localizedMessage)
                 }
             }
     }
 
-        fun login(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
-            auth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener {
-                    if (it.isSuccessful) {
-                        onResult(true, null)
+    fun login(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val user = task.result?.user
+                    if (user?.isEmailVerified == true) {
+                        val userId = user.uid
+                        firestore.collection("users").document(userId)
+                            .update("isVerified", true)
+                            .addOnCompleteListener { updateTask ->
+                                if (updateTask.isSuccessful) {
+                                    onResult(true, null)
+                                } else {
+                                    onResult(false, "Failed to update verification status.")
+                                }
+                            }
                     } else {
-                        onResult(false, it.exception?.localizedMessage)
+                        auth.signOut()
+                        onResult(false, "Please verify your email before logging in.")
                     }
-
+                } else {
+                    onResult(false, task.exception?.localizedMessage)
                 }
-        }
+            }
     }
+
+    fun signOut() {
+        auth.signOut()
+    }
+}

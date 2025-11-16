@@ -156,13 +156,13 @@ fun SignupScreen(modifier: Modifier = Modifier, navController: NavController, au
             onClick = {
                 isLoading = true
                 authViewModel.signup(email, name, password) { success, errorMessage ->
+                    isLoading = false
                     if (success) {
-                        isLoading = false
-                        navController.navigate("home") {
+                        AppUtil.showToast(context, context.getString(R.string.verification_email_sent))
+                        navController.navigate("login") {
                             popUpTo("auth") { inclusive = true }
                         }
                     } else {
-                        isLoading = false
                         AppUtil.showToast(context, errorMessage ?: context.getString(R.string.something_went_wrong))
                     }
                 }

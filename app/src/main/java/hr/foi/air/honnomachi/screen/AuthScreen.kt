@@ -27,7 +27,7 @@ import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.ui.components.OrDivider
 
 @Composable
-fun AuthScreen(modifier: Modifier = Modifier, navcontroller: NavHostController) {
+fun AuthScreen(modifier: Modifier = Modifier, navController: NavHostController) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -63,7 +63,7 @@ fun AuthScreen(modifier: Modifier = Modifier, navcontroller: NavHostController) 
         Spacer(modifier = Modifier.height(50.dp))
 
         Button(onClick = {
-            navcontroller.navigate("login")
+            navController.navigate("login")
         },
             modifier = Modifier
                 .fillMaxWidth()
@@ -78,7 +78,7 @@ fun AuthScreen(modifier: Modifier = Modifier, navcontroller: NavHostController) 
         Spacer(modifier = Modifier.height(20.dp))
 
         OutlinedButton(onClick = {
-            navcontroller.navigate("signup")
+            navController.navigate("signup")
         },
             modifier = Modifier
                 .fillMaxWidth()

@@ -163,7 +163,7 @@ fun SignupScreen(modifier: Modifier = Modifier, navController: NavController, au
                         }
                     } else {
                         isLoading = false
-                        AppUtil.showToast(context, errorMessage ?: "Something went wrong")
+                        AppUtil.showToast(context, errorMessage ?: context.getString(R.string.something_went_wrong))
                     }
                 }
             },

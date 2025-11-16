@@ -17,4 +17,15 @@
     <string name="sign_in_your_account">Prijavite se na svoj račun</string>
     <string name="creating_account">Kreiranje računa</string>
     <string name="logging_in">Prijavljivanje</string>
+    <string name="something_went_wrong">Nešto nije u redu</string>
+    <string name="cart">Košarica</string>
+    <string name="profile">Profil</string>
+    <string name="add">Dodaj</string>
+    <string name="home">Home</string>
+    <string name="shelf">Polica</string>
+    <string name="home_page">Početna stranica</string>
+    <string name="shelf_page">Polica s knjigama</string>
+    <string name="add_page">Dodaj novu knjigu</string>
+    <string name="cart_page">Stranica košarice</string>
+    <string name="profile_page">Stranica profila</string>
 </resources>

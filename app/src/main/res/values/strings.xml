@@ -1,3 +1,36 @@
 <resources>
     <string name="app_name">HonNoMachi</string>
+    <string name="login">Login</string>
+    <string name="signup">Signup</string>
+    <string name="welcome">Welcome!</string>
+    <string name="the_best_platform_to_buy_books">The best platform to buy books</string>
+    <string name="or">OR</string>
+    <string name="login_screen">Login Screen</string>
+    <string name="signup_screen">Signup Screen</string>
+    <string name="hallo_there">Hallo there!</string>
+    <string name="create_an_account">Create an account</string>
+    <string name="email_address">Email address</string>
+    <string name="name">Name</string>
+    <string name="password">Password</string>
+    <string name="welcome_back">Welcome back!</string>
+    <string name="sign_in_your_account">Sign in your account</string>
+    <string name="creating_account">Creating account</string>
+    <string name="logging_in">Logging in</string>
+    <string name="something_went_wrong">Something went wrong</string>
+    <string name="cart">Cart</string>
+    <string name="profile">Profile</string>
+    <string name="add">Add</string>
+    <string name="home">Home</string>
+    <string name="shelf">Shelf</string>
+    <string name="home_page">Home Page</string>
+    <string name="shelf_page">Shelf Page</string>
+    <string name="add_page">Add Page</string>
+    <string name="cart_page">Cart Page</string>
+    <string name="profile_page">Profile Page</string>
+    <string name="verification_email_sent">Verification email sent. Please check your inbox.</string>
+    <string name="forgot_password">Forgot Password</string>
+    <string name="enter_your_email_address_to_receive_a_password_reset_link">Enter your email address to receive a password reset link.</string>
+    <string name="back_to_login">Back to Login</string>
+    <string name="send_reset_link">Send Reset Link</string>
+    <string name="resend_verification_email">Resend verification email</string>
 </resources>

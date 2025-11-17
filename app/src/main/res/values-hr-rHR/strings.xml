@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">HonNoMachi</string>
+    <string name="login">Prijava</string>
+    <string name="signup">Registracija</string>
+    <string name="welcome">Dobrodošli!</string>
+    <string name="the_best_platform_to_buy_books">Najbolja platforma za kupnju knjiga</string>
+    <string name="or">ILI</string>
+    <string name="login_screen">Ekran za prijavu</string>
+    <string name="signup_screen">Ekran za registraciju</string>
+    <string name="hallo_there">Zdravo!</string>
+    <string name="create_an_account">Kreiraj račun</string>
+    <string name="email_address">Email adresa</string>
+    <string name="name">Ime</string>
+    <string name="password">Lozinka</string>
+    <string name="welcome_back">Dobrodošao nazad!</string>
+    <string name="sign_in_your_account">Prijavite se na svoj račun</string>
+    <string name="creating_account">Kreiranje računa</string>
+    <string name="logging_in">Prijavljivanje</string>
+    <string name="something_went_wrong">Nešto nije u redu</string>
+    <string name="cart">Košarica</string>
+    <string name="profile">Profil</string>
+    <string name="add">Dodaj</string>
+    <string name="home">Home</string>
+    <string name="shelf">Polica</string>
+    <string name="home_page">Početna stranica</string>
+    <string name="shelf_page">Polica s knjigama</string>
+    <string name="add_page">Dodaj novu knjigu</string>
+    <string name="cart_page">Stranica košarice</string>
+    <string name="profile_page">Stranica profila</string>
+    <string name="verification_email_sent">Verifikacijski email je poslan. Molimo provjerite svoj sandučić.</string>
+    <string name="forgot_password">Zaboravljena lozinka</string>
+    <string name="enter_your_email_address_to_receive_a_password_reset_link">Unesite svoju adresu e-pošte kako biste primili poveznicu za resetiranje lozinke.</string>
+    <string name="back_to_login">Natrag na prijavu</string>
+    <string name="send_reset_link">Pošalji poveznicu za resetiranje</string>
+    <string name="resend_verification_email">Ponovno pošalji email za potvrdu</string>
+</resources>

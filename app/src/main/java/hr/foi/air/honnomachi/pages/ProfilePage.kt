@@ -12,12 +12,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
+import androidx.lifecycle.viewmodel.compose.viewModel
 import hr.foi.air.honnomachi.R
+import hr.foi.air.honnomachi.viewmodel.AuthViewModel
 
 @Composable
-fun ProfilePage(modifier: Modifier = Modifier, navController : NavController) {
+fun ProfilePage(modifier: Modifier = Modifier, navController : NavController, authViewModel: AuthViewModel = viewModel()) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -27,7 +27,7 @@ fun ProfilePage(modifier: Modifier = Modifier, navController : NavController) {
     ) {
         Text (text= stringResource(R.string.profile_page))
         Button(onClick = {
-            Firebase.auth.signOut()
+            authViewModel.signOut()
             navController.navigate(route = "auth") {
                 popUpTo("home") { inclusive = true }
             }

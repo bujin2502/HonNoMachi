@@ -28,8 +28,10 @@ import hr.foi.air.honnomachi.pages.HomePage
 import hr.foi.air.honnomachi.pages.ProfilePage
 import hr.foi.air.honnomachi.pages.ShelfPage
 
+import hr.foi.air.honnomachi.viewmodel.AuthViewModel
+
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
+fun HomeScreen(modifier: Modifier = Modifier, navController: NavController, authViewModel: AuthViewModel) {
 
     val navItemList = listOf(
         NavItem(label = stringResource(R.string.home), icon = Icons.AutoMirrored.Outlined.MenuBook),
@@ -58,19 +60,19 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
             }
         }
     ) {
-        ContentScreen(modifier = modifier.padding(it), selectedIndex, navController)
+        ContentScreen(modifier = modifier.padding(it), selectedIndex, navController, authViewModel)
 
     }
 }
 
 @Composable
-fun ContentScreen(modifier: Modifier = Modifier, selectedIndex: Int, navController: NavController) {
+fun ContentScreen(modifier: Modifier = Modifier, selectedIndex: Int, navController: NavController, authViewModel: AuthViewModel) {
     when (selectedIndex) {
         0 -> HomePage()
         1 -> ShelfPage()
         2 -> AddPage()
         3 -> CartPage()
-        4 -> ProfilePage(navController = navController)
+        4 -> ProfilePage(navController = navController, authViewModel = authViewModel)
     }
 }
 

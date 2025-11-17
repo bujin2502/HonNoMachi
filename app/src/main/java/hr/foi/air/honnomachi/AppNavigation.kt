@@ -43,7 +43,7 @@ fun AppNavigation(modifier: Modifier=Modifier) {
         }
 
         composable("home") {
-            HomeScreen(modifier, navController)
+            HomeScreen(modifier, navController, authViewModel)
         }
     }
 }

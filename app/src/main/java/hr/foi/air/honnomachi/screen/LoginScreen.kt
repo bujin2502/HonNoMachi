@@ -25,6 +25,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.material3.TextButton
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
@@ -51,6 +52,7 @@ fun LoginScreen(modifier: Modifier=Modifier, navController: NavController, authV
     var context = LocalContext.current
 
     var isLoading by remember { mutableStateOf(false) }
+    var showResendButton by remember { mutableStateOf(false) }
 
 
     Column(
@@ -129,14 +131,17 @@ fun LoginScreen(modifier: Modifier=Modifier, navController: NavController, authV
         Button(onClick = {
             isLoading = true
             authViewModel.login(email, password) { success, errorMessage ->
+                isLoading = false
                 if (success) {
-                    isLoading = false
                     navController.navigate("home") {
                         popUpTo("auth") { inclusive = true }
                     }
                 } else {
-                    isLoading = false
-                    AppUtil.showToast(context, errorMessage ?: "Something went wrong")
+                    val message = errorMessage ?: "Something went wrong"
+                    AppUtil.showToast(context, message)
+                    if (message == "Please verify your email before logging in.") {
+                        showResendButton = true
+                    }
                 }
             }
         },
@@ -146,6 +151,28 @@ fun LoginScreen(modifier: Modifier=Modifier, navController: NavController, authV
                 .height(60.dp)
         ) {
             Text(text = if(isLoading) stringResource(R.string.logging_in) else stringResource(R.string.login), fontSize = 22.sp)
+        }
+
+        if (showResendButton) {
+            Spacer(modifier = Modifier.height(10.dp))
+            Button(
+                onClick = {
+                    authViewModel.resendVerificationEmail(email, password) { success, message ->
+                        AppUtil.showToast(context, message ?: "An unexpected error occurred.")
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(60.dp)
+            ) {
+                Text(text = stringResource(id = R.string.resend_verification_email), fontSize = 16.sp)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        TextButton(onClick = { navController.navigate("forgotPassword") }) {
+            Text(text = stringResource(R.string.forgot_password) + "?")
         }
     }
 }

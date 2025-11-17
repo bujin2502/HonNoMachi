@@ -83,4 +83,41 @@ class AuthViewModel : ViewModel() {
     fun signOut() {
         auth.signOut()
     }
+
+    fun forgotPassword(email: String, onResult: (Boolean, String?) -> Unit) {
+        auth.sendPasswordResetEmail(email)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    onResult(true, null)
+                } else {
+                    onResult(false, task.exception?.localizedMessage)
+                }
+            }
+    }
+
+    fun resendVerificationEmail(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val user = task.result?.user
+                    if (user?.isEmailVerified == false) {
+                        user.sendEmailVerification()
+                            .addOnCompleteListener { verificationTask ->
+                                if (verificationTask.isSuccessful) {
+                                    auth.signOut()
+                                    onResult(true, "Verification email sent. Please check your inbox.")
+                                } else {
+                                    auth.signOut()
+                                    onResult(false, "Failed to send verification email.")
+                                }
+                            }
+                    } else {
+                        auth.signOut()
+                        onResult(false, "This email is already verified.")
+                    }
+                } else {
+                    onResult(false, task.exception?.localizedMessage)
+                }
+            }
+    }
 }

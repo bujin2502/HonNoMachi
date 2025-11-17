@@ -29,4 +29,9 @@
     <string name="cart_page">Stranica košarice</string>
     <string name="profile_page">Stranica profila</string>
     <string name="verification_email_sent">Verifikacijski email je poslan. Molimo provjerite svoj sandučić.</string>
+    <string name="forgot_password">Zaboravljena lozinka</string>
+    <string name="enter_your_email_address_to_receive_a_password_reset_link">Unesite svoju adresu e-pošte kako biste primili poveznicu za resetiranje lozinke.</string>
+    <string name="back_to_login">Natrag na prijavu</string>
+    <string name="send_reset_link">Pošalji poveznicu za resetiranje</string>
+    <string name="resend_verification_email">Ponovno pošalji email za potvrdu</string>
 </resources>

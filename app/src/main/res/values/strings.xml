@@ -28,4 +28,9 @@
     <string name="cart_page">Cart Page</string>
     <string name="profile_page">Profile Page</string>
     <string name="verification_email_sent">Verification email sent. Please check your inbox.</string>
+    <string name="forgot_password">Forgot Password</string>
+    <string name="enter_your_email_address_to_receive_a_password_reset_link">Enter your email address to receive a password reset link.</string>
+    <string name="back_to_login">Back to Login</string>
+    <string name="send_reset_link">Send Reset Link</string>
+    <string name="resend_verification_email">Resend verification email</string>
 </resources>

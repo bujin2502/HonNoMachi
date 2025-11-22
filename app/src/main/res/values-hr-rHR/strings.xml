@@ -34,4 +34,9 @@
     <string name="back_to_login">Natrag na prijavu</string>
     <string name="send_reset_link">Pošalji poveznicu za resetiranje</string>
     <string name="resend_verification_email">Ponovno pošalji email za potvrdu</string>
+    <string name="error_email_required">Email je obavezan</string>
+    <string name="error_email_invalid">Unesite ispravnu email adresu</string>
+    <string name="error_name_required">Ime je obavezno</string>
+    <string name="error_name_short">Ime je prekratko</string>
+    <string name="error_password_short">Lozinka mora imati najmanje 6 znakova</string>
 </resources>

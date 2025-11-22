@@ -33,4 +33,9 @@
     <string name="back_to_login">Back to Login</string>
     <string name="send_reset_link">Send Reset Link</string>
     <string name="resend_verification_email">Resend verification email</string>
+    <string name="error_email_required">Email is required</string>
+    <string name="error_email_invalid">Enter a valid email address</string>
+    <string name="error_name_required">Name is required</string>
+    <string name="error_name_short">Name is too short</string>
+    <string name="error_password_short">Password must have at least 6 characters</string>
 </resources>

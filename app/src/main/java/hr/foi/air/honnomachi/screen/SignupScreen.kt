@@ -17,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -34,10 +35,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material3.MaterialTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import hr.foi.air.honnomachi.AppUtil
+import hr.foi.air.honnomachi.FormValidator
 import hr.foi.air.honnomachi.R
+import hr.foi.air.honnomachi.ValidationErrorType
 import hr.foi.air.honnomachi.viewmodel.AuthViewModel
 
 @Composable
@@ -46,6 +50,9 @@ fun SignupScreen(modifier: Modifier = Modifier, navController: NavController, au
     var email by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var emailError by remember { mutableStateOf<ValidationErrorType?>(null) }
+    var nameError by remember { mutableStateOf<ValidationErrorType?>(null) }
+    var passwordError by remember { mutableStateOf<ValidationErrorType?>(null) }
 
     var context = LocalContext.current
 
@@ -99,16 +106,29 @@ fun SignupScreen(modifier: Modifier = Modifier, navController: NavController, au
         OutlinedTextField(
             value = email, onValueChange = {
                 email = it
+                if (emailError != null) emailError = null
             },
             label = { Text(stringResource(R.string.email_address)) },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("signup_email"),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Next
             ),
             keyboardActions = KeyboardActions(
                 onNext = { nameFocusRequester.requestFocus() }
-            )
+            ),
+            isError = emailError != null,
+            supportingText = {
+                emailError?.let {
+                    Text(
+                        text = stringResource(errorMessageFor(it)),
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.testTag("signup_email_error")
+                    )
+                }
+            }
         )
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -116,18 +136,30 @@ fun SignupScreen(modifier: Modifier = Modifier, navController: NavController, au
         OutlinedTextField(
             value = name, onValueChange = {
                 name = it
+                if (nameError != null) nameError = null
             },
             label = { Text(stringResource(R.string.name)) },
             modifier = Modifier
                 .fillMaxWidth()
-                .focusRequester(nameFocusRequester),
+                .focusRequester(nameFocusRequester)
+                .testTag("signup_name"),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Next
             ),
             keyboardActions = KeyboardActions(
                 onNext = { passwordFocusRequester.requestFocus() }
-            )
+            ),
+            isError = nameError != null,
+            supportingText = {
+                nameError?.let {
+                    Text(
+                        text = stringResource(errorMessageFor(it)),
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.testTag("signup_name_error")
+                    )
+                }
+            }
         )
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -135,10 +167,12 @@ fun SignupScreen(modifier: Modifier = Modifier, navController: NavController, au
         OutlinedTextField(
             value = password, onValueChange = {
                 password = it
+                if (passwordError != null) passwordError = null
             },
             label = { Text(stringResource(R.string.password)) },
             modifier = Modifier
                 .fillMaxWidth()
+                .testTag("signup_password")
                 .focusRequester(passwordFocusRequester),
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(
@@ -147,13 +181,31 @@ fun SignupScreen(modifier: Modifier = Modifier, navController: NavController, au
             ),
             keyboardActions = KeyboardActions(
                 onDone = { focusManager.clearFocus() }
-            )
+            ),
+            isError = passwordError != null,
+            supportingText = {
+                passwordError?.let {
+                    Text(
+                        text = stringResource(errorMessageFor(it)),
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.testTag("signup_password_error")
+                    )
+                }
+            }
         )
 
         Spacer(modifier = Modifier.height(20.dp))
 
         Button(
             onClick = {
+                val validation = FormValidator.validateSignupForm(email, name, password)
+                emailError = validation.email.error
+                nameError = validation.name.error
+                passwordError = validation.password.error
+                if (!validation.isValid) {
+                    isLoading = false
+                    return@Button
+                }
                 isLoading = true
                 authViewModel.signup(email, name, password) { success, errorMessage ->
                     isLoading = false
@@ -171,8 +223,20 @@ fun SignupScreen(modifier: Modifier = Modifier, navController: NavController, au
             modifier = Modifier
                 .fillMaxWidth()
                 .height(60.dp)
+                .testTag("signup_button")
         ) {
             Text(if (isLoading) stringResource(R.string.creating_account) else stringResource(R.string.signup), fontSize = 22.sp)
         }
+    }
+}
+
+@Composable
+private fun errorMessageFor(error: ValidationErrorType): Int {
+    return when (error) {
+        ValidationErrorType.EMPTY_EMAIL -> R.string.error_email_required
+        ValidationErrorType.INVALID_EMAIL -> R.string.error_email_invalid
+        ValidationErrorType.EMPTY_NAME -> R.string.error_name_required
+        ValidationErrorType.SHORT_NAME -> R.string.error_name_short
+        ValidationErrorType.SHORT_PASSWORD -> R.string.error_password_short
     }
 }

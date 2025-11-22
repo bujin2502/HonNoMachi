@@ -6,14 +6,14 @@ import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 import hr.foi.air.honnomachi.model.UserModel
 
-class AuthViewModel : ViewModel() {
+open class AuthViewModel : ViewModel() {
 
     private val auth = Firebase.auth
 
     private val firestore = Firebase.firestore
 
 
-    fun signup(
+    open fun signup(
         email: String,
         name: String,
         password: String,
@@ -54,7 +54,7 @@ class AuthViewModel : ViewModel() {
             }
     }
 
-    fun login(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
+    open fun login(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
@@ -80,11 +80,11 @@ class AuthViewModel : ViewModel() {
             }
     }
 
-    fun signOut() {
+    open fun signOut() {
         auth.signOut()
     }
 
-    fun forgotPassword(email: String, onResult: (Boolean, String?) -> Unit) {
+    open fun forgotPassword(email: String, onResult: (Boolean, String?) -> Unit) {
         auth.sendPasswordResetEmail(email)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
@@ -95,7 +95,7 @@ class AuthViewModel : ViewModel() {
             }
     }
 
-    fun resendVerificationEmail(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
+    open fun resendVerificationEmail(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {

@@ -181,7 +181,17 @@ fun SignupScreen(modifier: Modifier = Modifier, navController: NavController, au
             ),
             keyboardActions = KeyboardActions(
                 onDone = { focusManager.clearFocus() }
-            )
+            ),
+            isError = passwordError != null,
+            supportingText = {
+                passwordError?.let {
+                    Text(
+                        text = stringResource(errorMessageFor(it)),
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.testTag("signup_password_error")
+                    )
+                }
+            }
         )
 
         Spacer(modifier = Modifier.height(20.dp))

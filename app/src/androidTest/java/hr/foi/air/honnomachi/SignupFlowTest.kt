@@ -3,7 +3,6 @@ package hr.foi.air.honnomachi
 import androidx.activity.ComponentActivity
 import androidx.compose.material3.Text
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.test.assertExists
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -32,12 +31,12 @@ class SignupFlowTest {
 
     @Before
     fun setup() {
+        fakeAuthViewModel = FakeAuthViewModel()
         composeRule.setContent {
             val context = LocalContext.current
             navController = TestNavHostController(context).apply {
                 navigatorProvider.addNavigator(ComposeNavigator())
             }
-            fakeAuthViewModel = FakeAuthViewModel()
 
             NavHost(navController = navController, startDestination = "signup") {
                 composable("signup") {
@@ -55,9 +54,9 @@ class SignupFlowTest {
     fun shows_validation_errors_when_fields_are_empty() {
         composeRule.onNodeWithTag("signup_button").performClick()
 
-        composeRule.onNodeWithTag("signup_email_error").assertExists()
-        composeRule.onNodeWithTag("signup_name_error").assertExists()
-        composeRule.onNodeWithTag("signup_password_error").assertExists()
+        composeRule.onNodeWithTag("signup_email_error", useUnmergedTree = true).assertExists()
+        composeRule.onNodeWithTag("signup_name_error", useUnmergedTree = true).assertExists()
+        composeRule.onNodeWithTag("signup_password_error", useUnmergedTree = true).assertExists()
         assertEquals(null, fakeAuthViewModel.lastSignup)
     }
 

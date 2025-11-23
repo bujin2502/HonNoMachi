@@ -6,12 +6,17 @@ import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 import hr.foi.air.honnomachi.model.UserModel
 
+import android.os.Bundle
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.analytics
+
 open class AuthViewModel : ViewModel() {
 
     private val auth = Firebase.auth
 
     private val firestore = Firebase.firestore
 
+    private val analytics: FirebaseAnalytics = Firebase.analytics
 
     open fun signup(
         email: String,
@@ -65,6 +70,7 @@ open class AuthViewModel : ViewModel() {
                             .update("isVerified", true)
                             .addOnCompleteListener { updateTask ->
                                 if (updateTask.isSuccessful) {
+                                    logLoginSuccess("email_password", user.uid)
                                     onResult(true, null)
                                 } else {
                                     onResult(false, "Failed to update verification status.")
@@ -75,12 +81,14 @@ open class AuthViewModel : ViewModel() {
                         onResult(false, "Please verify your email before logging in.")
                     }
                 } else {
+                    logLoginFailure(task.exception, "email_password")
                     onResult(false, task.exception?.localizedMessage)
                 }
             }
     }
 
     open fun signOut() {
+        logLogout("user_logout")
         auth.signOut()
     }
 
@@ -119,5 +127,31 @@ open class AuthViewModel : ViewModel() {
                     onResult(false, task.exception?.localizedMessage)
                 }
             }
+    }
+    // Funkcija za log uspjesne prijavu
+    private fun logLoginSuccess(method: String, userId: String) {
+        analytics.setUserId(userId)
+        val bundle = Bundle().apply {
+            putString(FirebaseAnalytics.Param.METHOD, method)
+        }
+        analytics.logEvent(FirebaseAnalytics.Event.LOGIN, bundle)
+    }
+
+    // Funkcija za log  neuspjesne prijave
+    private fun logLoginFailure(exception: Throwable?, method: String) {
+        val bundle = Bundle().apply {
+            putString("error_type", exception?.javaClass?.simpleName ?: "unknown")
+            putString("method", method)
+        }
+        analytics.logEvent("login_failed", bundle)
+    }
+
+    // Funkcija za log odjave
+    private fun logLogout(method: String) {
+        val logoutBundle = Bundle().apply {
+            putString(FirebaseAnalytics.Param.METHOD, method)
+        }
+        analytics.logEvent("logout", logoutBundle)
+        analytics.setUserId(null)
     }
 }

@@ -109,4 +109,4 @@ Projekt razvija tim studenata
 ---
 
 **Status projekta:** 🟢 Sprint 01 - U tijeku  
-**Zadnje ažuriranje:** 23.11 2025
+**Zadnje ažuriranje:** 23.11.2025

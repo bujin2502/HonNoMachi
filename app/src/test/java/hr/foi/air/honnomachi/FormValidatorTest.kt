@@ -48,6 +48,14 @@ class FormValidatorTest {
     }
 
     @Test
+    fun `blank password fails validation`() {
+        val result = FormValidator.validatePassword("")
+
+        assertFalse(result.isValid)
+        assertEquals(ValidationErrorType.EMPTY_PASSWORD, result.error)
+    }
+
+    @Test
     fun `short password fails validation`() {
         val result = FormValidator.validatePassword("123")
 

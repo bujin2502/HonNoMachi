@@ -19,6 +19,10 @@ open class AuthViewModel : ViewModel() {
         password: String,
         onResult: (Boolean, String?) -> Unit
     ) {
+        if (email.isBlank() || name.isBlank() || password.isBlank()) {
+            onResult(false, "Email, name, and password cannot be empty.")
+            return
+        }
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
@@ -55,6 +59,10 @@ open class AuthViewModel : ViewModel() {
     }
 
     open fun login(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
+        if (email.isBlank() || password.isBlank()) {
+            onResult(false, "Email and password cannot be empty.")
+            return
+        }
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
@@ -85,6 +93,10 @@ open class AuthViewModel : ViewModel() {
     }
 
     open fun forgotPassword(email: String, onResult: (Boolean, String?) -> Unit) {
+        if (email.isBlank()) {
+            onResult(false, "Email cannot be empty.")
+            return
+        }
         auth.sendPasswordResetEmail(email)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {

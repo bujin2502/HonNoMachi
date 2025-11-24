@@ -7,6 +7,7 @@ enum class ValidationErrorType {
     INVALID_EMAIL,
     EMPTY_NAME,
     SHORT_NAME,
+    EMPTY_PASSWORD,
     SHORT_PASSWORD
 }
 
@@ -21,6 +22,13 @@ data class SignupValidationResult(
     val password: ValidationResult
 ) {
     val isValid: Boolean = email.isValid && name.isValid && password.isValid
+}
+
+data class LoginValidationResult(
+    val email: ValidationResult,
+    val password: ValidationResult
+) {
+    val isValid: Boolean = email.isValid && password.isValid
 }
 
 object FormValidator {
@@ -45,6 +53,9 @@ object FormValidator {
     }
 
     fun validatePassword(password: String): ValidationResult {
+        if (password.isBlank()) {
+            return ValidationResult(isValid = false, error = ValidationErrorType.EMPTY_PASSWORD)
+        }
         if (password.length < 6) {
             return ValidationResult(isValid = false, error = ValidationErrorType.SHORT_PASSWORD)
         }
@@ -58,6 +69,15 @@ object FormValidator {
         return SignupValidationResult(
             email = emailValidation,
             name = nameValidation,
+            password = passwordValidation
+        )
+    }
+
+    fun validateLoginForm(email: String, password: String): LoginValidationResult {
+        val emailValidation = validateEmail(email)
+        val passwordValidation = validatePassword(password)
+        return LoginValidationResult(
+            email = emailValidation,
             password = passwordValidation
         )
     }

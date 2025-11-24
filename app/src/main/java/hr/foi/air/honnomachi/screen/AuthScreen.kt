@@ -35,7 +35,7 @@ fun AuthScreen(modifier: Modifier = Modifier, navController: NavHostController) 
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Image(painterResource(id = R.drawable.honnomachi_sprint1),
+        Image(painterResource(id = R.drawable.hnm_logo),
             contentDescription = "slika",
             modifier = Modifier
                 .fillMaxWidth()

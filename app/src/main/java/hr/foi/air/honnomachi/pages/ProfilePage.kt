@@ -15,6 +15,7 @@ import androidx.navigation.NavController
 import androidx.lifecycle.viewmodel.compose.viewModel
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.viewmodel.AuthViewModel
+import androidx.compose.ui.platform.testTag
 
 @Composable
 fun ProfilePage(modifier: Modifier = Modifier, navController : NavController, authViewModel: AuthViewModel = viewModel()) {
@@ -31,7 +32,9 @@ fun ProfilePage(modifier: Modifier = Modifier, navController : NavController, au
             navController.navigate(route = "auth") {
                 popUpTo("home") { inclusive = true }
             }
-        }) {
+        },
+            modifier = modifier.testTag("logout_button")
+        ) {
             Text("Logout")
         }
     }

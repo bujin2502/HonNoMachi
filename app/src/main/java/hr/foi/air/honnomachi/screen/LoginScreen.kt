@@ -160,9 +160,12 @@ fun LoginScreen(modifier: Modifier=Modifier, navController: NavController, authV
                     }
                 } else {
                     val message = errorMessage ?: "Something went wrong"
-                    AppUtil.showToast(context, message)
                     if (message == "Please verify your email before logging in.") {
-                        showResendButton = true
+                        navController.navigate("verification") {
+                            popUpTo("auth") { inclusive = true }
+                        }
+                    } else {
+                        AppUtil.showToast(context, message)
                     }
                 }
             }
@@ -174,21 +177,6 @@ fun LoginScreen(modifier: Modifier=Modifier, navController: NavController, authV
                 .testTag("login_button")
         ) {
             Text(text = if(isLoading) stringResource(R.string.logging_in) else stringResource(R.string.login), fontSize = 22.sp)
-        }
-        if (showResendButton) {
-            Spacer(modifier = Modifier.height(10.dp))
-            Button(
-                onClick = {
-                    authViewModel.resendVerificationEmail(email, password) { success, message ->
-                        AppUtil.showToast(context, message ?: "An unexpected error occurred.")
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp)
-            ) {
-                Text(text = stringResource(id = R.string.resend_verification_email), fontSize = 16.sp)
-            }
         }
         Spacer(modifier = Modifier.height(10.dp))
         TextButton(onClick = { navController.navigate("forgotPassword") }) {

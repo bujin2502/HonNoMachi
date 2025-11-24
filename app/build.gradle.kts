@@ -70,5 +70,5 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     implementation(platform("com.google.firebase:firebase-bom:34.4.0"))
     implementation("com.google.firebase:firebase-analytics")
-    implementation("androidx.compose.material:material-icons-extended:<compose_version>")
+    implementation("androidx.compose.material:material-icons-extended")
 }

@@ -212,7 +212,7 @@ fun SignupScreen(modifier: Modifier = Modifier, navController: NavController, au
                     isLoading = false
                     if (success) {
                         AppUtil.showToast(context, context.getString(R.string.verification_email_sent))
-                        navController.navigate("login") {
+                        navController.navigate("verification") {
                             popUpTo("auth") { inclusive = true }
                         }
                     } else {

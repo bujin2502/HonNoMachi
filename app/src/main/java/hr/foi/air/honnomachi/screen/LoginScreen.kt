@@ -40,6 +40,7 @@ import androidx.navigation.NavController
 import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.viewmodel.AuthViewModel
+import androidx.compose.ui.platform.testTag
 
 @Composable
 fun LoginScreen(modifier: Modifier=Modifier, navController: NavController, authViewModel: AuthViewModel=viewModel()){
@@ -96,7 +97,9 @@ fun LoginScreen(modifier: Modifier=Modifier, navController: NavController, authV
                 email = it
             },
             label = { Text(stringResource(R.string.email_address)) },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("email_field"),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Next
@@ -115,7 +118,8 @@ fun LoginScreen(modifier: Modifier=Modifier, navController: NavController, authV
             label = { Text(stringResource(R.string.password)) },
             modifier = Modifier
                 .fillMaxWidth()
-                .focusRequester(passwordFocusRequester),
+                .focusRequester(passwordFocusRequester)
+                .testTag("password_field"),
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Password,
@@ -149,6 +153,7 @@ fun LoginScreen(modifier: Modifier=Modifier, navController: NavController, authV
             modifier = Modifier
                 .fillMaxWidth()
                 .height(60.dp)
+                .testTag("login_button")
         ) {
             Text(text = if(isLoading) stringResource(R.string.logging_in) else stringResource(R.string.login), fontSize = 22.sp)
         }

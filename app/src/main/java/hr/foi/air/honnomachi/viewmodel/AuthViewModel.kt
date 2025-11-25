@@ -9,14 +9,14 @@ import hr.foi.air.honnomachi.model.UserModel
 import android.os.Bundle
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.analytics
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
-open class AuthViewModel : ViewModel() {
-
-    private val auth = Firebase.auth
-
-    private val firestore = Firebase.firestore
-
-    private val analytics: FirebaseAnalytics = Firebase.analytics
+open class AuthViewModel (
+    private val auth: FirebaseAuth? = Firebase.auth,
+    private val firestore: FirebaseFirestore? = Firebase.firestore,
+    private val analytics: FirebaseAnalytics? = Firebase.analytics
+): ViewModel() {
 
     open fun signup(
         email: String,
@@ -24,8 +24,8 @@ open class AuthViewModel : ViewModel() {
         password: String,
         onResult: (Boolean, String?) -> Unit
     ) {
-        auth.createUserWithEmailAndPassword(email, password)
-            .addOnCompleteListener { task ->
+        auth?.createUserWithEmailAndPassword(email, password)
+            ?.addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     val user = task.result?.user
                     user?.sendEmailVerification()
@@ -38,12 +38,12 @@ open class AuthViewModel : ViewModel() {
                                     uid = userId,
                                     isVerified = false
                                 )
-                                firestore.collection("users")
-                                    .document(userId)
-                                    .set(userModel)
-                                    .addOnCompleteListener { dbTask ->
+                                firestore?.collection("users")
+                                    ?.document(userId)
+                                    ?.set(userModel)
+                                    ?.addOnCompleteListener { dbTask ->
                                         if (dbTask.isSuccessful) {
-                                            auth.signOut()
+                                            auth?.signOut()
                                             onResult(true, null)
                                         } else {
                                             onResult(false, "Database error.")
@@ -60,15 +60,15 @@ open class AuthViewModel : ViewModel() {
     }
 
     open fun login(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
-        auth.signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener { task ->
+        auth?.signInWithEmailAndPassword(email, password)
+            ?.addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     val user = task.result?.user
                     if (user?.isEmailVerified == true) {
                         val userId = user.uid
-                        firestore.collection("users").document(userId)
-                            .update("isVerified", true)
-                            .addOnCompleteListener { updateTask ->
+                        firestore?.collection("users")?.document(userId)
+                            ?.update("isVerified", true)
+                            ?.addOnCompleteListener { updateTask ->
                                 if (updateTask.isSuccessful) {
                                     logLoginSuccess("email_password", user.uid)
                                     onResult(true, null)
@@ -77,7 +77,7 @@ open class AuthViewModel : ViewModel() {
                                 }
                             }
                     } else {
-                        auth.signOut()
+                        auth?.signOut()
                         onResult(false, "Please verify your email before logging in.")
                     }
                 } else {
@@ -89,12 +89,12 @@ open class AuthViewModel : ViewModel() {
 
     open fun signOut() {
         logLogout("user_logout")
-        auth.signOut()
+        auth?.signOut()
     }
 
     open fun forgotPassword(email: String, onResult: (Boolean, String?) -> Unit) {
-        auth.sendPasswordResetEmail(email)
-            .addOnCompleteListener { task ->
+        auth?.sendPasswordResetEmail(email)
+            ?.addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     onResult(true, null)
                 } else {
@@ -104,23 +104,23 @@ open class AuthViewModel : ViewModel() {
     }
 
     open fun resendVerificationEmail(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
-        auth.signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener { task ->
+        auth?.signInWithEmailAndPassword(email, password)
+            ?.addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     val user = task.result?.user
                     if (user?.isEmailVerified == false) {
                         user.sendEmailVerification()
                             .addOnCompleteListener { verificationTask ->
                                 if (verificationTask.isSuccessful) {
-                                    auth.signOut()
+                                    auth?.signOut()
                                     onResult(true, "Verification email sent. Please check your inbox.")
                                 } else {
-                                    auth.signOut()
+                                    auth?.signOut()
                                     onResult(false, "Failed to send verification email.")
                                 }
                             }
                     } else {
-                        auth.signOut()
+                        auth?.signOut()
                         onResult(false, "This email is already verified.")
                     }
                 } else {
@@ -130,11 +130,11 @@ open class AuthViewModel : ViewModel() {
     }
     // Funkcija za log uspjesne prijavu
     private fun logLoginSuccess(method: String, userId: String) {
-        analytics.setUserId(userId)
+        analytics?.setUserId(userId)
         val bundle = Bundle().apply {
             putString(FirebaseAnalytics.Param.METHOD, method)
         }
-        analytics.logEvent(FirebaseAnalytics.Event.LOGIN, bundle)
+        analytics?.logEvent(FirebaseAnalytics.Event.LOGIN, bundle)
     }
 
     // Funkcija za log  neuspjesne prijave
@@ -143,7 +143,7 @@ open class AuthViewModel : ViewModel() {
             putString("error_type", exception?.javaClass?.simpleName ?: "unknown")
             putString("method", method)
         }
-        analytics.logEvent("login_failed", bundle)
+        analytics?.logEvent("login_failed", bundle)
     }
 
     // Funkcija za log odjave
@@ -151,7 +151,7 @@ open class AuthViewModel : ViewModel() {
         val logoutBundle = Bundle().apply {
             putString(FirebaseAnalytics.Param.METHOD, method)
         }
-        analytics.logEvent("logout", logoutBundle)
-        analytics.setUserId(null)
+        analytics?.logEvent("logout", logoutBundle)
+        analytics?.setUserId(null)
     }
 }

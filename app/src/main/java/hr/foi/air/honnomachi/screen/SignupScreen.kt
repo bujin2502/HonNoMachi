@@ -42,6 +42,7 @@ import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.FormValidator
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.ValidationErrorType
+import hr.foi.air.honnomachi.ui.components.errorMessageFor
 import hr.foi.air.honnomachi.viewmodel.AuthViewModel
 
 @Composable
@@ -211,7 +212,7 @@ fun SignupScreen(modifier: Modifier = Modifier, navController: NavController, au
                     isLoading = false
                     if (success) {
                         AppUtil.showToast(context, context.getString(R.string.verification_email_sent))
-                        navController.navigate("login") {
+                        navController.navigate("verification") {
                             popUpTo("auth") { inclusive = true }
                         }
                     } else {
@@ -227,16 +228,5 @@ fun SignupScreen(modifier: Modifier = Modifier, navController: NavController, au
         ) {
             Text(if (isLoading) stringResource(R.string.creating_account) else stringResource(R.string.signup), fontSize = 22.sp)
         }
-    }
-}
-
-@Composable
-private fun errorMessageFor(error: ValidationErrorType): Int {
-    return when (error) {
-        ValidationErrorType.EMPTY_EMAIL -> R.string.error_email_required
-        ValidationErrorType.INVALID_EMAIL -> R.string.error_email_invalid
-        ValidationErrorType.EMPTY_NAME -> R.string.error_name_required
-        ValidationErrorType.SHORT_NAME -> R.string.error_name_short
-        ValidationErrorType.SHORT_PASSWORD -> R.string.error_password_short
     }
 }

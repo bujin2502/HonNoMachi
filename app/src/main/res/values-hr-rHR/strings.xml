@@ -39,4 +39,5 @@
     <string name="error_name_required">Ime je obavezno</string>
     <string name="error_name_short">Ime je prekratko</string>
     <string name="error_password_short">Lozinka mora imati najmanje 6 znakova</string>
+    <string name="error_password_required">Lozinka je obavezna</string>
 </resources>

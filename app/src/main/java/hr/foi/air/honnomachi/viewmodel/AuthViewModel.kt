@@ -24,6 +24,10 @@ open class AuthViewModel (
         password: String,
         onResult: (Boolean, String?) -> Unit
     ) {
+        if (email.isBlank() || name.isBlank() || password.isBlank()) {
+            onResult(false, "Email, name, and password cannot be empty.")
+            return
+        }
         auth?.createUserWithEmailAndPassword(email, password)
             ?.addOnCompleteListener { task ->
                 if (task.isSuccessful) {
@@ -56,10 +60,16 @@ open class AuthViewModel (
                 } else {
                     onResult(false, task.exception?.localizedMessage)
                 }
+                } ?: run {
+                onResult(false, "Authentication service is not available.")
             }
     }
 
     open fun login(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
+        if (email.isBlank() || password.isBlank()) {
+            onResult(false, "Email and password cannot be empty.")
+            return
+        }
         auth?.signInWithEmailAndPassword(email, password)
             ?.addOnCompleteListener { task ->
                 if (task.isSuccessful) {
@@ -84,6 +94,8 @@ open class AuthViewModel (
                     logLoginFailure(task.exception, "email_password")
                     onResult(false, task.exception?.localizedMessage)
                 }
+                } ?: run {
+                onResult(false, "Authentication service is not available.")
             }
     }
 
@@ -93,6 +105,10 @@ open class AuthViewModel (
     }
 
     open fun forgotPassword(email: String, onResult: (Boolean, String?) -> Unit) {
+        if (email.isBlank()) {
+            onResult(false, "Email cannot be empty.")
+            return
+        }
         auth?.sendPasswordResetEmail(email)
             ?.addOnCompleteListener { task ->
                 if (task.isSuccessful) {
@@ -100,6 +116,8 @@ open class AuthViewModel (
                 } else {
                     onResult(false, task.exception?.localizedMessage)
                 }
+                } ?: run {
+                onResult(false, "Authentication service is not available.")
             }
     }
 
@@ -126,9 +144,12 @@ open class AuthViewModel (
                 } else {
                     onResult(false, task.exception?.localizedMessage)
                 }
+                } ?: run {
+                onResult(false, "Authentication service is not available.")
             }
     }
-    // Funkcija za log uspjesne prijavu
+
+  // Funkcija za log uspjesne prijavu
     private fun logLoginSuccess(method: String, userId: String) {
         analytics?.setUserId(userId)
         val bundle = Bundle().apply {

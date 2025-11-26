@@ -1,14 +1,13 @@
-package hr.foi.air.honnomachi
-
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import hr.foi.air.honnomachi.screen.AuthScreen
+import hr.foi.air.honnomachi.screen.EmailVerificationScreen
 import hr.foi.air.honnomachi.screen.ForgotPasswordScreen
 import hr.foi.air.honnomachi.screen.HomeScreen
 import hr.foi.air.honnomachi.screen.LoginScreen
@@ -16,13 +15,18 @@ import hr.foi.air.honnomachi.screen.SignupScreen
 import hr.foi.air.honnomachi.viewmodel.AuthViewModel
 
 @Composable
-fun AppNavigation(modifier: Modifier=Modifier) {
-
-    val navController=rememberNavController()
+fun AppNavigation(
+    modifier: Modifier = Modifier,
+    navController: NavHostController
+) {
     val authViewModel: AuthViewModel = viewModel()
 
-    val isLoggedIn = Firebase.auth.currentUser != null
-    val startDestination = if (isLoggedIn) "home" else "auth"
+    val currentUser = Firebase.auth.currentUser
+    val startDestination = when {
+        currentUser == null -> "auth"
+        currentUser.isEmailVerified -> "home"
+        else -> "verification"
+    }
 
     NavHost(navController = navController, startDestination = startDestination) {
 
@@ -36,6 +40,17 @@ fun AppNavigation(modifier: Modifier=Modifier) {
 
         composable("signup") {
             SignupScreen(modifier, navController, authViewModel)
+        }
+
+        composable("verification") {
+            EmailVerificationScreen(
+                onNavigateToLogin = {
+                    navController.navigate("login") {
+                        popUpTo("auth") { inclusive = true }
+                    }
+                },
+                authViewModel = authViewModel
+            )
         }
 
         composable("forgotPassword") {

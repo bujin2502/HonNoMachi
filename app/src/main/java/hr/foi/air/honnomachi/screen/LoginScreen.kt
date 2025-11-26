@@ -93,7 +93,7 @@ fun LoginScreen(modifier: Modifier=Modifier, navController: NavController, authV
             label = { Text(stringResource(R.string.email_address)) },
             modifier = Modifier
                 .fillMaxWidth()
-                .testTag("login_email"),
+                .testTag("email_field"),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Next
@@ -122,7 +122,7 @@ fun LoginScreen(modifier: Modifier=Modifier, navController: NavController, authV
             modifier = Modifier
                 .fillMaxWidth()
                 .focusRequester(passwordFocusRequester)
-                .testTag("login_password"),
+                .testTag("password_field"),
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Password,

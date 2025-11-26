@@ -45,6 +45,9 @@ class SignupFlowTest {
                 composable("login") {
                     Text("Login Screen")
                 }
+                composable("verification") {
+                    Text("Verification Screen")
+                }
             }
         }
         composeRule.waitForIdle()
@@ -61,7 +64,7 @@ class SignupFlowTest {
     }
 
     @Test
-    fun successful_signup_navigates_to_login() {
+    fun successful_signup_navigates_to_verification() {
         composeRule.onNodeWithTag("signup_email").performTextInput("user@example.com")
         composeRule.onNodeWithTag("signup_name").performTextInput("Test User")
         composeRule.onNodeWithTag("signup_password").performTextInput("secret123")
@@ -69,7 +72,7 @@ class SignupFlowTest {
         composeRule.onNodeWithTag("signup_button").performClick()
         composeRule.waitForIdle()
 
-        assertEquals("login", navController.currentBackStackEntry?.destination?.route)
+        assertEquals("verification", navController.currentBackStackEntry?.destination?.route)
         assertEquals(Triple("user@example.com", "Test User", "secret123"), fakeAuthViewModel.lastSignup)
     }
 

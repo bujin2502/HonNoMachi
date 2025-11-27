@@ -12,9 +12,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.testing.TestNavHostController
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import hr.foi.air.honnomachi.screen.EmailVerificationScreen
 import hr.foi.air.honnomachi.screen.LoginScreen
 import hr.foi.air.honnomachi.viewmodel.AuthViewModel
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -33,6 +35,7 @@ class LoginFlowTest {
     private val TEST_EMAIL = "test@example.com"
     private val TEST_PASSWORD = "password123"
 
+    private val VERIFY_MSG = "Please verify your email before logging in."
 
     @Before
     fun setup() {
@@ -54,6 +57,15 @@ class LoginFlowTest {
                 composable("home") {
                     Text("Home Screen")
                 }
+                composable("verification") {
+                    EmailVerificationScreen(
+                        onNavigateToLogin = { navController.navigate("auth") },
+                        authViewModel = fakeLoginViewModel
+                    )
+                }
+                composable("forgotPassword") {
+                    Text("Forgot Password Screen")
+                }
             }
         }
         composeRule.waitForIdle()
@@ -61,6 +73,7 @@ class LoginFlowTest {
 
     @Test
     fun login_successful_navigates_to_home() {
+        fakeLoginViewModel.shouldLoginSucceed = true
         composeRule.onNodeWithTag("email_field").performTextInput(TEST_EMAIL)
         composeRule.onNodeWithTag("password_field").performTextInput(TEST_PASSWORD)
         composeRule.onNodeWithTag("login_button").performClick()
@@ -74,6 +87,7 @@ class LoginFlowTest {
     @Test
     fun login_failure_stays_on_auth_screen() {
         fakeLoginViewModel.shouldLoginSucceed = false
+        fakeLoginViewModel.nextErrorMessage = "Invalid credentials"
         composeRule.onNodeWithTag("email_field").performTextInput("wrong@user.com")
         composeRule.onNodeWithTag("password_field").performTextInput("wrongPassword")
         composeRule.onNodeWithTag("login_button").performClick()
@@ -82,6 +96,32 @@ class LoginFlowTest {
         assertEquals("auth", navController.currentBackStackEntry?.destination?.route)
         assertEquals(true, fakeLoginViewModel.loginCalled)
         fakeLoginViewModel.shouldLoginSucceed = true
+    }
+
+    @Test
+    fun resend_verification_flow_navigates_and_calls_service() {
+        val TEST_RESEND_EMAIL = "unverified@test.com"
+        val TEST_RESEND_PASSWORD = "passwordtest"
+
+        fakeLoginViewModel.shouldLoginSucceed = false
+        fakeLoginViewModel.nextErrorMessage = VERIFY_MSG
+
+        composeRule.onNodeWithTag("email_field").performTextInput(TEST_RESEND_EMAIL)
+        composeRule.onNodeWithTag("password_field").performTextInput(TEST_RESEND_PASSWORD)
+        composeRule.onNodeWithTag("login_button").performClick()
+        composeRule.waitForIdle()
+
+        assertEquals("verification", navController.currentBackStackEntry?.destination?.route)
+        composeRule.onNodeWithTag("verification_email_field").performTextInput(TEST_RESEND_EMAIL)
+        composeRule.onNodeWithTag("verification_password_field").performTextInput(TEST_RESEND_PASSWORD)
+        composeRule.onNodeWithTag("resend_verification_button").performClick()
+        composeRule.waitForIdle()
+        assertTrue("resendVerificationEmail mora biti pozvan", fakeLoginViewModel.resendCalled)
+        assertEquals(TEST_RESEND_EMAIL, fakeLoginViewModel.resendCapturedEmail)
+        assertEquals(TEST_RESEND_PASSWORD, fakeLoginViewModel.resendCapturedPassword)
+
+        fakeLoginViewModel.shouldLoginSucceed = true
+        fakeLoginViewModel.nextErrorMessage = null
     }
 }
 
@@ -92,6 +132,11 @@ private class FakeLoginViewModel : AuthViewModel() {
     var capturedPassword: String? = null
     var shouldLoginSucceed: Boolean = true
 
+    var resendCalled: Boolean = false
+    var resendCapturedEmail: String? = null
+    var resendCapturedPassword: String? = null
+    var nextErrorMessage: String? = null
+
     override fun login(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
         loginCalled = true
         capturedEmail = email
@@ -100,10 +145,16 @@ private class FakeLoginViewModel : AuthViewModel() {
         if (shouldLoginSucceed) {
             onResult(true, null)
         } else {
-            onResult(false, "Invalid credentials")
+            val error = nextErrorMessage ?: "Invalid credentials"
+            onResult(false, error)
         }
     }
 
     override fun resendVerificationEmail(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
+        resendCalled = true
+        resendCapturedEmail = email
+        resendCapturedPassword = password
+
+        onResult(true, "Verification email sent.")
     }
 }

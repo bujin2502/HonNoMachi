@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import hr.foi.air.honnomachi.viewmodel.AuthViewModel
+import androidx.compose.ui.platform.testTag
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,7 +88,7 @@ fun EmailVerificationScreen(
                 value = email,
                 onValueChange = { email = it },
                 label = { Text("Email") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().testTag("verification_email_field")
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
@@ -95,7 +96,7 @@ fun EmailVerificationScreen(
                 onValueChange = { password = it },
                 label = { Text("Password") },
                 visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().testTag("verification_password_field")
             )
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -104,7 +105,9 @@ fun EmailVerificationScreen(
                     message = msg
                     isError = !success
                 }
-            }) {
+            },
+                modifier = Modifier.testTag("resend_verification_button")
+            ) {
                 Text("Resend Verification Email")
             }
 

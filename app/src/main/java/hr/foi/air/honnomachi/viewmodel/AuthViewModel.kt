@@ -175,4 +175,22 @@ open class AuthViewModel (
         analytics?.logEvent("logout", logoutBundle)
         analytics?.setUserId(null)
     }
+
+    //QA helper-Funkcija za testiranje tokena
+    fun testSecureRead(onSuccess: () -> Unit, onError: (Exception) -> Unit
+    ) {
+        val user = auth?.currentUser
+            ?: return onError(IllegalStateException("No logged-in user"))
+        val firestoreInstance = firestore
+            ?: return onError(IllegalStateException("Firestore service is not available"))
+
+        user.getIdToken(true) // 'true' prisiljava osvjezavanje i provjeru statusa
+            .addOnSuccessListener {
+                firestoreInstance.collection("users").document(user.uid).get()
+                    ?.addOnSuccessListener { onSuccess() }
+                    ?.addOnFailureListener { e -> onError(e) }
+            }
+            .addOnFailureListener { e -> onError(e)
+            }
+    }
 }

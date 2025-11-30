@@ -16,9 +16,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.viewmodel.AuthViewModel
 import androidx.compose.ui.platform.testTag
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 
+private const val SHOW_QA_BUTTON = false
 @Composable
 fun ProfilePage(modifier: Modifier = Modifier, navController : NavController, authViewModel: AuthViewModel = viewModel()) {
+    val message = remember { mutableStateOf("") }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -36,6 +41,21 @@ fun ProfilePage(modifier: Modifier = Modifier, navController : NavController, au
             modifier = modifier.testTag("logout_button")
         ) {
             Text("Logout")
+        }
+        if (SHOW_QA_BUTTON){
+        Button(
+            onClick = {
+                authViewModel.testSecureRead(
+                    onSuccess = { message.value = "Secure read OK — token is valid" },
+                    onError = { e -> message.value = "Error: ${e.message}" }
+                )
+            }
+        ) {
+            Text("Test Token (QA)")
+        }
+        if (message.value.isNotEmpty()) {
+            Text(text = message.value)
+        }
         }
     }
 }

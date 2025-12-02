@@ -180,7 +180,7 @@ fun LoginScreen(modifier: Modifier=Modifier, navController: NavController, authV
         }
         Spacer(modifier = Modifier.height(10.dp))
         TextButton(onClick = { navController.navigate("forgotPassword") }) {
-            Text(text = stringResource(R.string.forgot_password) + "?")
+            Text(text = stringResource(R.string.forgot_password_question))
         }
     }
 }

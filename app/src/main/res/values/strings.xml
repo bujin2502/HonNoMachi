@@ -5,8 +5,6 @@
     <string name="welcome">Welcome!</string>
     <string name="the_best_platform_to_buy_books">The best platform to buy books</string>
     <string name="or">OR</string>
-    <string name="login_screen">Login Screen</string>
-    <string name="signup_screen">Signup Screen</string>
     <string name="hallo_there">Hallo there!</string>
     <string name="create_an_account">Create an account</string>
     <string name="email_address">Email address</string>
@@ -32,11 +30,20 @@
     <string name="enter_your_email_address_to_receive_a_password_reset_link">Enter your email address to receive a password reset link.</string>
     <string name="back_to_login">Back to Login</string>
     <string name="send_reset_link">Send Reset Link</string>
-    <string name="resend_verification_email">Resend verification email</string>
     <string name="error_email_required">Email is required</string>
     <string name="error_email_invalid">Enter a valid email address</string>
     <string name="error_name_required">Name is required</string>
     <string name="error_name_short">Name is too short</string>
     <string name="error_password_short">Password must have at least 6 characters</string>
     <string name="error_password_required">Password is required</string>
+    <string name="logout">Logout</string>
+    <string name="test_token_qa">Test Token (QA)</string>
+    <string name="verify_your_email">Verify Your Email</string>
+    <string name="verification_link_sent">We\'ve sent a verification link to your email address. Please check your inbox and click the link to continue.</string>
+    <string name="go_to_login">Go to Login</string>
+    <string name="didnt_receive_email">Didn\'t receive the email? Enter your credentials to resend.</string>
+    <string name="email">Email</string>
+    <string name="resend_verification_email">Resend Verification Email</string>
+    <string name="email_icon">Email Icon</string>
+    <string name="forgot_password_question">Forgot Password?</string>
 </resources>

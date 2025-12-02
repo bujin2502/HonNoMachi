@@ -6,8 +6,6 @@
     <string name="welcome">Dobrodošli!</string>
     <string name="the_best_platform_to_buy_books">Najbolja platforma za kupnju knjiga</string>
     <string name="or">ILI</string>
-    <string name="login_screen">Ekran za prijavu</string>
-    <string name="signup_screen">Ekran za registraciju</string>
     <string name="hallo_there">Zdravo!</string>
     <string name="create_an_account">Kreiraj račun</string>
     <string name="email_address">Email adresa</string>
@@ -33,11 +31,20 @@
     <string name="enter_your_email_address_to_receive_a_password_reset_link">Unesite svoju adresu e-pošte kako biste primili poveznicu za resetiranje lozinke.</string>
     <string name="back_to_login">Natrag na prijavu</string>
     <string name="send_reset_link">Pošalji poveznicu za resetiranje</string>
-    <string name="resend_verification_email">Ponovno pošalji email za potvrdu</string>
     <string name="error_email_required">Email je obavezan</string>
     <string name="error_email_invalid">Unesite ispravnu email adresu</string>
     <string name="error_name_required">Ime je obavezno</string>
     <string name="error_name_short">Ime je prekratko</string>
     <string name="error_password_short">Lozinka mora imati najmanje 6 znakova</string>
     <string name="error_password_required">Lozinka je obavezna</string>
+    <string name="logout">Odjava</string>
+    <string name="test_token_qa">Testni Token (QA)</string>
+    <string name="verify_your_email">Potvrdite Vašu Email adresu</string>
+    <string name="verification_link_sent">Poslali smo verifikacijski link na Vašu email adresu. Molimo Vas da provjerite svoj sandučić i kliknete na link za nastavak.</string>
+    <string name="go_to_login">Idi na Prijavu</string>
+    <string name="didnt_receive_email">Niste primili email? Unesite Vaše podatke za ponovno slanje.</string>
+    <string name="email">Email</string>
+    <string name="resend_verification_email">Ponovno pošalji verifikacijski Email</string>
+    <string name="email_icon">Email Ikona</string>
+    <string name="forgot_password_question">Zaboravljena lozinka?</string>
 </resources>

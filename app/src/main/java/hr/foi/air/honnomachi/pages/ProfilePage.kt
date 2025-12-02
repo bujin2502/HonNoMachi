@@ -40,7 +40,7 @@ fun ProfilePage(modifier: Modifier = Modifier, navController : NavController, au
         },
             modifier = modifier.testTag("logout_button")
         ) {
-            Text("Logout")
+            Text(stringResource(id = R.string.logout))
         }
         if (SHOW_QA_BUTTON){
         Button(
@@ -51,7 +51,7 @@ fun ProfilePage(modifier: Modifier = Modifier, navController : NavController, au
                 )
             }
         ) {
-            Text("Test Token (QA)")
+            Text(stringResource(id = R.string.test_token_qa))
         }
         if (message.value.isNotEmpty()) {
             Text(text = message.value)

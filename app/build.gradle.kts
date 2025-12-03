@@ -55,6 +55,7 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.ads.mobile.sdk)
     implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.compose.foundation.layout)
     testImplementation(libs.junit)
     testImplementation(platform(libs.androidx.compose.bom))
     testImplementation(libs.androidx.compose.ui.test.junit4)
@@ -70,4 +71,5 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
     implementation(libs.androidx.material.icons.extended)
+    implementation(libs.coil.compose)
 }

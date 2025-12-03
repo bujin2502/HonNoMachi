@@ -68,7 +68,7 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController, auth
 @Composable
 fun ContentScreen(modifier: Modifier = Modifier, selectedIndex: Int, navController: NavController, authViewModel: AuthViewModel) {
     when (selectedIndex) {
-        0 -> HomePage()
+        0 -> HomePage(navController = navController)
         1 -> ShelfPage()
         2 -> AddPage()
         3 -> CartPage()

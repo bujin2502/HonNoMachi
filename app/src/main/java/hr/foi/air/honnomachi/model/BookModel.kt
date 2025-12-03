@@ -6,7 +6,7 @@ import com.google.firebase.firestore.DocumentId
 data class BookModel(
     @DocumentId
     val bookId: String? = null,
-    val author: String = "",
+    val authors: List<String> = emptyList(),
     val condition: String = "",
     val coverImageUrl: String = "",
     val genre: String = "",

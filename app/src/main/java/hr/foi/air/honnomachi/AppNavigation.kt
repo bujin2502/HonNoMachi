@@ -2,11 +2,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import hr.foi.air.honnomachi.screen.AuthScreen
+import hr.foi.air.honnomachi.screen.BookDetailScreen
 import hr.foi.air.honnomachi.screen.EmailVerificationScreen
 import hr.foi.air.honnomachi.screen.ForgotPasswordScreen
 import hr.foi.air.honnomachi.screen.HomeScreen
@@ -59,6 +62,13 @@ fun AppNavigation(
 
         composable("home") {
             HomeScreen(modifier, navController, authViewModel)
+        }
+        
+        composable(
+            "bookDetail/{bookId}",
+            arguments = listOf(navArgument("bookId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            BookDetailScreen(bookId = backStackEntry.arguments?.getString("bookId"))
         }
     }
 }

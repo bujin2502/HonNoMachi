@@ -12,12 +12,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import hr.foi.air.honnomachi.R
 
+import androidx.compose.foundation.layout.PaddingValues
+
 @Composable
-fun AddPage(modifier: Modifier = Modifier) {
+fun AddPage(paddingValues: PaddingValues) {
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
-            .padding(32.dp),
+            .padding(paddingValues)
+            .padding(horizontal = 16.dp), // Keep horizontal padding
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

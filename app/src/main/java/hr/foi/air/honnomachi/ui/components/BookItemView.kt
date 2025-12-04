@@ -30,7 +30,7 @@ fun BookItemView(
     Card(modifier = modifier
             .fillMaxWidth()
             .height(160.dp)
-            .padding(8.dp)
+        .padding(8.dp)
             .clickable { onBookClick(book.bookId) }, shape = RoundedCornerShape(12.dp),
         colors = CardDefaults . cardColors (containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)) {

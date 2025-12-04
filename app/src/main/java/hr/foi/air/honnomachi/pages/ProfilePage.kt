@@ -19,15 +19,18 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 
+import androidx.compose.foundation.layout.PaddingValues
+
 private const val SHOW_QA_BUTTON = false
 @Composable
-fun ProfilePage(modifier: Modifier = Modifier, navController : NavController, authViewModel: AuthViewModel = viewModel()) {
+fun ProfilePage(paddingValues: PaddingValues, navController : NavController, authViewModel: AuthViewModel = viewModel()) {
     val message = remember { mutableStateOf("") }
 
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
-            .padding(32.dp),
+            .padding(paddingValues)
+            .padding(horizontal = 16.dp), // Keep horizontal padding
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -38,7 +41,7 @@ fun ProfilePage(modifier: Modifier = Modifier, navController : NavController, au
                 popUpTo("home") { inclusive = true }
             }
         },
-            modifier = modifier.testTag("logout_button")
+            modifier = Modifier.testTag("logout_button")
         ) {
             Text(stringResource(id = R.string.logout))
         }

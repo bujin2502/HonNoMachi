@@ -1,5 +1,6 @@
 package hr.foi.air.honnomachi.screen
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.LibraryBooks
@@ -59,20 +60,20 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController, auth
                 }
             }
         }
-    ) {
-        ContentScreen(modifier = modifier.padding(it), selectedIndex, navController, authViewModel)
+    ) { paddingValues -> // Renamed `it` to `paddingValues` for clarity
+        ContentScreen(paddingValues = paddingValues, selectedIndex, navController, authViewModel)
 
     }
 }
 
 @Composable
-fun ContentScreen(modifier: Modifier = Modifier, selectedIndex: Int, navController: NavController, authViewModel: AuthViewModel) {
+fun ContentScreen(paddingValues: PaddingValues, selectedIndex: Int, navController: NavController, authViewModel: AuthViewModel) {
     when (selectedIndex) {
-        0 -> HomePage(navController = navController)
-        1 -> ShelfPage()
-        2 -> AddPage()
-        3 -> CartPage()
-        4 -> ProfilePage(navController = navController, authViewModel = authViewModel)
+        0 -> HomePage(paddingValues = paddingValues, navController = navController)
+        1 -> ShelfPage(paddingValues = paddingValues)
+        2 -> AddPage(paddingValues = paddingValues)
+        3 -> CartPage(paddingValues = paddingValues)
+        4 -> ProfilePage(paddingValues = paddingValues, navController = navController, authViewModel = authViewModel)
     }
 }
 

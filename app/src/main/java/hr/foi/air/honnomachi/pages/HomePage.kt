@@ -1,5 +1,6 @@
 package hr.foi.air.honnomachi.pages
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,8 +17,12 @@ import com.google.firebase.firestore.firestore
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.ui.components.BookItemView
 
+import androidx.compose.foundation.layout.PaddingValues
+
+// ...
+
 @Composable
-fun HomePage(modifier: Modifier = Modifier, navController: NavController) {
+fun HomePage(paddingValues: PaddingValues, navController: NavController) {
     val bookList = remember {
         mutableStateOf<List<BookModel>>(emptyList())
     }
@@ -32,13 +37,15 @@ fun HomePage(modifier: Modifier = Modifier, navController: NavController) {
             }
     }
 
-    LazyColumn (
-        modifier = modifier.fillMaxSize()
-            .padding(25.dp)
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp),
+        contentPadding = paddingValues,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(bookList.value) { item ->
             BookItemView(
-                modifier = modifier,
                 book = item,
                 onBookClick = { bookId ->
                     bookId?.let {

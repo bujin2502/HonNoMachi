@@ -81,4 +81,5 @@
     <string name="status_sold">Sold</string>
     <string name="status_pending_sale">Pending Sale</string>
     <string name="status_inactive">Inactive</string>
+    <string name="search_by_title">Search by title</string>
 </resources>

@@ -60,7 +60,7 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController, auth
                 }
             }
         }
-    ) { paddingValues -> // Renamed `it` to `paddingValues` for clarity
+    ) { paddingValues ->
         ContentScreen(paddingValues = paddingValues, selectedIndex, navController, authViewModel)
 
     }

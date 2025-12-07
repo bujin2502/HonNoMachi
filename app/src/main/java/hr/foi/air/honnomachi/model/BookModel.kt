@@ -9,6 +9,7 @@ data class BookModel(
     val authors: List<String> = emptyList(),
     val condition: BookCondition = BookCondition.USED,
     val coverImageUrl: String = "",
+    val description: String = "",
     val genre: BookGenre = BookGenre.OTHER,
     val isbn13: String = "",
     val language: Language = Language.HR,

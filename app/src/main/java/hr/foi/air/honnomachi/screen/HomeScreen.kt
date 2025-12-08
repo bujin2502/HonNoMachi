@@ -1,7 +1,6 @@
 package hr.foi.air.honnomachi.screen
 
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.LibraryBooks
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
@@ -28,7 +27,6 @@ import hr.foi.air.honnomachi.pages.CartPage
 import hr.foi.air.honnomachi.pages.HomePage
 import hr.foi.air.honnomachi.pages.ProfilePage
 import hr.foi.air.honnomachi.pages.ShelfPage
-
 import hr.foi.air.honnomachi.viewmodel.AuthViewModel
 
 @Composable

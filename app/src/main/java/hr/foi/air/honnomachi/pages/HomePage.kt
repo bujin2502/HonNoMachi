@@ -33,37 +33,49 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import hr.foi.air.honnomachi.R
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.Box
+
+sealed interface BookListState {
+    object Loading : BookListState
+    data class Success(val books: List<BookModel>) : BookListState
+    object Empty : BookListState
+    data class Error(val message: String) : BookListState
+}
 
 // ...
 
 @Composable
 fun HomePage(paddingValues: PaddingValues, navController: NavController) {
-    val bookList = remember {
-        mutableStateOf<List<BookModel>>(emptyList())
+    var bookListState by remember {
+        mutableStateOf<BookListState>(BookListState.Loading)
     }
     var searchQuery by remember { mutableStateOf("") }
 
-
     LaunchedEffect(key1 = Unit) {
         Firebase.firestore.collection("books")
-            .get().addOnSuccessListener {
+            .get()
+            .addOnSuccessListener {
                 val resultList = it.documents.mapNotNull { doc ->
                     doc.toObject(BookModel::class.java)
                 }
-                bookList.value = resultList
+                bookListState = if (resultList.isEmpty()) {
+                    BookListState.Empty
+                } else {
+                    BookListState.Success(resultList)
+                }
             }
-    }
-
-    val filteredBookList = if (searchQuery.isEmpty()) {
-        bookList.value
-    } else {
-        bookList.value.filter { it.title.contains(searchQuery, ignoreCase = true) }
+            .addOnFailureListener { exception ->
+                bookListState = BookListState.Error(exception.message ?: "Unknown error occurred.")
+            }
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 12.dp)
+            .padding(bottom = paddingValues.calculateBottomPadding()) // Apply bottom padding to the whole column
     ) {
         TextField(
             value = searchQuery,
@@ -83,22 +95,66 @@ fun HomePage(paddingValues: PaddingValues, navController: NavController) {
             )
         )
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 8.dp),
-            contentPadding = PaddingValues(bottom = paddingValues.calculateBottomPadding()),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(filteredBookList) { item ->
-                BookItemView(
-                    book = item,
-                    onBookClick = { bookId ->
-                        bookId?.let {
-                            navController.navigate("bookDetail/$it")
+        val currentState = bookListState // Introduce a local immutable variable
+
+        when (currentState) {
+            BookListState.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+            is BookListState.Success -> {
+                val filteredBookList = if (searchQuery.isEmpty()) {
+                    currentState.books
+                } else {
+                    currentState.books.filter { it.title.contains(searchQuery, ignoreCase = true) }
+                }
+
+                if (filteredBookList.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(stringResource(R.string.no_books_found))
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(top = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(filteredBookList) { item ->
+                            BookItemView(
+                                book = item,
+                                onBookClick = { bookId ->
+                                    bookId?.let {
+                                        navController.navigate("bookDetail/$it")
+                                    }
+                                }
+                            )
                         }
                     }
-                )
+                }
+            }
+            BookListState.Empty -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(stringResource(R.string.no_books_available))
+                }
+            }
+            is BookListState.Error -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(stringResource(R.string.error_occurred) + ": ${currentState.message}")
+                }
             }
         }
     }

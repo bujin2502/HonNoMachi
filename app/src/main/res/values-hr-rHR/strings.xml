@@ -83,4 +83,7 @@
     <string name="status_pending_sale">Čekanje prodaje</string>
     <string name="status_inactive">Neaktivno</string>
     <string name="search_by_title">Pretraži po naslovu</string>
+    <string name="no_books_found">Nema knjiga koje odgovaraju pretrazi.</string>
+    <string name="no_books_available">Trenutno nema dostupnih knjiga.</string>
+    <string name="error_occurred">Došlo je do pogreške prilikom učitavanja knjiga.</string>
 </resources>

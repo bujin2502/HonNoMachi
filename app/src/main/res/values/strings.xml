@@ -82,4 +82,7 @@
     <string name="status_pending_sale">Pending Sale</string>
     <string name="status_inactive">Inactive</string>
     <string name="search_by_title">Search by title</string>
+    <string name="no_books_found">No books found matching your search.</string>
+    <string name="no_books_available">No books are available at the moment.</string>
+    <string name="error_occurred">An error occurred while loading books.</string>
 </resources>

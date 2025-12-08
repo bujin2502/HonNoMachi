@@ -16,6 +16,8 @@
     <string name="sign_in_your_account">Sign in your account</string>
     <string name="creating_account">Creating account</string>
     <string name="logging_in">Logging in</string>
+    <string name="signing_in">Signing in…</string>
+    <string name="continue_with_google">Continue with Google</string>
     <string name="something_went_wrong">Something went wrong</string>
     <string name="cart">Cart</string>
     <string name="profile">Profile</string>

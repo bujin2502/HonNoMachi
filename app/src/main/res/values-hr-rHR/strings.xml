@@ -11,6 +11,8 @@
     <string name="hallo_there">Zdravo!</string>
     <string name="create_an_account">Kreiraj račun</string>
     <string name="email_address">Email adresa</string>
+    <string name="signing_in">Prijavljivanje…</string>
+    <string name="continue_with_google">Nastavi sa Googleom</string>
     <string name="name">Ime</string>
     <string name="password">Lozinka</string>
     <string name="welcome_back">Dobrodošao nazad!</string>

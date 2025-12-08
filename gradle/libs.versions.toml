@@ -8,14 +8,14 @@ junit = "4.13.2"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
 lifecycleRuntimeKtx = "2.10.0"
-activityCompose = "1.12.0"
-composeBom = "2025.11.01"
+activityCompose = "1.12.1"
+composeBom = "2025.12.00"
 navigationCompose = "2.9.6"
 firebaseAuth = "24.0.1"
 firebaseFirestore = "26.0.2"
 adsMobileSdk = "0.21.0-beta01"
 navigationTesting = "2.9.6"
-foundationLayout = "1.9.5"
+foundationLayout = "1.10.0"
 
 [libraries]
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }

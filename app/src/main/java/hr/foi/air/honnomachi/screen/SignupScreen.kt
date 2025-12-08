@@ -211,12 +211,12 @@ fun SignupScreen(modifier: Modifier = Modifier, navController: NavController, au
                 authViewModel.signup(email, name, password) { success, errorMessage ->
                     isLoading = false
                     if (success) {
-                        AppUtil.showToast(context, context.getString(R.string.verification_email_sent))
+                        AppUtil.showToast(context, R.string.verification_email_sent)
                         navController.navigate("verification") {
                             popUpTo("auth") { inclusive = true }
                         }
                     } else {
-                        AppUtil.showToast(context, errorMessage ?: context.getString(R.string.something_went_wrong))
+                        AppUtil.showToast(context, R.string.something_went_wrong)
                     }
                 }
             },

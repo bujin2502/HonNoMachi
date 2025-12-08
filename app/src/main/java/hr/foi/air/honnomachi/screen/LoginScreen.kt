@@ -165,7 +165,11 @@ fun LoginScreen(modifier: Modifier=Modifier, navController: NavController, authV
                             popUpTo("auth") { inclusive = true }
                         }
                     } else {
-                        AppUtil.showToast(context, message)
+                        if (errorMessage != null) {
+                            AppUtil.showToast(context, errorMessage)
+                        } else {
+                            AppUtil.showToast(context, R.string.something_went_wrong)
+                        }
                     }
                 }
             }

@@ -11,6 +11,7 @@ data class BookModel(
     val coverImageUrl: String = "",
     val description: String = "",
     val genre: BookGenre = BookGenre.OTHER,
+    val imageUrls: List<String>? = emptyList(),
     val isbn13: String = "",
     val language: Language = Language.HR,
     val listingDate: Timestamp = Timestamp.now(),

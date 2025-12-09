@@ -18,22 +18,18 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.ui.components.BookItemView
+import hr.foi.air.honnomachi.viewmodel.HomeViewModel
 
 sealed interface BookListState {
     object Loading : BookListState
@@ -43,29 +39,13 @@ sealed interface BookListState {
 }
 
 @Composable
-fun HomePage(paddingValues: PaddingValues, navController: NavController) {
-    var bookListState by remember {
-        mutableStateOf<BookListState>(BookListState.Loading)
-    }
-    var searchQuery by remember { mutableStateOf("") }
-
-    LaunchedEffect(key1 = Unit) {
-        Firebase.firestore.collection("books")
-            .get()
-            .addOnSuccessListener {
-                val resultList = it.documents.mapNotNull { doc ->
-                    doc.toObject(BookModel::class.java)
-                }
-                bookListState = if (resultList.isEmpty()) {
-                    BookListState.Empty
-                } else {
-                    BookListState.Success(resultList)
-                }
-            }
-            .addOnFailureListener { exception ->
-                bookListState = BookListState.Error(exception.message ?: "Unknown error occurred.")
-            }
-    }
+fun HomePage(
+    paddingValues: PaddingValues,
+    navController: NavController,
+    viewModel: HomeViewModel
+) {
+    val bookListState by viewModel.bookListState.collectAsStateWithLifecycle()
+    val searchQuery by viewModel.searchQuery
 
     Column(
         modifier = Modifier
@@ -75,7 +55,7 @@ fun HomePage(paddingValues: PaddingValues, navController: NavController) {
     ) {
         TextField(
             value = searchQuery,
-            onValueChange = { searchQuery = it },
+            onValueChange = { viewModel.onSearchQueryChange(it) },
             placeholder = { Text(stringResource(R.string.search_by_title)) },
             modifier = Modifier
                 .fillMaxWidth()

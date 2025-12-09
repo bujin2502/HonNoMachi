@@ -55,7 +55,9 @@ fun SignupScreen(modifier: Modifier = Modifier, navController: NavController, au
     var nameError by remember { mutableStateOf<ValidationErrorType?>(null) }
     var passwordError by remember { mutableStateOf<ValidationErrorType?>(null) }
 
-    var context = LocalContext.current
+    val verificationEmailSentMessage = stringResource(id = R.string.verification_email_sent)
+    val somethingWentWrongMessage = stringResource(id = R.string.something_went_wrong)
+    val context = LocalContext.current
 
     var isLoading by remember { mutableStateOf(false) }
 

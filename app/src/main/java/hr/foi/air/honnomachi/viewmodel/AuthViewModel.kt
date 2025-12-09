@@ -10,6 +10,7 @@ import android.os.Bundle
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.analytics
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 
 open class AuthViewModel (
@@ -47,7 +48,7 @@ open class AuthViewModel (
                                     ?.set(userModel)
                                     ?.addOnCompleteListener { dbTask ->
                                         if (dbTask.isSuccessful) {
-                                            auth?.signOut()
+                                            auth.signOut()
                                             onResult(true, null)
                                         } else {
                                             onResult(false, "Database error.")
@@ -87,7 +88,7 @@ open class AuthViewModel (
                                 }
                             }
                     } else {
-                        auth?.signOut()
+                        auth.signOut()
                         onResult(false, "Please verify your email before logging in.")
                     }
                 } else {
@@ -97,6 +98,56 @@ open class AuthViewModel (
                 } ?: run {
                 onResult(false, "Authentication service is not available.")
             }
+    }
+
+    open fun loginWithGoogle(idToken: String, onResult: (Boolean, String?) -> Unit) {
+        val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
+        auth?.signInWithCredential(firebaseCredential)
+            ?.addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val user = task.result?.user
+                    val userId = user?.uid
+                    if (user != null && userId != null) {
+                        val userDocRef = firestore?.collection("users")?.document(userId)
+                        if (userDocRef == null) {
+                            logLoginSuccess("google", userId)
+                            onResult(true, null)
+                            return@addOnCompleteListener
+                        }
+
+                        userDocRef.get()
+                            .addOnSuccessListener { snapshot ->
+                                val writeTask = if (snapshot.exists()) {
+                                    userDocRef.update("isVerified", true)
+                                } else {
+                                    val userModel = UserModel(
+                                        name = user.displayName ?: "",
+                                        email = user.email ?: "",
+                                        uid = userId,
+                                        isVerified = user.isEmailVerified
+                                    )
+                                    userDocRef.set(userModel)
+                                }
+                                writeTask.addOnCompleteListener {
+                                    logLoginSuccess("google", userId)
+                                    onResult(true, null)
+                                }
+                            }
+                            .addOnFailureListener {
+                                logLoginSuccess("google", userId)
+                                onResult(true, null)
+                            }
+                    } else {
+                        logLoginSuccess("google", userId ?: "")
+                        onResult(true, null)
+                    }
+                } else {
+                    logLoginFailure(task.exception, "google")
+                    onResult(false, task.exception?.localizedMessage ?: "Google sign-in failed.")
+                }
+            } ?: run {
+            onResult(false, "Authentication service is not available.")
+        }
     }
 
     open fun signOut() {
@@ -130,15 +181,15 @@ open class AuthViewModel (
                         user.sendEmailVerification()
                             .addOnCompleteListener { verificationTask ->
                                 if (verificationTask.isSuccessful) {
-                                    auth?.signOut()
+                                    auth.signOut()
                                     onResult(true, "Verification email sent. Please check your inbox.")
                                 } else {
-                                    auth?.signOut()
+                                    auth.signOut()
                                     onResult(false, "Failed to send verification email.")
                                 }
                             }
                     } else {
-                        auth?.signOut()
+                        auth.signOut()
                         onResult(false, "This email is already verified.")
                     }
                 } else {
@@ -187,8 +238,8 @@ open class AuthViewModel (
         user.getIdToken(true) // 'true' prisiljava osvjezavanje i provjeru statusa
             .addOnSuccessListener {
                 firestoreInstance.collection("users").document(user.uid).get()
-                    ?.addOnSuccessListener { onSuccess() }
-                    ?.addOnFailureListener { e -> onError(e) }
+                    .addOnSuccessListener { onSuccess() }
+                    .addOnFailureListener { e -> onError(e) }
             }
             .addOnFailureListener { e -> onError(e)
             }

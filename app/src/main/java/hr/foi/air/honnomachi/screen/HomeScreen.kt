@@ -1,6 +1,6 @@
 package hr.foi.air.honnomachi.screen
 
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.LibraryBooks
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
@@ -27,11 +27,16 @@ import hr.foi.air.honnomachi.pages.CartPage
 import hr.foi.air.honnomachi.pages.HomePage
 import hr.foi.air.honnomachi.pages.ProfilePage
 import hr.foi.air.honnomachi.pages.ShelfPage
-
 import hr.foi.air.honnomachi.viewmodel.AuthViewModel
+import hr.foi.air.honnomachi.viewmodel.HomeViewModel
 
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier, navController: NavController, authViewModel: AuthViewModel) {
+fun HomeScreen(
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    authViewModel: AuthViewModel,
+    homeViewModel: HomeViewModel
+) {
 
     val navItemList = listOf(
         NavItem(label = stringResource(R.string.home), icon = Icons.AutoMirrored.Outlined.MenuBook),
@@ -59,20 +64,40 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController, auth
                 }
             }
         }
-    ) {
-        ContentScreen(modifier = modifier.padding(it), selectedIndex, navController, authViewModel)
+    ) { paddingValues ->
+        ContentScreen(
+            paddingValues = paddingValues,
+            selectedIndex,
+            navController,
+            authViewModel,
+            homeViewModel
+        )
 
     }
 }
 
 @Composable
-fun ContentScreen(modifier: Modifier = Modifier, selectedIndex: Int, navController: NavController, authViewModel: AuthViewModel) {
+fun ContentScreen(
+    paddingValues: PaddingValues,
+    selectedIndex: Int,
+    navController: NavController,
+    authViewModel: AuthViewModel,
+    homeViewModel: HomeViewModel
+) {
     when (selectedIndex) {
-        0 -> HomePage()
-        1 -> ShelfPage()
-        2 -> AddPage()
-        3 -> CartPage()
-        4 -> ProfilePage(navController = navController, authViewModel = authViewModel)
+        0 -> HomePage(
+            paddingValues = paddingValues,
+            navController = navController,
+            viewModel = homeViewModel
+        )
+        1 -> ShelfPage(paddingValues = paddingValues)
+        2 -> AddPage(paddingValues = paddingValues)
+        3 -> CartPage(paddingValues = paddingValues)
+        4 -> ProfilePage(
+            paddingValues = paddingValues,
+            navController = navController,
+            authViewModel = authViewModel
+        )
     }
 }
 

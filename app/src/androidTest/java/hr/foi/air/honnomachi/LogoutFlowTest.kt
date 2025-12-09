@@ -1,5 +1,6 @@
 package hr.foi.air.honnomachi
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.activity.ComponentActivity
 import androidx.compose.material3.Text
 import androidx.compose.ui.platform.LocalContext
@@ -41,7 +42,7 @@ class LogoutFlowTest {
 
             NavHost(navController = navController, startDestination = "profile") {
                 composable("profile") {
-                    ProfilePage(navController = navController, authViewModel = fakeLogoutViewModel)
+                    ProfilePage(navController = navController, authViewModel = fakeLogoutViewModel, paddingValues = PaddingValues())
                 }
                 composable("auth") {
                     Text("Auth Screen (Login/Signup)")

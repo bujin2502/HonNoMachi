@@ -2,6 +2,7 @@ package hr.foi.air.honnomachi.pages
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
@@ -13,11 +14,12 @@ import androidx.compose.ui.unit.dp
 import hr.foi.air.honnomachi.R
 
 @Composable
-fun ShelfPage(modifier: Modifier = Modifier) {
+fun ShelfPage(paddingValues: PaddingValues) {
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
-            .padding(32.dp),
+            .padding(paddingValues)
+            .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

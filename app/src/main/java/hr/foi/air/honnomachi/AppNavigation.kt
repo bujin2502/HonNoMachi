@@ -2,17 +2,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import hr.foi.air.honnomachi.screen.AuthScreen
+import hr.foi.air.honnomachi.screen.BookDetailScreen
 import hr.foi.air.honnomachi.screen.EmailVerificationScreen
 import hr.foi.air.honnomachi.screen.ForgotPasswordScreen
 import hr.foi.air.honnomachi.screen.HomeScreen
 import hr.foi.air.honnomachi.screen.LoginScreen
 import hr.foi.air.honnomachi.screen.SignupScreen
 import hr.foi.air.honnomachi.viewmodel.AuthViewModel
+import hr.foi.air.honnomachi.viewmodel.HomeViewModel
+import hr.foi.air.honnomachi.viewmodel.ViewModelFactory
 
 @Composable
 fun AppNavigation(
@@ -20,6 +25,7 @@ fun AppNavigation(
     navController: NavHostController
 ) {
     val authViewModel: AuthViewModel = viewModel()
+    val homeViewModel: HomeViewModel = viewModel(factory = ViewModelFactory())
 
     val currentUser = Firebase.auth.currentUser
     val startDestination = when {
@@ -58,7 +64,14 @@ fun AppNavigation(
         }
 
         composable("home") {
-            HomeScreen(modifier, navController, authViewModel)
+            HomeScreen(modifier, navController, authViewModel, homeViewModel)
+        }
+
+        composable(
+            "bookDetail/{bookId}",
+            arguments = listOf(navArgument("bookId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            BookDetailScreen(bookId = backStackEntry.arguments?.getString("bookId"))
         }
     }
 }

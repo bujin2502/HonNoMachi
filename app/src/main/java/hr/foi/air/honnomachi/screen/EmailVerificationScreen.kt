@@ -30,14 +30,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.viewmodel.AuthViewModel
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,7 +57,7 @@ fun EmailVerificationScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Verify Your Email") })
+            TopAppBar(title = { Text(stringResource(id = R.string.verify_your_email)) })
         }
     ) { paddingValues ->
         Column(
@@ -67,19 +70,19 @@ fun EmailVerificationScreen(
         ) {
             Icon(
                 imageVector = Icons.Default.Email,
-                contentDescription = "Email Icon",
+                contentDescription = stringResource(id = R.string.email_icon),
                 modifier = Modifier.size(100.dp)
             )
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                text = "We've sent a verification link to your email address. Please check your inbox and click the link to continue.",
+                text = stringResource(id = R.string.verification_link_sent),
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.bodyLarge
             )
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(onClick = onNavigateToLogin) {
-                Text("Go to Login")
+                Text(stringResource(id = R.string.go_to_login))
             }
 
             Spacer(modifier = Modifier.height(48.dp))
@@ -87,7 +90,7 @@ fun EmailVerificationScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                "Didn't receive the email? Enter your credentials to resend.",
+                stringResource(id = R.string.didnt_receive_email),
                 style = MaterialTheme.typography.titleMedium
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -95,7 +98,7 @@ fun EmailVerificationScreen(
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Email") },
+                label = { Text(stringResource(id = R.string.email)) },
                 modifier = Modifier.fillMaxWidth().testTag("verification_email_field"),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email,
@@ -109,7 +112,7 @@ fun EmailVerificationScreen(
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Password") },
+                label = { Text(stringResource(id = R.string.password)) },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth().testTag("verification_password_field"),
                 keyboardOptions = KeyboardOptions(
@@ -130,7 +133,7 @@ fun EmailVerificationScreen(
             },
                 modifier = Modifier.testTag("resend_verification_button")
             ) {
-                Text("Resend Verification Email")
+                Text(stringResource(id = R.string.resend_verification_email))
             }
 
             message?.let {

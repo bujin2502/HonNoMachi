@@ -165,7 +165,11 @@ fun LoginScreen(modifier: Modifier=Modifier, navController: NavController, authV
                             popUpTo("auth") { inclusive = true }
                         }
                     } else {
-                        AppUtil.showToast(context, message)
+                        if (errorMessage != null) {
+                            AppUtil.showToast(context, errorMessage)
+                        } else {
+                            AppUtil.showToast(context, R.string.something_went_wrong)
+                        }
                     }
                 }
             }
@@ -180,7 +184,7 @@ fun LoginScreen(modifier: Modifier=Modifier, navController: NavController, authV
         }
         Spacer(modifier = Modifier.height(10.dp))
         TextButton(onClick = { navController.navigate("forgotPassword") }) {
-            Text(text = stringResource(R.string.forgot_password) + "?")
+            Text(text = stringResource(R.string.forgot_password_question))
         }
     }
 }

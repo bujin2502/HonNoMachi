@@ -22,16 +22,12 @@ class BookDetailViewModel(private val bookRepository: BookRepository) : ViewMode
         viewModelScope.launch {
             _uiState.value = BookUiState.Loading
 
-            val result = bookRepository.getBookDetails(bookId)
+            val book = bookRepository.getBookDetails(bookId)
 
-            result.onSuccess { book ->
-                if (book != null) {
-                    _uiState.value = BookUiState.Success(book)
-                } else {
-                    _uiState.value = BookUiState.BookNotFound
-                }
-            }.onFailure { exception ->
-                _uiState.value = BookUiState.Error(exception.message ?: "Nepoznata greška prilikom dohvaćanja.")
+            if (book != null) {
+                _uiState.value = BookUiState.Success(book)
+            } else {
+                _uiState.value = BookUiState.BookNotFound
             }
         }
     }

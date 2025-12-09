@@ -50,37 +50,24 @@ fun BookDetailScreen(bookId: String?, viewModel: BookDetailViewModel = viewModel
                     text = stringResource(id = R.string.screen_title_book_details),
                     fontWeight = FontWeight.Bold
                 )}
-                // Ovdje se mogu dodati navigacijske ikone, ali za detalje ekrana obično stoji samo Back button.
             )
         }
     ){ paddingValues ->
         Box(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
             when (uiState) {
                 is BookUiState.Loading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    BookDetailLoading()
                 }
                 is BookUiState.Error -> {
                     val errorMessage = (uiState as BookUiState.Error).message
-                    Text(
-                        text = stringResource(id = R.string.error) + " $errorMessage",
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    BookDetailError(errorMessage = errorMessage)
                 }
                 is BookUiState.Success -> {
                     val book = (uiState as BookUiState.Success).book
                     BookDetailContent(book = book)
                 }
                 BookUiState.BookNotFound -> {
-                    Text(
-                        text = stringResource(id = R.string.book_not_found),
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                    if (bookId == null) {
-                        Text(
-                            text = stringResource(id = R.string.error_invalid_book_id),
-                            modifier = Modifier.align(Alignment.Center)
-                        )
-                    }
+                    BookDetailNotFound(bookId = bookId)
                 }
             }
         }
@@ -96,7 +83,40 @@ class BookDetailViewModelFactory(private val repository: BookRepository) : andro
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
-
+@Composable
+fun BookDetailLoading() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator()
+    }
+}
+@Composable
+fun BookDetailError(errorMessage: String) {
+    Text(
+        text = stringResource(id = R.string.error) + " $errorMessage",
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.error
+    )
+}
+@Composable
+fun BookDetailNotFound(bookId: String?) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = stringResource(id = R.string.book_not_found),
+            fontWeight = FontWeight.Bold
+        )
+        if (bookId == null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = stringResource(id = R.string.error_invalid_book_id)
+            )
+        }
+    }
+}
 @Composable
 fun BookDetailContent(book: BookModel) {
     Column(

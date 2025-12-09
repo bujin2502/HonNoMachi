@@ -73,5 +73,6 @@ dependencies {
     implementation(libs.credentials)
     implementation(libs.credentials.play.services.auth)
     implementation(libs.googleid)
+    implementation(libs.play.services.auth)
     implementation(libs.kotlinx.coroutines.play.services)
 }

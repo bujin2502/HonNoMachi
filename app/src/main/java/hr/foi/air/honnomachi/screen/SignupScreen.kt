@@ -55,7 +55,9 @@ fun SignupScreen(modifier: Modifier = Modifier, navController: NavController, au
     var nameError by remember { mutableStateOf<ValidationErrorType?>(null) }
     var passwordError by remember { mutableStateOf<ValidationErrorType?>(null) }
 
-    var context = LocalContext.current
+    val verificationEmailSentMessage = stringResource(id = R.string.verification_email_sent)
+    val somethingWentWrongMessage = stringResource(id = R.string.something_went_wrong)
+    val context = LocalContext.current
 
     var isLoading by remember { mutableStateOf(false) }
 
@@ -211,12 +213,12 @@ fun SignupScreen(modifier: Modifier = Modifier, navController: NavController, au
                 authViewModel.signup(email, name, password) { success, errorMessage ->
                     isLoading = false
                     if (success) {
-                        AppUtil.showToast(context, context.getString(R.string.verification_email_sent))
+                        AppUtil.showToast(context, verificationEmailSentMessage)
                         navController.navigate("verification") {
                             popUpTo("auth") { inclusive = true }
                         }
                     } else {
-                        AppUtil.showToast(context, errorMessage ?: context.getString(R.string.something_went_wrong))
+                        AppUtil.showToast(context, errorMessage ?: somethingWentWrongMessage)
                     }
                 }
             },

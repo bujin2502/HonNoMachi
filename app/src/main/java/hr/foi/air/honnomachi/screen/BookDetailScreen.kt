@@ -6,8 +6,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
 import hr.foi.air.honnomachi.model.BookModel
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -25,61 +23,77 @@ import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import hr.foi.air.honnomachi.R
+import hr.foi.air.honnomachi.repository.BookRepository
+import hr.foi.air.honnomachi.viewmodel.BookDetailViewModel
+import hr.foi.air.honnomachi.viewmodel.BookUiState
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.material3.CenterAlignedTopAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BookDetailScreen(bookId: String?) {
-
-    val bookState = remember { mutableStateOf<BookModel?>(null) }
-    val isLoading = remember { mutableStateOf(true) }
-    val errorMessage = remember { mutableStateOf<String?>(null) }
-    val invalidBookIdError = stringResource(id = R.string.error_invalid_book_id)
-    val fetchingDetailsErrorPrefix = stringResource(id = R.string.error_fetching_details)
-
+fun BookDetailScreen(bookId: String?, viewModel: BookDetailViewModel = viewModel(
+        factory = BookDetailViewModelFactory(BookRepository())
+    ))
+{
     LaunchedEffect(key1 = bookId) {
-        if (bookId == null) {
-            errorMessage.value = invalidBookIdError
-            isLoading.value = false
-            return@LaunchedEffect
-        }
-
-        Firebase.firestore.collection("books").document(bookId)
-            .get()
-            .addOnSuccessListener { document ->
-                bookState.value = document.toObject(BookModel::class.java)
-                isLoading.value = false
-            }
-            .addOnFailureListener {
-                errorMessage.value = "$fetchingDetailsErrorPrefix ${it.message}"
-                isLoading.value = false
-            }
+        viewModel.loadBookDetails(bookId)
     }
+
+    val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = { Text(
                     text = stringResource(id = R.string.screen_title_book_details),
-                    fontWeight= FontWeight.Bold)}
+                    fontWeight = FontWeight.Bold
+                )}
+                // Ovdje se mogu dodati navigacijske ikone, ali za detalje ekrana obično stoji samo Back button.
             )
         }
-    ) { paddingValues ->
+    ){ paddingValues ->
         Box(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
-            when {
-                isLoading.value -> {
+            when (uiState) {
+                is BookUiState.Loading -> {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
-                errorMessage.value != null -> {
-                    Text(text = stringResource(id = R.string.error) + {errorMessage.value}, modifier = Modifier.align(Alignment.Center))
+                is BookUiState.Error -> {
+                    val errorMessage = (uiState as BookUiState.Error).message
+                    Text(
+                        text = stringResource(id = R.string.error) + " $errorMessage",
+                        modifier = Modifier.align(Alignment.Center)
+                    )
                 }
-                bookState.value != null -> {
-                    BookDetailContent(book = bookState.value!!)
+                is BookUiState.Success -> {
+                    val book = (uiState as BookUiState.Success).book
+                    BookDetailContent(book = book)
                 }
-                else -> {
-                    Text(text = stringResource(id = R.string.book_not_found), modifier = Modifier.align(Alignment.Center))
+                BookUiState.BookNotFound -> {
+                    Text(
+                        text = stringResource(id = R.string.book_not_found),
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                    if (bookId == null) {
+                        Text(
+                            text = stringResource(id = R.string.error_invalid_book_id),
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    }
                 }
             }
         }
+    }
+}
+
+class BookDetailViewModelFactory(private val repository: BookRepository) : androidx.lifecycle.ViewModelProvider.Factory {
+    override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(BookDetailViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return BookDetailViewModel(repository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
 
@@ -98,7 +112,7 @@ fun BookDetailContent(book: BookModel) {
 
         @OptIn(ExperimentalFoundationApi::class)
         if (images.isNotEmpty()) {
-            // Stanje pagera prati koja je stranica trenutno aktivna
+            // Stanje pagera prati koja je slika trenutno aktivna
             val pagerState = rememberPagerState(pageCount = { images.size })
 
             HorizontalPager(

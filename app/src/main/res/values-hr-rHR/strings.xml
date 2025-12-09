@@ -21,7 +21,6 @@
     <string name="add">Dodaj</string>
     <string name="home">Home</string>
     <string name="shelf">Polica</string>
-    <string name="home_page">Početna stranica</string>
     <string name="shelf_page">Polica s knjigama</string>
     <string name="add_page">Dodaj novu knjigu</string>
     <string name="cart_page">Stranica košarice</string>
@@ -98,4 +97,8 @@
     <string name="label_price">Cijena:</string>
     <string name="button_add_to_cart">Dodaj u košaricu</string>
     <string name="label_description">Opis:</string>
+    <string name="search_by_title">Pretraži po naslovu</string>
+    <string name="no_books_found">Nema knjiga koje odgovaraju pretrazi.</string>
+    <string name="no_books_available">Trenutno nema dostupnih knjiga.</string>
+    <string name="error_occurred">Došlo je do pogreške prilikom učitavanja knjiga.</string>
 </resources>

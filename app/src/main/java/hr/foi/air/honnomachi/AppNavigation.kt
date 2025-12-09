@@ -16,6 +16,8 @@ import hr.foi.air.honnomachi.screen.HomeScreen
 import hr.foi.air.honnomachi.screen.LoginScreen
 import hr.foi.air.honnomachi.screen.SignupScreen
 import hr.foi.air.honnomachi.viewmodel.AuthViewModel
+import hr.foi.air.honnomachi.viewmodel.HomeViewModel
+import hr.foi.air.honnomachi.viewmodel.ViewModelFactory
 
 @Composable
 fun AppNavigation(
@@ -23,6 +25,7 @@ fun AppNavigation(
     navController: NavHostController
 ) {
     val authViewModel: AuthViewModel = viewModel()
+    val homeViewModel: HomeViewModel = viewModel(factory = ViewModelFactory())
 
     val currentUser = Firebase.auth.currentUser
     val startDestination = when {
@@ -61,9 +64,9 @@ fun AppNavigation(
         }
 
         composable("home") {
-            HomeScreen(modifier, navController, authViewModel)
+            HomeScreen(modifier, navController, authViewModel, homeViewModel)
         }
-        
+
         composable(
             "bookDetail/{bookId}",
             arguments = listOf(navArgument("bookId") { type = NavType.StringType })

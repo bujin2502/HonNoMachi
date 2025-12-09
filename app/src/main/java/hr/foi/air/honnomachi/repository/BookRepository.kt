@@ -3,23 +3,36 @@ package hr.foi.air.honnomachi.repository
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import hr.foi.air.honnomachi.model.BookModel
-import kotlinx.coroutines.tasks.await
+import hr.foi.air.honnomachi.pages.BookListState
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 
-class BookRepository {
-    private val db = Firebase.firestore
+interface BookRepository {
+    fun getBooks(): Flow<BookListState>
+}
 
-    suspend fun getBookDetails(bookId: String): Result<BookModel?> {
-        return try {
-            val document = db.collection("books").document(bookId).get().await()
+class BookRepositoryImpl : BookRepository {
+    override fun getBooks(): Flow<BookListState> = callbackFlow {
+        val listener = Firebase.firestore.collection("books")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(BookListState.Error(error.message ?: "Unknown error occurred."))
+                    return@addSnapshotListener
+                }
 
-            if (document.exists()) {
-                val book = document.toObject(BookModel::class.java)
-                Result.success(book)
-            } else {
-                Result.success(null)
+                if (snapshot != null) {
+                    val resultList = snapshot.documents.mapNotNull { doc ->
+                        doc.toObject(BookModel::class.java)
+                    }
+                    val state = if (resultList.isEmpty()) {
+                        BookListState.Empty
+                    } else {
+                        BookListState.Success(resultList)
+                    }
+                    trySend(state)
+                }
             }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        awaitClose { listener.remove() }
     }
 }

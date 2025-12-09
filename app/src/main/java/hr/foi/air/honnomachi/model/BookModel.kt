@@ -10,6 +10,7 @@ data class BookModel(
     val condition: BookCondition = BookCondition.USED,
     val imageUrls: List<String>? = null,
     val genre: BookGenre = BookGenre.OTHER,
+    val imageUrls: List<String>? = emptyList(),
     val isbn13: String = "",
     val language: Language = Language.HR,
     val listingDate: Timestamp = Timestamp.now(),

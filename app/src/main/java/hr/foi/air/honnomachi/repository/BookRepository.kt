@@ -7,9 +7,11 @@ import hr.foi.air.honnomachi.pages.BookListState
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.tasks.await
 
 interface BookRepository {
     fun getBooks(): Flow<BookListState>
+    suspend fun getBookDetails(bookId: String): BookModel?
 }
 
 class BookRepositoryImpl : BookRepository {
@@ -34,5 +36,13 @@ class BookRepositoryImpl : BookRepository {
                 }
             }
         awaitClose { listener.remove() }
+    }
+
+    override suspend fun getBookDetails(bookId: String): BookModel? {
+        return try {
+            Firebase.firestore.collection("books").document(bookId).get().await().toObject(BookModel::class.java)
+        } catch (e: Exception) {
+            null
+        }
     }
 }

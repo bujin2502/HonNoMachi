@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.repository.BookRepository
+import hr.foi.air.honnomachi.repository.BookRepositoryImpl
 import hr.foi.air.honnomachi.viewmodel.BookDetailViewModel
 import hr.foi.air.honnomachi.viewmodel.BookUiState
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -34,7 +35,7 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookDetailScreen(bookId: String?, viewModel: BookDetailViewModel = viewModel(
-        factory = BookDetailViewModelFactory(BookRepository())
+        factory = BookDetailViewModelFactory(BookRepositoryImpl())
     ))
 {
     LaunchedEffect(key1 = bookId) {

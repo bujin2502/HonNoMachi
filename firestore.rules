@@ -1,0 +1,23 @@
+rules_version = '2';
+service cloud.firestore {
+    match /databases/{database}/documents {
+
+        // Korisnici mogu kreirati svoj dokument, te čitati i ažurirati samo vlastiti dokument
+        match /users/{userId} {
+            allow create: if request.auth != null;
+            allow read, update: if request.auth != null && request.auth.uid == userId;
+        }
+
+        // Knjige su javno dostupne za čitanje
+        match /books/{bookId} {
+            allow read: if true;
+            allow write: if request.auth != null && request.auth.token.email_verified == true;
+        }
+
+        // Za sve ostale kolekcije, pristup je dopušten samo ako je korisnik prijavljen
+        // I ako mu je email adresa verificirana.
+        match /{document=**} {
+            allow read, write: if request.auth != null && request.auth.token.email_verified == true;
+        }
+    }
+}

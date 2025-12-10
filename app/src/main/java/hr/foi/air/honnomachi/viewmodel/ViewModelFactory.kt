@@ -2,7 +2,6 @@ package hr.foi.air.honnomachi.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import hr.foi.air.honnomachi.repository.BookRepository
 import hr.foi.air.honnomachi.repository.BookRepositoryImpl
 
 class ViewModelFactory : ViewModelProvider.Factory {

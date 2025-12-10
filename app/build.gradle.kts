@@ -40,8 +40,15 @@ android {
     }
 }
 
+configurations.all {
+    resolutionStrategy {
+        force("com.google.android.gms:play-services-auth:21.4.0")
+    }
+}
+
 dependencies {
 
+    implementation(platform(libs.firebase.bom))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
@@ -69,7 +76,6 @@ dependencies {
     androidTestImplementation(libs.androidx.navigation.testing)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-    implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.credentials)

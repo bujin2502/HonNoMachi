@@ -7,9 +7,5 @@
 <!--    <color name="teal_700">#FF018786</color>-->
     <!--Boje koje su definirane u wireframe paleti boja -->
     <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
     <color name="blue">#FFC8E1F5</color>
-    <color name="light_blue">#FFE4ECF4</color>
-    <color name="gray_blue">#FFD1D4D9</color>
-    <color name="dark_blue">#FF3E4658</color>
 </resources>

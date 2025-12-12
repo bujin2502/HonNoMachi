@@ -45,7 +45,7 @@ import kotlinx.coroutines.launch
 fun AuthScreen(
     modifier: Modifier = Modifier,
     navController: NavHostController,
-    authViewModel: AuthViewModel = viewModel()
+    authViewModel: AuthViewModel = viewModel(),
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -56,45 +56,55 @@ fun AuthScreen(
     val serverClientId = stringResource(id = R.string.default_web_client_id)
 
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(32.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(32.dp),
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Image(painterResource(id = R.drawable.hnm_logo),
+        Image(
+            painterResource(id = R.drawable.hnm_logo),
             contentDescription = "slika",
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(150.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(150.dp),
         )
 
         Spacer(modifier = Modifier.height(20.dp))
 
         Text(
             stringResource(R.string.welcome),
-            style = TextStyle(
-                fontSize = 30.sp,
-                fontWeight = FontWeight.SemiBold,
-                fontFamily = FontFamily.Monospace
-            ))
+            style =
+                TextStyle(
+                    fontSize = 30.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = FontFamily.Monospace,
+                ),
+        )
 
         Spacer(modifier = Modifier.height(15.dp))
 
         Text(
             stringResource(R.string.the_best_platform_to_buy_books),
-            style = TextStyle(
-                textAlign = TextAlign.Center,
-            ))
+            style =
+                TextStyle(
+                    textAlign = TextAlign.Center,
+                ),
+        )
 
         Spacer(modifier = Modifier.height(50.dp))
 
-        Button(onClick = {
-            navController.navigate("login")
-        },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)) {
+        Button(
+            onClick = {
+                navController.navigate("login")
+            },
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(60.dp),
+        ) {
             Text(stringResource(R.string.login), fontSize = 22.sp)
         }
 
@@ -105,21 +115,26 @@ fun AuthScreen(
                 isGoogleLoading = true
                 coroutineScope.launch {
                     try {
-                        val googleIdOption = GetGoogleIdOption.Builder()
-                            .setFilterByAuthorizedAccounts(false)
-                            // Use the variable here instead of the composable function
-                            .setServerClientId(serverClientId)
-                            .setAutoSelectEnabled(true)
-                            .build()
+                        val googleIdOption =
+                            GetGoogleIdOption
+                                .Builder()
+                                .setFilterByAuthorizedAccounts(false)
+                                // Use the variable here instead of the composable function
+                                .setServerClientId(serverClientId)
+                                .setAutoSelectEnabled(true)
+                                .build()
 
-                        val request = GetCredentialRequest.Builder()
-                            .addCredentialOption(googleIdOption)
-                            .build()
+                        val request =
+                            GetCredentialRequest
+                                .Builder()
+                                .addCredentialOption(googleIdOption)
+                                .build()
 
-                        val result = credentialManager.getCredential(
-                            request = request,
-                            context = context
-                        )
+                        val result =
+                            credentialManager.getCredential(
+                                request = request,
+                                context = context,
+                            )
                         val googleIdTokenCredential =
                             GoogleIdTokenCredential.createFrom(result.credential.data)
 
@@ -143,13 +158,14 @@ fun AuthScreen(
                 }
             },
             enabled = !isGoogleLoading,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(60.dp),
         ) {
             Text(
                 text = if (isGoogleLoading) stringResource(R.string.signing_in) else stringResource(R.string.continue_with_google),
-                fontSize = 18.sp
+                fontSize = 18.sp,
             )
         }
 
@@ -159,12 +175,15 @@ fun AuthScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        OutlinedButton(onClick = {
-            navController.navigate("signup")
-        },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)) {
+        OutlinedButton(
+            onClick = {
+                navController.navigate("signup")
+            },
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(60.dp),
+        ) {
             Text(stringResource(R.string.signup), fontSize = 22.sp)
         }
     }

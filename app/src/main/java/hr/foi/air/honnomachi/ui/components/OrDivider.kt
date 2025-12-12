@@ -17,18 +17,18 @@ import hr.foi.air.honnomachi.R
 @Composable
 fun OrDivider(
     lineColor: Color = MaterialTheme.colorScheme.outline,
-    textColor: Color = MaterialTheme.colorScheme.onSurfaceVariant
+    textColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         HorizontalDivider(modifier = Modifier.weight(1f), thickness = 1.dp, color = lineColor)
         Text(
             text = stringResource(R.string.or),
             color = textColor,
             style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.padding(horizontal = 12.dp)
+            modifier = Modifier.padding(horizontal = 12.dp),
         )
         HorizontalDivider(modifier = Modifier.weight(1f), thickness = 1.dp, color = lineColor)
     }

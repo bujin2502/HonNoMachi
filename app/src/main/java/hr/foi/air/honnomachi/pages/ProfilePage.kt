@@ -21,43 +21,50 @@ import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.viewmodel.AuthViewModel
 
 private const val SHOW_QA_BUTTON = false
+
 @Composable
-fun ProfilePage(paddingValues: PaddingValues, navController : NavController, authViewModel: AuthViewModel = viewModel()) {
+fun ProfilePage(
+    paddingValues: PaddingValues,
+    navController: NavController,
+    authViewModel: AuthViewModel = viewModel(),
+) {
     val message = remember { mutableStateOf("") }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)
-            .padding(horizontal = 16.dp),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text (text= stringResource(R.string.profile_page))
-        Button(onClick = {
-            authViewModel.signOut()
-            navController.navigate(route = "auth") {
-                popUpTo("home") { inclusive = true }
-            }
-        },
-            modifier = Modifier.testTag("logout_button")
+        Text(text = stringResource(R.string.profile_page))
+        Button(
+            onClick = {
+                authViewModel.signOut()
+                navController.navigate(route = "auth") {
+                    popUpTo("home") { inclusive = true }
+                }
+            },
+            modifier = Modifier.testTag("logout_button"),
         ) {
             Text(stringResource(id = R.string.logout))
         }
-        if (SHOW_QA_BUTTON){
-        Button(
-            onClick = {
-                authViewModel.testSecureRead(
-                    onSuccess = { message.value = "Secure read OK — token is valid" },
-                    onError = { e -> message.value = "Error: ${e.message}" }
-                )
+        if (SHOW_QA_BUTTON) {
+            Button(
+                onClick = {
+                    authViewModel.testSecureRead(
+                        onSuccess = { message.value = "Secure read OK — token is valid" },
+                        onError = { e -> message.value = "Error: ${e.message}" },
+                    )
+                },
+            ) {
+                Text(stringResource(id = R.string.test_token_qa))
             }
-        ) {
-            Text(stringResource(id = R.string.test_token_qa))
-        }
-        if (message.value.isNotEmpty()) {
-            Text(text = message.value)
-        }
+            if (message.value.isNotEmpty()) {
+                Text(text = message.value)
+            }
         }
     }
 }

@@ -1,43 +1,62 @@
 package hr.foi.air.honnomachi.screen
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import hr.foi.air.honnomachi.model.BookModel
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.layout.ContentScale
-import coil.compose.AsyncImage
-import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.background
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import hr.foi.air.honnomachi.R
+import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.repository.BookRepository
 import hr.foi.air.honnomachi.repository.BookRepositoryImpl
 import hr.foi.air.honnomachi.viewmodel.BookDetailViewModel
 import hr.foi.air.honnomachi.viewmodel.BookUiState
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.material3.CenterAlignedTopAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BookDetailScreen(bookId: String?, viewModel: BookDetailViewModel = viewModel(
-        factory = BookDetailViewModelFactory(BookRepositoryImpl())
-    ))
-{
+fun BookDetailScreen(
+    bookId: String?,
+    viewModel: BookDetailViewModel =
+        viewModel(
+            factory = BookDetailViewModelFactory(BookRepositoryImpl()),
+        ),
+) {
     LaunchedEffect(key1 = bookId) {
         viewModel.loadBookDetails(bookId)
     }
@@ -47,13 +66,15 @@ fun BookDetailScreen(bookId: String?, viewModel: BookDetailViewModel = viewModel
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(
-                    text = stringResource(id = R.string.screen_title_book_details),
-                    fontWeight = FontWeight.Bold
-                )}
+                title = {
+                    Text(
+                        text = stringResource(id = R.string.screen_title_book_details),
+                        fontWeight = FontWeight.Bold,
+                    )
+                },
             )
-        }
-    ){ paddingValues ->
+        },
+    ) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
             when (uiState) {
                 is BookUiState.Loading -> {
@@ -75,7 +96,9 @@ fun BookDetailScreen(bookId: String?, viewModel: BookDetailViewModel = viewModel
     }
 }
 
-class BookDetailViewModelFactory(private val repository: BookRepository) : androidx.lifecycle.ViewModelProvider.Factory {
+class BookDetailViewModelFactory(
+    private val repository: BookRepository,
+) : androidx.lifecycle.ViewModelProvider.Factory {
     override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(BookDetailViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
@@ -84,50 +107,55 @@ class BookDetailViewModelFactory(private val repository: BookRepository) : andro
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
+
 @Composable
 fun BookDetailLoading() {
     Box(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         CircularProgressIndicator()
     }
 }
+
 @Composable
 fun BookDetailError(errorMessage: String) {
     Text(
         text = stringResource(id = R.string.error) + " $errorMessage",
         fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.error
+        color = MaterialTheme.colorScheme.error,
     )
 }
+
 @Composable
 fun BookDetailNotFound(bookId: String?) {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             text = stringResource(id = R.string.book_not_found),
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
         )
         if (bookId == null) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = stringResource(id = R.string.error_invalid_book_id)
+                text = stringResource(id = R.string.error_invalid_book_id),
             )
         }
     }
 }
+
 @Composable
 fun BookDetailContent(book: BookModel) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.Start
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.Start,
     ) {
-        //odnosi se na slike
+        // odnosi se na slike
         val images = book.imageUrls.orEmpty()
         val imageRatio = 180f / 260f
 
@@ -138,60 +166,61 @@ fun BookDetailContent(book: BookModel) {
 
             HorizontalPager(
                 state = pagerState,
-                modifier = Modifier
-                    .fillMaxWidth(0.6f)
-                    .aspectRatio(imageRatio)
-                    .align(Alignment.CenterHorizontally)
+                modifier =
+                    Modifier
+                        .fillMaxWidth(0.6f)
+                        .aspectRatio(imageRatio)
+                        .align(Alignment.CenterHorizontally),
             ) { pageIndex ->
                 AsyncImage(
                     model = images[pageIndex],
                     contentDescription = stringResource(id = R.string.content_description_book_image, pageIndex + 1),
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            //Indikator trenutne slike
+            // Indikator trenutne slike
             Row(
                 Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.Center,
             ) {
                 images.forEachIndexed { index, _ ->
                     Box(
-                        modifier = Modifier
-                            .padding(horizontal = 4.dp)
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(
-                                if (index == pagerState.currentPage) MaterialTheme.colorScheme.primary else Color.Gray
-                            )
+                        modifier =
+                            Modifier
+                                .padding(horizontal = 4.dp)
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (index == pagerState.currentPage) MaterialTheme.colorScheme.primary else Color.Gray,
+                                ),
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
-
         } else {
             Text(
                 text = stringResource(id = R.string.no_images_available),
-                modifier = Modifier.align(Alignment.CenterHorizontally).padding(24.dp)
+                modifier = Modifier.align(Alignment.CenterHorizontally).padding(24.dp),
             )
             Spacer(modifier = Modifier.height(24.dp))
         }
-        //kraj slike
+        // kraj slike
 
         Spacer(modifier = Modifier.height(24.dp))
 
         // Redak koji sadrzi dva stupca
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             // lijevi stupac
             Column(
-                modifier = Modifier.weight(0.5f)
+                modifier = Modifier.weight(0.5f),
             ) {
                 Text(text = stringResource(id = R.string.label_title), fontWeight = FontWeight.Bold)
                 Text(text = book.title, style = MaterialTheme.typography.bodyLarge)
@@ -221,12 +250,14 @@ fun BookDetailContent(book: BookModel) {
 
         Button(
             onClick = { /* TODO: Implementirat dodavanje u kosaricu */ },
-            modifier = Modifier
-                .fillMaxWidth(0.6f)
-                .align(Alignment.CenterHorizontally),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = colorResource(id = R.color.blue)
-            )
+            modifier =
+                Modifier
+                    .fillMaxWidth(0.6f)
+                    .align(Alignment.CenterHorizontally),
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor = colorResource(id = R.color.blue),
+                ),
         ) {
             Text(stringResource(id = R.string.button_add_to_cart), color = colorResource(id = R.color.black))
         }

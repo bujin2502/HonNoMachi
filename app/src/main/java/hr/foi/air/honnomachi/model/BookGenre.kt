@@ -3,7 +3,9 @@ package hr.foi.air.honnomachi.model
 import androidx.annotation.StringRes
 import hr.foi.air.honnomachi.R
 
-enum class BookGenre(@param:StringRes val resourceId: Int) {
+enum class BookGenre(
+    @param:StringRes val resourceId: Int,
+) {
     FANTASY(R.string.genre_fantasy),
     SCIENCE_FICTION(R.string.genre_science_fiction),
     MYSTERY(R.string.genre_mystery),
@@ -21,5 +23,5 @@ enum class BookGenre(@param:StringRes val resourceId: Int) {
     MARTIAL_ARTS(R.string.genre_martial_arts),
     HEALTH(R.string.genre_health),
     FITNESS(R.string.genre_fitness),
-    OTHER(R.string.genre_other)
+    OTHER(R.string.genre_other),
 }

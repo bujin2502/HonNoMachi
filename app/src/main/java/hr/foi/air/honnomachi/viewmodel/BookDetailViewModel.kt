@@ -7,9 +7,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-
-class BookDetailViewModel(private val bookRepository: BookRepository) : ViewModel() {
-
+class BookDetailViewModel(
+    private val bookRepository: BookRepository,
+) : ViewModel() {
     private val _uiState = MutableStateFlow<BookUiState>(BookUiState.Loading)
     val uiState: StateFlow<BookUiState> = _uiState
 

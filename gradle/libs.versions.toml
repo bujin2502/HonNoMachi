@@ -1,5 +1,5 @@
 [versions]
-agp = "8.13.1"
+agp = "8.13.2"
 coilCompose = "2.7.0"
 firebaseBom = "34.6.0"
 kotlin = "2.2.21"
@@ -21,6 +21,8 @@ gmsGoogleServices = "4.4.4"
 kotlinxCoroutinesPlayServices = "1.10.2"
 playServicesAuth = "21.4.0"
 foundationLayout = "1.10.0"
+kotlinxCoroutinesTest = "1.10.2"
+ktlint = "14.0.1"
 
 [libraries]
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
@@ -55,9 +57,11 @@ googleid = { group = "com.google.android.libraries.identity.googleid", name = "g
 kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "kotlinxCoroutinesPlayServices" }
 play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "playServicesAuth" }
 androidx-compose-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayout" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 gms-google-services = { id = "com.google.gms.google-services", version.ref = "gmsGoogleServices" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }

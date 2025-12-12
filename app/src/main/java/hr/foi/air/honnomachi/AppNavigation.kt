@@ -22,20 +22,20 @@ import hr.foi.air.honnomachi.viewmodel.ViewModelFactory
 @Composable
 fun AppNavigation(
     modifier: Modifier = Modifier,
-    navController: NavHostController
+    navController: NavHostController,
 ) {
     val authViewModel: AuthViewModel = viewModel()
     val homeViewModel: HomeViewModel = viewModel(factory = ViewModelFactory())
 
     val currentUser = Firebase.auth.currentUser
-    val startDestination = when {
-        currentUser == null -> "auth"
-        currentUser.isEmailVerified -> "home"
-        else -> "verification"
-    }
+    val startDestination =
+        when {
+            currentUser == null -> "auth"
+            currentUser.isEmailVerified -> "home"
+            else -> "verification"
+        }
 
     NavHost(navController = navController, startDestination = startDestination) {
-
         composable("auth") {
             AuthScreen(modifier, navController, authViewModel)
         }
@@ -55,7 +55,7 @@ fun AppNavigation(
                         popUpTo("auth") { inclusive = true }
                     }
                 },
-                authViewModel = authViewModel
+                authViewModel = authViewModel,
             )
         }
 
@@ -69,7 +69,7 @@ fun AppNavigation(
 
         composable(
             "bookDetail/{bookId}",
-            arguments = listOf(navArgument("bookId") { type = NavType.StringType })
+            arguments = listOf(navArgument("bookId") { type = NavType.StringType }),
         ) { backStackEntry ->
             BookDetailScreen(bookId = backStackEntry.arguments?.getString("bookId"))
         }

@@ -11,38 +11,48 @@ import kotlinx.coroutines.tasks.await
 
 interface BookRepository {
     fun getBooks(): Flow<BookListState>
+
     suspend fun getBookDetails(bookId: String): BookModel?
 }
 
 class BookRepositoryImpl : BookRepository {
-    override fun getBooks(): Flow<BookListState> = callbackFlow {
-        val listener = Firebase.firestore.collection("books")
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    trySend(BookListState.Error(error.message ?: "Unknown error occurred."))
-                    return@addSnapshotListener
-                }
+    override fun getBooks(): Flow<BookListState> =
+        callbackFlow {
+            val listener =
+                Firebase.firestore
+                    .collection("books")
+                    .addSnapshotListener { snapshot, error ->
+                        if (error != null) {
+                            trySend(BookListState.Error(error.message ?: "Unknown error occurred."))
+                            return@addSnapshotListener
+                        }
 
-                if (snapshot != null) {
-                    val resultList = snapshot.documents.mapNotNull { doc ->
-                        doc.toObject(BookModel::class.java)
+                        if (snapshot != null) {
+                            val resultList =
+                                snapshot.documents.mapNotNull { doc ->
+                                    doc.toObject(BookModel::class.java)
+                                }
+                            val state =
+                                if (resultList.isEmpty()) {
+                                    BookListState.Empty
+                                } else {
+                                    BookListState.Success(resultList)
+                                }
+                            trySend(state)
+                        }
                     }
-                    val state = if (resultList.isEmpty()) {
-                        BookListState.Empty
-                    } else {
-                        BookListState.Success(resultList)
-                    }
-                    trySend(state)
-                }
-            }
-        awaitClose { listener.remove() }
-    }
+            awaitClose { listener.remove() }
+        }
 
-    override suspend fun getBookDetails(bookId: String): BookModel? {
-        return try {
-            Firebase.firestore.collection("books").document(bookId).get().await().toObject(BookModel::class.java)
+    override suspend fun getBookDetails(bookId: String): BookModel? =
+        try {
+            Firebase.firestore
+                .collection("books")
+                .document(bookId)
+                .get()
+                .await()
+                .toObject(BookModel::class.java)
         } catch (e: Exception) {
             null
         }
-    }
 }

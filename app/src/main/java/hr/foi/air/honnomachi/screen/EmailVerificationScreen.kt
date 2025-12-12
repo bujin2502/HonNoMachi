@@ -41,12 +41,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.viewmodel.AuthViewModel
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EmailVerificationScreen(
     onNavigateToLogin: () -> Unit,
-    authViewModel: AuthViewModel = viewModel()
+    authViewModel: AuthViewModel = viewModel(),
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -58,26 +57,27 @@ fun EmailVerificationScreen(
     Scaffold(
         topBar = {
             TopAppBar(title = { Text(stringResource(id = R.string.verify_your_email)) })
-        }
+        },
     ) { paddingValues ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(16.dp),
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Icon(
                 imageVector = Icons.Default.Email,
                 contentDescription = stringResource(id = R.string.email_icon),
-                modifier = Modifier.size(100.dp)
+                modifier = Modifier.size(100.dp),
             )
             Spacer(modifier = Modifier.height(24.dp))
             Text(
                 text = stringResource(id = R.string.verification_link_sent),
                 textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.bodyLarge,
             )
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -91,7 +91,7 @@ fun EmailVerificationScreen(
 
             Text(
                 stringResource(id = R.string.didnt_receive_email),
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
             )
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -100,13 +100,15 @@ fun EmailVerificationScreen(
                 onValueChange = { email = it },
                 label = { Text(stringResource(id = R.string.email)) },
                 modifier = Modifier.fillMaxWidth().testTag("verification_email_field"),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = { passwordFocusRequester.requestFocus() }
-                ),
+                keyboardOptions =
+                    KeyboardOptions(
+                        keyboardType = KeyboardType.Email,
+                        imeAction = ImeAction.Next,
+                    ),
+                keyboardActions =
+                    KeyboardActions(
+                        onNext = { passwordFocusRequester.requestFocus() },
+                    ),
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
@@ -115,23 +117,26 @@ fun EmailVerificationScreen(
                 label = { Text(stringResource(id = R.string.password)) },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth().testTag("verification_password_field"),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = { focusManager.clearFocus() }
-                ),
+                keyboardOptions =
+                    KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done,
+                    ),
+                keyboardActions =
+                    KeyboardActions(
+                        onDone = { focusManager.clearFocus() },
+                    ),
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            Button(onClick = {
-                authViewModel.resendVerificationEmail(email, password) { success, msg ->
-                    message = msg
-                    isError = !success
-                }
-            },
-                modifier = Modifier.testTag("resend_verification_button")
+            Button(
+                onClick = {
+                    authViewModel.resendVerificationEmail(email, password) { success, msg ->
+                        message = msg
+                        isError = !success
+                    }
+                },
+                modifier = Modifier.testTag("resend_verification_button"),
             ) {
                 Text(stringResource(id = R.string.resend_verification_email))
             }
@@ -141,7 +146,7 @@ fun EmailVerificationScreen(
                 Text(
                     text = it,
                     color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
             }
         }

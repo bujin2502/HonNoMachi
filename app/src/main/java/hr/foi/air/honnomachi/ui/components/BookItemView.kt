@@ -16,54 +16,59 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import hr.foi.air.honnomachi.model.BookModel
-import androidx.compose.ui.res.painterResource
 import hr.foi.air.honnomachi.R
+import hr.foi.air.honnomachi.model.BookModel
 
 @Composable
 fun BookItemView(
     modifier: Modifier = Modifier,
     book: BookModel,
-    onBookClick: (String?) -> Unit
+    onBookClick: (String?) -> Unit,
 ) {
-    Card(modifier = modifier
-            .fillMaxWidth()
-            .height(160.dp)
-            .padding(8.dp)
-            .clickable { onBookClick(book.bookId) },
+    Card(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(160.dp)
+                .padding(8.dp)
+                .clickable { onBookClick(book.bookId) },
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults . cardColors (containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)) {
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+    ) {
         Row(modifier = Modifier.fillMaxWidth()) {
             AsyncImage(
                 model = book.imageUrls?.firstOrNull(),
                 contentDescription = book.title,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
                 error = painterResource(R.drawable.baseline_broken_image_24),
-                placeholder = painterResource(R.drawable.baseline_change_circle_24)
+                placeholder = painterResource(R.drawable.baseline_change_circle_24),
             )
             Column(
-                modifier = Modifier
-                    .weight(2f)
-                    .padding(start = 8.dp)
+                modifier =
+                    Modifier
+                        .weight(2f)
+                        .padding(start = 8.dp),
             ) {
                 Text(
                     text = book.title,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = book.authors.joinToString(", ")
+                    text = book.authors.joinToString(", "),
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "${book.price} ${book.priceCurrency}"
+                    text = "${book.price} ${book.priceCurrency}",
                 )
             }
         }

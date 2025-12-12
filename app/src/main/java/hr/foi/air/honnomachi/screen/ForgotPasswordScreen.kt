@@ -35,7 +35,7 @@ import hr.foi.air.honnomachi.viewmodel.AuthViewModel
 @Composable
 fun ForgotPasswordScreen(
     navController: NavController,
-    authViewModel: AuthViewModel
+    authViewModel: AuthViewModel,
 ) {
     var email by remember { mutableStateOf(TextFieldValue()) }
     var message by remember { mutableStateOf<String?>(null) }
@@ -43,34 +43,37 @@ fun ForgotPasswordScreen(
     val passwordFocusRequester = remember { FocusRequester() }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
         Text(
             text = stringResource(R.string.forgot_password),
             style = MaterialTheme.typography.headlineLarge,
-            modifier = Modifier.padding(bottom = 16.dp)
+            modifier = Modifier.padding(bottom = 16.dp),
         )
         Text(
             text = stringResource(R.string.enter_your_email_address_to_receive_a_password_reset_link),
             style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(bottom = 32.dp)
+            modifier = Modifier.padding(bottom = 32.dp),
         )
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
             label = { Text(stringResource(id = R.string.email)) },
             modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Email,
-                imeAction = ImeAction.Next
-            ),
-            keyboardActions = KeyboardActions(
-                onNext = { passwordFocusRequester.requestFocus() }
-            ),
+            keyboardOptions =
+                KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Next,
+                ),
+            keyboardActions =
+                KeyboardActions(
+                    onNext = { passwordFocusRequester.requestFocus() },
+                ),
         )
         Spacer(modifier = Modifier.height(16.dp))
         Button(
@@ -81,9 +84,10 @@ fun ForgotPasswordScreen(
                 }
             },
             enabled = email.text.isNotBlank(),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(60.dp),
         ) {
             Text(stringResource(R.string.send_reset_link))
         }
@@ -91,7 +95,7 @@ fun ForgotPasswordScreen(
             Text(
                 text = it,
                 color = if (isSuccess) Color.Green else Color.Red,
-                modifier = Modifier.padding(top = 8.dp)
+                modifier = Modifier.padding(top = 8.dp),
             )
         }
         Spacer(modifier = Modifier.height(16.dp))

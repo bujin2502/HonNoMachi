@@ -44,8 +44,13 @@ import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.ValidationErrorType
 import hr.foi.air.honnomachi.ui.components.errorMessageFor
 import hr.foi.air.honnomachi.viewmodel.AuthViewModel
+
 @Composable
-fun LoginScreen(modifier: Modifier=Modifier, navController: NavController, authViewModel: AuthViewModel=viewModel()){
+fun LoginScreen(
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    authViewModel: AuthViewModel = viewModel(),
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var emailError by remember { mutableStateOf<ValidationErrorType?>(null) }
@@ -56,131 +61,148 @@ fun LoginScreen(modifier: Modifier=Modifier, navController: NavController, authV
     var isLoading by remember { mutableStateOf(false) }
     var showResendButton by remember { mutableStateOf(false) }
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(32.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(32.dp),
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             stringResource(R.string.welcome_back),
             modifier = Modifier.fillMaxWidth(),
-            style = TextStyle(
-                fontSize = 30.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.Monospace
-            ))
+            style =
+                TextStyle(
+                    fontSize = 30.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Monospace,
+                ),
+        )
         Spacer(modifier = Modifier.height(10.dp))
         Text(
             stringResource(R.string.sign_in_your_account),
             modifier = Modifier.fillMaxWidth(),
-            style = TextStyle(
-                fontSize = 22.sp
-            ))
+            style =
+                TextStyle(
+                    fontSize = 22.sp,
+                ),
+        )
         Spacer(modifier = Modifier.height(20.dp))
-        Image(painterResource(id = R.drawable.vecteezy_deconstructing_sign_up_and_log_in_49110285),
+        Image(
+            painterResource(id = R.drawable.vecteezy_deconstructing_sign_up_and_log_in_49110285),
             contentDescription = "signup_slika",
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
         )
         Spacer(modifier = Modifier.height(20.dp))
         OutlinedTextField(
-            value = email, onValueChange = {
+            value = email,
+            onValueChange = {
                 email = it
                 if (emailError != null) emailError = null
             },
             label = { Text(stringResource(R.string.email_address)) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("email_field"),
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Email,
-                imeAction = ImeAction.Next
-            ),
-            keyboardActions = KeyboardActions(
-                onNext = { passwordFocusRequester.requestFocus() }
-            ),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .testTag("email_field"),
+            keyboardOptions =
+                KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Next,
+                ),
+            keyboardActions =
+                KeyboardActions(
+                    onNext = { passwordFocusRequester.requestFocus() },
+                ),
             isError = emailError != null,
             supportingText = {
                 emailError?.let {
                     Text(
                         text = stringResource(errorMessageFor(it)),
                         color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.testTag("login_email_error")
+                        modifier = Modifier.testTag("login_email_error"),
                     )
                 }
-            }
+            },
         )
         Spacer(modifier = Modifier.height(10.dp))
         OutlinedTextField(
-            value = password, onValueChange = {
+            value = password,
+            onValueChange = {
                 password = it
                 if (passwordError != null) passwordError = null
             },
             label = { Text(stringResource(R.string.password)) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .focusRequester(passwordFocusRequester)
-                .testTag("password_field"),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .focusRequester(passwordFocusRequester)
+                    .testTag("password_field"),
             visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Password,
-                imeAction = ImeAction.Done
-            ),
-            keyboardActions = KeyboardActions(
-                onDone = { focusManager.clearFocus() }
-            ),
+            keyboardOptions =
+                KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done,
+                ),
+            keyboardActions =
+                KeyboardActions(
+                    onDone = { focusManager.clearFocus() },
+                ),
             isError = passwordError != null,
             supportingText = {
                 passwordError?.let {
                     Text(
                         text = stringResource(errorMessageFor(it)),
                         color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.testTag("login_password_error")
+                        modifier = Modifier.testTag("login_password_error"),
                     )
                 }
-            }
+            },
         )
         Spacer(modifier = Modifier.height(20.dp))
-        Button(onClick = {
-            val validation = FormValidator.validateLoginForm(email, password)
-            emailError = validation.email.error
-            passwordError = validation.password.error
-            if (!validation.isValid) {
-                isLoading = false
-                return@Button
-            }
-            isLoading = true
-            authViewModel.login(email, password) { success, errorMessage ->
-                isLoading = false
-                if (success) {
-                    navController.navigate("home") {
-                        popUpTo("auth") { inclusive = true }
-                    }
-                } else {
-                    val message = errorMessage ?: "Something went wrong"
-                    if (message == "Please verify your email before logging in.") {
-                        navController.navigate("verification") {
+        Button(
+            onClick = {
+                val validation = FormValidator.validateLoginForm(email, password)
+                emailError = validation.email.error
+                passwordError = validation.password.error
+                if (!validation.isValid) {
+                    isLoading = false
+                    return@Button
+                }
+                isLoading = true
+                authViewModel.login(email, password) { success, errorMessage ->
+                    isLoading = false
+                    if (success) {
+                        navController.navigate("home") {
                             popUpTo("auth") { inclusive = true }
                         }
                     } else {
-                        if (errorMessage != null) {
-                            AppUtil.showToast(context, errorMessage)
+                        val message = errorMessage ?: "Something went wrong"
+                        if (message == "Please verify your email before logging in.") {
+                            navController.navigate("verification") {
+                                popUpTo("auth") { inclusive = true }
+                            }
                         } else {
-                            AppUtil.showToast(context, R.string.something_went_wrong)
+                            if (errorMessage != null) {
+                                AppUtil.showToast(context, errorMessage)
+                            } else {
+                                AppUtil.showToast(context, R.string.something_went_wrong)
+                            }
                         }
                     }
                 }
-            }
-        },
+            },
             enabled = !isLoading,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .testTag("login_button")
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(60.dp)
+                    .testTag("login_button"),
         ) {
-            Text(text = if(isLoading) stringResource(R.string.logging_in) else stringResource(R.string.login), fontSize = 22.sp)
+            Text(text = if (isLoading) stringResource(R.string.logging_in) else stringResource(R.string.login), fontSize = 22.sp)
         }
         Spacer(modifier = Modifier.height(10.dp))
         TextButton(onClick = { navController.navigate("forgotPassword") }) {

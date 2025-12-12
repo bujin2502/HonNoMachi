@@ -6,20 +6,19 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LoginUnitTest {
-
-    private val TEST_EMAIL = "test@example.com"
-    private val TEST_PASSWORD = "password123"
+    private val testEmail = "test@example.com"
+    private val testPassword = "password123"
 
     @Test
     fun `login successful executes success callback`() {
         val viewModel = TestableLoginViewModel()
         var callbackSuccess: Boolean? = null
-        viewModel.login(TEST_EMAIL, TEST_PASSWORD) { success, _ ->
+        viewModel.login(testEmail, testPassword) { success, _ ->
             callbackSuccess = success
         }
         assertTrue(viewModel.loginCalled)
-        assertEquals(TEST_EMAIL, viewModel.capturedEmail)
-        assertEquals(TEST_PASSWORD, viewModel.capturedPassword)
+        assertEquals(testEmail, viewModel.capturedEmail)
+        assertEquals(testPassword, viewModel.capturedPassword)
 
         assertEquals(true, callbackSuccess)
     }
@@ -29,7 +28,7 @@ class LoginUnitTest {
         val viewModel = TestableLoginViewModel()
         viewModel.nextResultSuccess = false
         var callbackSuccess: Boolean? = null
-        viewModel.login(TEST_EMAIL, TEST_PASSWORD) { success, _ ->
+        viewModel.login(testEmail, testPassword) { success, _ ->
             callbackSuccess = success
         }
         assertTrue(viewModel.loginCalled)
@@ -39,13 +38,17 @@ class LoginUnitTest {
 }
 
 // Klasa za testiranje
-private class TestableLoginViewModel : AuthViewModel(null, null,null) {
+private class TestableLoginViewModel : AuthViewModel(null, null, null) {
     var loginCalled: Boolean = false
     var capturedEmail: String? = null
     var capturedPassword: String? = null
     var nextResultSuccess: Boolean = true
 
-    override fun login(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
+    override fun login(
+        email: String,
+        password: String,
+        onResult: (Boolean, String?) -> Unit,
+    ) {
         loginCalled = true
         capturedEmail = email
         capturedPassword = password
@@ -57,7 +60,11 @@ private class TestableLoginViewModel : AuthViewModel(null, null,null) {
         }
     }
 
-    override fun resendVerificationEmail(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
+    override fun resendVerificationEmail(
+        email: String,
+        password: String,
+        onResult: (Boolean, String?) -> Unit,
+    ) {
     }
 
     override fun signOut() {

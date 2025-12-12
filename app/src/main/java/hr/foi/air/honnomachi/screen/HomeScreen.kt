@@ -35,19 +35,18 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
     authViewModel: AuthViewModel,
-    homeViewModel: HomeViewModel
+    homeViewModel: HomeViewModel,
 ) {
-
-    val navItemList = listOf(
-        NavItem(label = stringResource(R.string.home), icon = Icons.AutoMirrored.Outlined.MenuBook),
-        NavItem(label = stringResource(R.string.shelf), icon = Icons.AutoMirrored.Filled.LibraryBooks),
-        NavItem(label = stringResource(R.string.add), icon = Icons.Default.AddCircle),
-        NavItem(label = stringResource(R.string.cart), icon = Icons.Default.ShoppingCart),
-        NavItem(label = stringResource(R.string.profile), icon = Icons.Default.Person)
-    )
+    val navItemList =
+        listOf(
+            NavItem(label = stringResource(R.string.home), icon = Icons.AutoMirrored.Outlined.MenuBook),
+            NavItem(label = stringResource(R.string.shelf), icon = Icons.AutoMirrored.Filled.LibraryBooks),
+            NavItem(label = stringResource(R.string.add), icon = Icons.Default.AddCircle),
+            NavItem(label = stringResource(R.string.cart), icon = Icons.Default.ShoppingCart),
+            NavItem(label = stringResource(R.string.profile), icon = Icons.Default.Person),
+        )
 
     var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
-
 
     Scaffold(
         bottomBar = {
@@ -59,20 +58,19 @@ fun HomeScreen(
                         label = { Text(text = navItem.label) },
                         icon = {
                             Icon(imageVector = navItem.icon, contentDescription = navItem.label)
-                        }
+                        },
                     )
                 }
             }
-        }
+        },
     ) { paddingValues ->
         ContentScreen(
             paddingValues = paddingValues,
             selectedIndex,
             navController,
             authViewModel,
-            homeViewModel
+            homeViewModel,
         )
-
     }
 }
 
@@ -82,26 +80,28 @@ fun ContentScreen(
     selectedIndex: Int,
     navController: NavController,
     authViewModel: AuthViewModel,
-    homeViewModel: HomeViewModel
+    homeViewModel: HomeViewModel,
 ) {
     when (selectedIndex) {
-        0 -> HomePage(
-            paddingValues = paddingValues,
-            navController = navController,
-            viewModel = homeViewModel
-        )
+        0 ->
+            HomePage(
+                paddingValues = paddingValues,
+                navController = navController,
+                viewModel = homeViewModel,
+            )
         1 -> ShelfPage(paddingValues = paddingValues)
         2 -> AddPage(paddingValues = paddingValues)
         3 -> CartPage(paddingValues = paddingValues)
-        4 -> ProfilePage(
-            paddingValues = paddingValues,
-            navController = navController,
-            authViewModel = authViewModel
-        )
+        4 ->
+            ProfilePage(
+                paddingValues = paddingValues,
+                navController = navController,
+                authViewModel = authViewModel,
+            )
     }
 }
 
 data class NavItem(
     val label: String,
-    val icon: ImageVector
+    val icon: ImageVector,
 )

@@ -21,5 +21,5 @@ data class BookModel(
     val publisher: String = "",
     val status: ItemStatus = ItemStatus.AVAILABLE,
     val title: String = "",
-    val userID: String = ""
+    val userID: String = "",
 )

@@ -6,7 +6,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class FormValidatorTest {
-
     @Test
     fun `empty email fails with required error`() {
         val result = FormValidator.validateEmail("")
@@ -65,11 +64,12 @@ class FormValidatorTest {
 
     @Test
     fun `valid signup form passes aggregate validation`() {
-        val result = FormValidator.validateSignupForm(
-            email = "user@example.com",
-            name = "Test User",
-            password = "secret123"
-        )
+        val result =
+            FormValidator.validateSignupForm(
+                email = "user@example.com",
+                name = "Test User",
+                password = "secret123",
+            )
 
         assertTrue(result.isValid)
         assertTrue(result.email.isValid)

@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class HomeViewModel(
-    private val bookRepository: BookRepository
+    private val bookRepository: BookRepository,
 ) : ViewModel() {
     private val _bookListState = MutableStateFlow<BookListState>(BookListState.Loading)
     val bookListState = _bookListState.asStateFlow()

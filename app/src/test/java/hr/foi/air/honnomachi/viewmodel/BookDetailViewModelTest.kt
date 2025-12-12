@@ -21,19 +21,13 @@ class FakeBookRepository : BookRepository {
         book.bookId?.let { books[it] = book }
     }
 
-    override fun getBooks(): kotlinx.coroutines.flow.Flow<hr.foi.air.honnomachi.pages.BookListState> {
-        throw NotImplementedError()
-    }
+    override fun getBooks(): kotlinx.coroutines.flow.Flow<hr.foi.air.honnomachi.pages.BookListState> = throw NotImplementedError()
 
-    override suspend fun getBookDetails(bookId: String): BookModel? {
-        return books[bookId]
-    }
+    override suspend fun getBookDetails(bookId: String): BookModel? = books[bookId]
 }
-
 
 @ExperimentalCoroutinesApi
 class BookDetailViewModelTest {
-
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var fakeRepository: FakeBookRepository
     private lateinit var viewModel: BookDetailViewModel
@@ -51,25 +45,26 @@ class BookDetailViewModelTest {
     }
 
     @Test
-    fun `loadBookDetails with valid ID returns Success state`() = runTest {
-        val book = BookModel(bookId = "123", title = "Test Title")
-        fakeRepository.addBook(book)
+    fun `loadBookDetails with valid ID returns Success state`() =
+        runTest {
+            val book = BookModel(bookId = "123", title = "Test Title")
+            fakeRepository.addBook(book)
 
-        viewModel.loadBookDetails("123")
-        testDispatcher.scheduler.advanceUntilIdle()
+            viewModel.loadBookDetails("123")
+            testDispatcher.scheduler.advanceUntilIdle()
 
-        val currentState = viewModel.uiState.value
-        assertTrue(currentState is BookUiState.Success)
-        assertEquals(book, (currentState as BookUiState.Success).book)
-    }
+            val currentState = viewModel.uiState.value
+            assertTrue(currentState is BookUiState.Success)
+            assertEquals(book, (currentState as BookUiState.Success).book)
+        }
 
     @Test
-    fun `loadBookDetails with invalid ID returns BookNotFound state`() = runTest {
+    fun `loadBookDetails with invalid ID returns BookNotFound state`() =
+        runTest {
+            viewModel.loadBookDetails("404")
+            testDispatcher.scheduler.advanceUntilIdle()
 
-        viewModel.loadBookDetails("404")
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        val currentState = viewModel.uiState.value
-        assertTrue(currentState is BookUiState.BookNotFound)
-    }
+            val currentState = viewModel.uiState.value
+            assertTrue(currentState is BookUiState.BookNotFound)
+        }
 }

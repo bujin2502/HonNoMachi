@@ -8,25 +8,25 @@ enum class ValidationErrorType {
     EMPTY_NAME,
     SHORT_NAME,
     EMPTY_PASSWORD,
-    SHORT_PASSWORD
+    SHORT_PASSWORD,
 }
 
 data class ValidationResult(
     val isValid: Boolean,
-    val error: ValidationErrorType? = null
+    val error: ValidationErrorType? = null,
 )
 
 data class SignupValidationResult(
     val email: ValidationResult,
     val name: ValidationResult,
-    val password: ValidationResult
+    val password: ValidationResult,
 ) {
     val isValid: Boolean = email.isValid && name.isValid && password.isValid
 }
 
 data class LoginValidationResult(
     val email: ValidationResult,
-    val password: ValidationResult
+    val password: ValidationResult,
 ) {
     val isValid: Boolean = email.isValid && password.isValid
 }
@@ -62,23 +62,30 @@ object FormValidator {
         return ValidationResult(isValid = true)
     }
 
-    fun validateSignupForm(email: String, name: String, password: String): SignupValidationResult {
+    fun validateSignupForm(
+        email: String,
+        name: String,
+        password: String,
+    ): SignupValidationResult {
         val emailValidation = validateEmail(email)
         val nameValidation = validateName(name)
         val passwordValidation = validatePassword(password)
         return SignupValidationResult(
             email = emailValidation,
             name = nameValidation,
-            password = passwordValidation
+            password = passwordValidation,
         )
     }
 
-    fun validateLoginForm(email: String, password: String): LoginValidationResult {
+    fun validateLoginForm(
+        email: String,
+        password: String,
+    ): LoginValidationResult {
         val emailValidation = validateEmail(email)
         val passwordValidation = validatePassword(password)
         return LoginValidationResult(
             email = emailValidation,
-            password = passwordValidation
+            password = passwordValidation,
         )
     }
 }

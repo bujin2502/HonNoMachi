@@ -33,73 +33,85 @@ import hr.foi.air.honnomachi.viewmodel.HomeViewModel
 
 sealed interface BookListState {
     object Loading : BookListState
-    data class Success(val books: List<BookModel>) : BookListState
+
+    data class Success(
+        val books: List<BookModel>,
+    ) : BookListState
+
     object Empty : BookListState
-    data class Error(val message: String) : BookListState
+
+    data class Error(
+        val message: String,
+    ) : BookListState
 }
 
 @Composable
 fun HomePage(
     paddingValues: PaddingValues,
     navController: NavController,
-    viewModel: HomeViewModel
+    viewModel: HomeViewModel,
 ) {
     val bookListState by viewModel.bookListState.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 12.dp)
-            .padding(bottom = paddingValues.calculateBottomPadding())
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(horizontal = 12.dp)
+                .padding(bottom = paddingValues.calculateBottomPadding()),
     ) {
         TextField(
             value = searchQuery,
             onValueChange = { viewModel.onSearchQueryChange(it) },
             placeholder = { Text(stringResource(R.string.search_by_title)) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 24.dp, bottom = 2.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 24.dp, bottom = 2.dp),
             leadingIcon = {
                 Icon(Icons.Default.Search, contentDescription = "Search Icon")
             },
             shape = RoundedCornerShape(24.dp),
-            colors = TextFieldDefaults.colors(
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                disabledIndicatorColor = Color.Transparent
-            )
+            colors =
+                TextFieldDefaults.colors(
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent,
+                ),
         )
 
         when (val currentState = bookListState) {
             BookListState.Loading -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     CircularProgressIndicator()
                 }
             }
             is BookListState.Success -> {
-                val filteredBookList = if (searchQuery.isEmpty()) {
-                    currentState.books
-                } else {
-                    currentState.books.filter { it.title.contains(searchQuery, ignoreCase = true) }
-                }
+                val filteredBookList =
+                    if (searchQuery.isEmpty()) {
+                        currentState.books
+                    } else {
+                        currentState.books.filter { it.title.contains(searchQuery, ignoreCase = true) }
+                    }
 
                 if (filteredBookList.isEmpty()) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         Text(stringResource(R.string.no_books_found))
                     }
                 } else {
                     LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(top = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .padding(top = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         items(filteredBookList) { item ->
                             BookItemView(
@@ -108,7 +120,7 @@ fun HomePage(
                                     bookId?.let {
                                         navController.navigate("bookDetail/$it")
                                     }
-                                }
+                                },
                             )
                         }
                     }
@@ -117,7 +129,7 @@ fun HomePage(
             BookListState.Empty -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Text(stringResource(R.string.no_books_available))
                 }
@@ -125,7 +137,7 @@ fun HomePage(
             is BookListState.Error -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Text(stringResource(R.string.error_occurred) + ": ${currentState.message}")
                 }

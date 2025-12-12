@@ -22,7 +22,6 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class SignupFlowTest {
-
     @get:Rule
     val composeRule = createAndroidComposeRule<ComponentActivity>()
 
@@ -34,9 +33,10 @@ class SignupFlowTest {
         fakeAuthViewModel = FakeAuthViewModel()
         composeRule.setContent {
             val context = LocalContext.current
-            navController = TestNavHostController(context).apply {
-                navigatorProvider.addNavigator(ComposeNavigator())
-            }
+            navController =
+                TestNavHostController(context).apply {
+                    navigatorProvider.addNavigator(ComposeNavigator())
+                }
 
             NavHost(navController = navController, startDestination = "signup") {
                 composable("signup") {
@@ -128,7 +128,7 @@ private class FakeAuthViewModel : AuthViewModel() {
         email: String,
         name: String,
         password: String,
-        onResult: (Boolean, String?) -> Unit
+        onResult: (Boolean, String?) -> Unit,
     ) {
         lastSignup = Triple(email, name, password)
         onResult(nextResult, nextErrorMessage)

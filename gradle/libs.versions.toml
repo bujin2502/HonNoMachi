@@ -22,6 +22,7 @@ kotlinxCoroutinesPlayServices = "1.10.2"
 playServicesAuth = "21.4.0"
 foundationLayout = "1.10.0"
 kotlinxCoroutinesTest = "1.10.2"
+ktlint = "14.0.1"
 
 [libraries]
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
@@ -63,3 +64,4 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 gms-google-services = { id = "com.google.gms.google-services", version.ref = "gmsGoogleServices" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }

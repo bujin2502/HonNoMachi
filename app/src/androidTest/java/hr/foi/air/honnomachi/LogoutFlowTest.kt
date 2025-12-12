@@ -1,7 +1,7 @@
 package hr.foi.air.honnomachi
 
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.Text
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -22,7 +22,6 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class LogoutFlowTest {
-
     @get:Rule
     val composeRule = createAndroidComposeRule<ComponentActivity>()
 
@@ -36,9 +35,10 @@ class LogoutFlowTest {
         composeRule.setContent {
             val context = LocalContext.current
 
-            navController = TestNavHostController(context).apply {
-                navigatorProvider.addNavigator(ComposeNavigator())
-            }
+            navController =
+                TestNavHostController(context).apply {
+                    navigatorProvider.addNavigator(ComposeNavigator())
+                }
 
             NavHost(navController = navController, startDestination = "profile") {
                 composable("profile") {
@@ -69,6 +69,7 @@ class LogoutFlowTest {
 // Fake koji oponasa ponasanje stvarnog AuthViewModel-a
 private class FakeLogoutViewModel : AuthViewModel() {
     var logoutCalled: Boolean = false
+
     override fun signOut() {
         logoutCalled = true
     }

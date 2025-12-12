@@ -24,7 +24,6 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class LoginFlowTest {
-
     @get:Rule
     val composeRule = createAndroidComposeRule<ComponentActivity>()
 
@@ -32,10 +31,10 @@ class LoginFlowTest {
     private lateinit var fakeLoginViewModel: FakeLoginViewModel
 
     // Test podaci
-    private val TEST_EMAIL = "test@example.com"
-    private val TEST_PASSWORD = "password123"
+    private val testEmail = "test@example.com"
+    private val testPassword = "password123"
 
-    private val VERIFY_MSG = "Please verify your email before logging in."
+    private val verifyMsg = "Please verify your email before logging in."
 
     @Before
     fun setup() {
@@ -44,12 +43,12 @@ class LoginFlowTest {
         composeRule.setContent {
             val context = LocalContext.current
 
-            navController = TestNavHostController(context).apply {
-                navigatorProvider.addNavigator(ComposeNavigator())
-            }
+            navController =
+                TestNavHostController(context).apply {
+                    navigatorProvider.addNavigator(ComposeNavigator())
+                }
 
             NavHost(navController = navController, startDestination = "auth") {
-
                 composable("auth") {
                     LoginScreen(navController = navController, authViewModel = fakeLoginViewModel)
                 }
@@ -60,7 +59,7 @@ class LoginFlowTest {
                 composable("verification") {
                     EmailVerificationScreen(
                         onNavigateToLogin = { navController.navigate("auth") },
-                        authViewModel = fakeLoginViewModel
+                        authViewModel = fakeLoginViewModel,
                     )
                 }
                 composable("forgotPassword") {
@@ -74,16 +73,17 @@ class LoginFlowTest {
     @Test
     fun login_successful_navigates_to_home() {
         fakeLoginViewModel.shouldLoginSucceed = true
-        composeRule.onNodeWithTag("email_field").performTextInput(TEST_EMAIL)
-        composeRule.onNodeWithTag("password_field").performTextInput(TEST_PASSWORD)
+        composeRule.onNodeWithTag("email_field").performTextInput(testEmail)
+        composeRule.onNodeWithTag("password_field").performTextInput(testPassword)
         composeRule.onNodeWithTag("login_button").performClick()
         composeRule.waitForIdle()
 
         assertEquals("home", navController.currentBackStackEntry?.destination?.route)
         assertEquals(true, fakeLoginViewModel.loginCalled)
-        assertEquals(TEST_EMAIL, fakeLoginViewModel.capturedEmail)
-        assertEquals(TEST_PASSWORD, fakeLoginViewModel.capturedPassword)
+        assertEquals(testEmail, fakeLoginViewModel.capturedEmail)
+        assertEquals(testPassword, fakeLoginViewModel.capturedPassword)
     }
+
     @Test
     fun login_failure_stays_on_auth_screen() {
         fakeLoginViewModel.shouldLoginSucceed = false
@@ -100,25 +100,25 @@ class LoginFlowTest {
 
     @Test
     fun resend_verification_flow_navigates_and_calls_service() {
-        val TEST_RESEND_EMAIL = "unverified@test.com"
-        val TEST_RESEND_PASSWORD = "passwordtest"
+        val testResendEmail = "unverified@test.com"
+        val testResendPassword = "passwordtest"
 
         fakeLoginViewModel.shouldLoginSucceed = false
-        fakeLoginViewModel.nextErrorMessage = VERIFY_MSG
+        fakeLoginViewModel.nextErrorMessage = verifyMsg
 
-        composeRule.onNodeWithTag("email_field").performTextInput(TEST_RESEND_EMAIL)
-        composeRule.onNodeWithTag("password_field").performTextInput(TEST_RESEND_PASSWORD)
+        composeRule.onNodeWithTag("email_field").performTextInput(testResendEmail)
+        composeRule.onNodeWithTag("password_field").performTextInput(testResendPassword)
         composeRule.onNodeWithTag("login_button").performClick()
         composeRule.waitForIdle()
 
         assertEquals("verification", navController.currentBackStackEntry?.destination?.route)
-        composeRule.onNodeWithTag("verification_email_field").performTextInput(TEST_RESEND_EMAIL)
-        composeRule.onNodeWithTag("verification_password_field").performTextInput(TEST_RESEND_PASSWORD)
+        composeRule.onNodeWithTag("verification_email_field").performTextInput(testResendEmail)
+        composeRule.onNodeWithTag("verification_password_field").performTextInput(testResendPassword)
         composeRule.onNodeWithTag("resend_verification_button").performClick()
         composeRule.waitForIdle()
         assertTrue("resendVerificationEmail mora biti pozvan", fakeLoginViewModel.resendCalled)
-        assertEquals(TEST_RESEND_EMAIL, fakeLoginViewModel.resendCapturedEmail)
-        assertEquals(TEST_RESEND_PASSWORD, fakeLoginViewModel.resendCapturedPassword)
+        assertEquals(testResendEmail, fakeLoginViewModel.resendCapturedEmail)
+        assertEquals(testResendPassword, fakeLoginViewModel.resendCapturedPassword)
 
         fakeLoginViewModel.shouldLoginSucceed = true
         fakeLoginViewModel.nextErrorMessage = null
@@ -137,7 +137,11 @@ private class FakeLoginViewModel : AuthViewModel() {
     var resendCapturedPassword: String? = null
     var nextErrorMessage: String? = null
 
-    override fun login(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
+    override fun login(
+        email: String,
+        password: String,
+        onResult: (Boolean, String?) -> Unit,
+    ) {
         loginCalled = true
         capturedEmail = email
         capturedPassword = password
@@ -150,7 +154,11 @@ private class FakeLoginViewModel : AuthViewModel() {
         }
     }
 
-    override fun resendVerificationEmail(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
+    override fun resendVerificationEmail(
+        email: String,
+        password: String,
+        onResult: (Boolean, String?) -> Unit,
+    ) {
         resendCalled = true
         resendCapturedEmail = email
         resendCapturedPassword = password

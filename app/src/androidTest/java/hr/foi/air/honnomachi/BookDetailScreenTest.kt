@@ -15,26 +15,26 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class BookDetailScreenTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
     @Test
     fun bookDetailContent_displaysCorrectData() {
-        val book = BookModel(
-            bookId = "1",
-            title = "Test Book",
-            authors = listOf("Test Author"),
-            description = "This is a test book.",
-            publisher = "Test Publisher",
-            publicationYear = 2023,
-            genre = BookGenre.FANTASY,
-            imageUrls = emptyList(),
-            price = 19.99,
-            priceCurrency = Currency.USD,
-            condition = BookCondition.NEW,
-            language = Language.EN
-        )
+        val book =
+            BookModel(
+                bookId = "1",
+                title = "Test Book",
+                authors = listOf("Test Author"),
+                description = "This is a test book.",
+                publisher = "Test Publisher",
+                publicationYear = 2023,
+                genre = BookGenre.FANTASY,
+                imageUrls = emptyList(),
+                price = 19.99,
+                priceCurrency = Currency.USD,
+                condition = BookCondition.NEW,
+                language = Language.EN,
+            )
 
         composeTestRule.setContent {
             BookDetailContent(book = book)

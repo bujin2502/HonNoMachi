@@ -65,7 +65,7 @@ fun AuthScreen(
     ) {
         Image(
             painterResource(id = R.drawable.hnm_logo),
-            contentDescription = "slika",
+            contentDescription = "img",
             modifier =
                 Modifier
                     .fillMaxWidth()

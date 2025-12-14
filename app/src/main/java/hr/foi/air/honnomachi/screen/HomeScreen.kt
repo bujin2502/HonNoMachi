@@ -83,21 +83,33 @@ fun ContentScreen(
     homeViewModel: HomeViewModel,
 ) {
     when (selectedIndex) {
-        0 ->
+        0 -> {
             HomePage(
                 paddingValues = paddingValues,
                 navController = navController,
                 viewModel = homeViewModel,
             )
-        1 -> ShelfPage(paddingValues = paddingValues)
-        2 -> AddPage(paddingValues = paddingValues)
-        3 -> CartPage(paddingValues = paddingValues)
-        4 ->
+        }
+
+        1 -> {
+            ShelfPage(paddingValues = paddingValues)
+        }
+
+        2 -> {
+            AddPage(paddingValues = paddingValues)
+        }
+
+        3 -> {
+            CartPage(paddingValues = paddingValues)
+        }
+
+        4 -> {
             ProfilePage(
                 paddingValues = paddingValues,
                 navController = navController,
                 authViewModel = authViewModel,
             )
+        }
     }
 }
 

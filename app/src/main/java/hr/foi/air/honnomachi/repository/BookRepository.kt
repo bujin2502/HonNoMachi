@@ -52,7 +52,7 @@ class BookRepositoryImpl : BookRepository {
                 .get()
                 .await()
                 .toObject(BookModel::class.java)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
 }

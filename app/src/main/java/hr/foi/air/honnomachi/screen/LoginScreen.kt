@@ -57,9 +57,8 @@ fun LoginScreen(
     var passwordError by remember { mutableStateOf<ValidationErrorType?>(null) }
     val passwordFocusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
-    var context = LocalContext.current
+    val context = LocalContext.current
     var isLoading by remember { mutableStateOf(false) }
-    var showResendButton by remember { mutableStateOf(false) }
     Column(
         modifier =
             modifier
@@ -90,7 +89,7 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(20.dp))
         Image(
             painterResource(id = R.drawable.vecteezy_deconstructing_sign_up_and_log_in_49110285),
-            contentDescription = "signup_slika",
+            contentDescription = "signup_image",
             modifier =
                 Modifier
                     .fillMaxWidth()

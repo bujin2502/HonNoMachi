@@ -58,8 +58,6 @@ fun SignupScreen(
     var nameError by remember { mutableStateOf<ValidationErrorType?>(null) }
     var passwordError by remember { mutableStateOf<ValidationErrorType?>(null) }
 
-    val verificationEmailSentMessage = stringResource(id = R.string.verification_email_sent)
-    val somethingWentWrongMessage = stringResource(id = R.string.something_went_wrong)
     val context = LocalContext.current
 
     var isLoading by remember { mutableStateOf(false) }
@@ -227,7 +225,7 @@ fun SignupScreen(
                     return@Button
                 }
                 isLoading = true
-                authViewModel.signup(email, name, password) { success, errorMessage ->
+                authViewModel.signup(email, name, password) { success, _ ->
                     isLoading = false
                     if (success) {
                         AppUtil.showToast(context, R.string.verification_email_sent)

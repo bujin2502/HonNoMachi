@@ -80,14 +80,17 @@ fun BookDetailScreen(
                 is BookUiState.Loading -> {
                     BookDetailLoading()
                 }
+
                 is BookUiState.Error -> {
                     val errorMessage = (uiState as BookUiState.Error).message
                     BookDetailError(errorMessage = errorMessage)
                 }
+
                 is BookUiState.Success -> {
                     val book = (uiState as BookUiState.Success).book
                     BookDetailContent(book = book)
                 }
+
                 BookUiState.BookNotFound -> {
                     BookDetailNotFound(bookId = bookId)
                 }

@@ -14,9 +14,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.ManageAccounts
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.Button
@@ -39,6 +42,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -65,6 +70,7 @@ fun ProfileScreen(
     var street by remember { mutableStateOf("") }
     var zip by remember { mutableStateOf("") }
     var city by remember { mutableStateOf("") }
+    var isSaving by remember { mutableStateOf(false) }
 
     // Initialize state when data is loaded
     LaunchedEffect(uiState) {
@@ -77,6 +83,15 @@ fun ProfileScreen(
             city = user.city ?: ""
         }
     }
+
+    val hasChanges = if (uiState is ProfileUiState.Success) {
+        val user = (uiState as ProfileUiState.Success).user
+        name != user.name ||
+                phone != (user.phoneNumber ?: "") ||
+                street != (user.street ?: "") ||
+                zip != (user.postNumber ?: "") ||
+                city != (user.city ?: "")
+    } else false
 
     Column(
         modifier = Modifier
@@ -125,7 +140,7 @@ fun ProfileScreen(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                        imageVector = Icons.AutoMirrored.Filled.Logout,
                         contentDescription = stringResource(R.string.label_logout),
                         tint = Color.Black
                     )
@@ -147,7 +162,7 @@ fun ProfileScreen(
         ) {
             // User Icon (based on Admin role)
             val icon = if (uiState is ProfileUiState.Success && (uiState as ProfileUiState.Success).user.admin == true) {
-                Icons.Filled.Security
+                Icons.Default.ManageAccounts
             } else {
                 Icons.Default.Person
             }
@@ -178,7 +193,8 @@ fun ProfileScreen(
                         label = stringResource(R.string.label_name),
                         value = name,
                         onValueChange = { name = it },
-                        isEditable = true
+                        isEditable = true,
+                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
                     )
                     
                     // Read-only Email
@@ -193,7 +209,8 @@ fun ProfileScreen(
                         label = stringResource(R.string.label_phone),
                         value = phone,
                         onValueChange = { phone = it },
-                        isEditable = true
+                        isEditable = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
                     )
                     
                     // Editable Address Fields
@@ -201,24 +218,23 @@ fun ProfileScreen(
                         label = stringResource(R.string.label_street),
                         value = street,
                         onValueChange = { street = it },
-                        isEditable = true
+                        isEditable = true,
+                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
                     )
                     ProfileItem(
                         label = stringResource(R.string.label_zip),
                         value = zip,
                         onValueChange = { zip = it },
-                        isEditable = true
+                        isEditable = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
                     ProfileItem(
                         label = stringResource(R.string.label_city),
                         value = city,
                         onValueChange = { city = it },
-                        isEditable = true
+                        isEditable = true,
+                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
                     )
-
-                    // Read-only Role
-                    val role = if (user.admin == true) stringResource(R.string.value_admin) else stringResource(R.string.value_user)
-                    ProfileItem(label = stringResource(R.string.label_role), value = role, isEditable = false)
                 }
                 is ProfileUiState.Error -> {
                     Text(
@@ -245,8 +261,10 @@ fun ProfileScreen(
                 }
 
                 Button(
+                    enabled = hasChanges && !isSaving,
                     onClick = {
                         if (uiState is ProfileUiState.Success) {
+                            isSaving = true
                             val currentUser = (uiState as ProfileUiState.Success).user
                             val updatedUser = currentUser.copy(
                                 name = name,
@@ -256,6 +274,7 @@ fun ProfileScreen(
                                 city = city
                             )
                             profileViewModel.updateUserProfile(updatedUser) { success, message ->
+                                isSaving = false
                                 if (success) {
                                     AppUtil.showToast(context, "Profil uspješno ažuriran!")
                                 } else {
@@ -267,7 +286,15 @@ fun ProfileScreen(
                     shape = RoundedCornerShape(24.dp),
                     modifier = Modifier.weight(1f).padding(start = 8.dp)
                 ) {
-                    Text(text = stringResource(R.string.button_save))
+                    if (isSaving) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(text = stringResource(R.string.button_save))
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))

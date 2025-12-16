@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,7 +22,8 @@ fun ProfileItem(
     label: String,
     value: String?,
     onValueChange: ((String) -> Unit)? = null,
-    isEditable: Boolean = false
+    isEditable: Boolean = false,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
 ) {
     Column(
         modifier = Modifier
@@ -48,7 +50,8 @@ fun ProfileItem(
                     color = Color.Black
                 ),
                 cursorBrush = SolidColor(Color.Black),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = keyboardOptions
             )
         } else {
             Text(
@@ -57,7 +60,7 @@ fun ProfileItem(
                     fontWeight = FontWeight.Medium,
                     fontSize = 18.sp
                 ),
-                color = Color.Black
+                color = if (isEditable) Color.Black else Color.Gray
             )
         }
     }

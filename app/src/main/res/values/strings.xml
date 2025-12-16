@@ -37,6 +37,10 @@
     <string name="error_name_short">Name is too short</string>
     <string name="error_password_short">Password must have at least 6 characters</string>
     <string name="error_password_required">Password is required</string>
+    <string name="error_phone_required">Phone number is required</string>
+    <string name="error_street_required">Street is required</string>
+    <string name="error_city_required">City is required</string>
+    <string name="error_zip_required">Zip code is required</string>
     <string name="default_web_client_id" translatable="false">YOUR_DEFAULT_WEB_CLIENT_ID</string>
     <string name="logout">Logout</string>
     <string name="test_token_qa">Test Token (QA)</string>

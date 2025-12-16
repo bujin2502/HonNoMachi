@@ -13,5 +13,9 @@ fun errorMessageFor(error: ValidationErrorType): Int {
         ValidationErrorType.SHORT_NAME -> R.string.error_name_short
         ValidationErrorType.EMPTY_PASSWORD -> R.string.error_password_required
         ValidationErrorType.SHORT_PASSWORD -> R.string.error_password_short
+        ValidationErrorType.EMPTY_PHONE -> R.string.error_phone_required
+        ValidationErrorType.EMPTY_STREET -> R.string.error_street_required
+        ValidationErrorType.EMPTY_CITY -> R.string.error_city_required
+        ValidationErrorType.EMPTY_ZIP -> R.string.error_zip_required
     }
 }

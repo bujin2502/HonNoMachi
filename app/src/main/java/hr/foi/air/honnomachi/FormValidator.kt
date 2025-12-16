@@ -8,7 +8,11 @@ enum class ValidationErrorType {
     EMPTY_NAME,
     SHORT_NAME,
     EMPTY_PASSWORD,
-    SHORT_PASSWORD
+    SHORT_PASSWORD,
+    EMPTY_PHONE,
+    EMPTY_STREET,
+    EMPTY_CITY,
+    EMPTY_ZIP
 }
 
 data class ValidationResult(
@@ -29,6 +33,16 @@ data class LoginValidationResult(
     val password: ValidationResult
 ) {
     val isValid: Boolean = email.isValid && password.isValid
+}
+
+data class ProfileEditValidationResult(
+    val name: ValidationResult,
+    val phone: ValidationResult,
+    val street: ValidationResult,
+    val city: ValidationResult,
+    val zip: ValidationResult
+) {
+    val isValid: Boolean = name.isValid && phone.isValid && street.isValid && city.isValid && zip.isValid
 }
 
 object FormValidator {
@@ -62,6 +76,34 @@ object FormValidator {
         return ValidationResult(isValid = true)
     }
 
+    fun validatePhone(phone: String): ValidationResult {
+        if (phone.isBlank()) {
+            return ValidationResult(isValid = false, error = ValidationErrorType.EMPTY_PHONE)
+        }
+        return ValidationResult(isValid = true)
+    }
+
+    fun validateStreet(street: String): ValidationResult {
+        if (street.isBlank()) {
+            return ValidationResult(isValid = false, error = ValidationErrorType.EMPTY_STREET)
+        }
+        return ValidationResult(isValid = true)
+    }
+
+    fun validateCity(city: String): ValidationResult {
+        if (city.isBlank()) {
+            return ValidationResult(isValid = false, error = ValidationErrorType.EMPTY_CITY)
+        }
+        return ValidationResult(isValid = true)
+    }
+
+    fun validateZip(zip: String): ValidationResult {
+        if (zip.isBlank()) {
+            return ValidationResult(isValid = false, error = ValidationErrorType.EMPTY_ZIP)
+        }
+        return ValidationResult(isValid = true)
+    }
+
     fun validateSignupForm(email: String, name: String, password: String): SignupValidationResult {
         val emailValidation = validateEmail(email)
         val nameValidation = validateName(name)
@@ -79,6 +121,16 @@ object FormValidator {
         return LoginValidationResult(
             email = emailValidation,
             password = passwordValidation
+        )
+    }
+
+    fun validateProfileEditForm(name: String, phone: String, street: String, city: String, zip: String): ProfileEditValidationResult {
+        return ProfileEditValidationResult(
+            name = validateName(name),
+            phone = validatePhone(phone),
+            street = validateStreet(street),
+            city = validateCity(city),
+            zip = validateZip(zip)
         )
     }
 }

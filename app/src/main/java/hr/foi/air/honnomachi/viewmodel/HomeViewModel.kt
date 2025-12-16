@@ -9,10 +9,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class HomeViewModel(
+open class HomeViewModel(
     private val bookRepository: BookRepository,
 ) : ViewModel() {
-    private val _bookListState = MutableStateFlow<BookListState>(BookListState.Loading)
+    protected val _bookListState = MutableStateFlow<BookListState>(BookListState.Loading)
     val bookListState = _bookListState.asStateFlow()
 
     var searchQuery = mutableStateOf("")
@@ -22,7 +22,7 @@ class HomeViewModel(
         getBooks()
     }
 
-    private fun getBooks() {
+    open fun getBooks() {
         viewModelScope.launch {
             bookRepository.getBooks().collect {
                 _bookListState.value = it

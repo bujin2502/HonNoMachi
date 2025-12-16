@@ -25,7 +25,6 @@ import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.pages.AddPage
 import hr.foi.air.honnomachi.pages.CartPage
 import hr.foi.air.honnomachi.pages.HomePage
-import hr.foi.air.honnomachi.pages.ProfilePage
 import hr.foi.air.honnomachi.pages.ShelfPage
 import hr.foi.air.honnomachi.viewmodel.AuthViewModel
 import hr.foi.air.honnomachi.viewmodel.HomeViewModel
@@ -93,10 +92,14 @@ fun ContentScreen(
         1 -> ShelfPage(paddingValues = paddingValues)
         2 -> AddPage(paddingValues = paddingValues)
         3 -> CartPage(paddingValues = paddingValues)
-        4 -> ProfilePage(
+        4 -> ProfileScreen(
             paddingValues = paddingValues,
-            navController = navController,
-            authViewModel = authViewModel
+            onLogout = {
+                authViewModel.signOut()
+                navController.navigate("auth") {
+                    popUpTo("home") { inclusive = true }
+                }
+            }
         )
     }
 }

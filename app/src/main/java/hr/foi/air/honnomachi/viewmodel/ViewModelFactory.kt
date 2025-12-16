@@ -10,6 +10,9 @@ class ViewModelFactory : ViewModelProvider.Factory {
         if (modelClass.isAssignableFrom(HomeViewModel::class.java)) {
             return HomeViewModel(BookRepositoryImpl()) as T
         }
+        if (modelClass.isAssignableFrom(ProfileViewModel::class.java)) {
+            return ProfileViewModel() as T
+        }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

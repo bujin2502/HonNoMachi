@@ -44,6 +44,7 @@ fun ProfileItem(
             BasicTextField(
                 value = value ?: "",
                 onValueChange = onValueChange,
+                singleLine = true,
                 textStyle = MaterialTheme.typography.bodyLarge.copy(
                     fontWeight = FontWeight.Medium,
                     fontSize = 18.sp,

@@ -42,6 +42,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -194,7 +195,10 @@ fun ProfileScreen(
                         value = name,
                         onValueChange = { name = it },
                         isEditable = true,
-                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Words,
+                            imeAction = ImeAction.Next
+                        )
                     )
                     
                     // Read-only Email
@@ -210,7 +214,10 @@ fun ProfileScreen(
                         value = phone,
                         onValueChange = { phone = it },
                         isEditable = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Phone,
+                            imeAction = ImeAction.Next
+                        )
                     )
                     
                     // Editable Address Fields
@@ -219,21 +226,30 @@ fun ProfileScreen(
                         value = street,
                         onValueChange = { street = it },
                         isEditable = true,
-                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Sentences,
+                            imeAction = ImeAction.Next
+                        )
                     )
                     ProfileItem(
                         label = stringResource(R.string.label_zip),
                         value = zip,
                         onValueChange = { zip = it },
                         isEditable = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Next
+                        )
                     )
                     ProfileItem(
                         label = stringResource(R.string.label_city),
                         value = city,
                         onValueChange = { city = it },
                         isEditable = true,
-                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Words,
+                            imeAction = ImeAction.Done
+                        )
                     )
                 }
                 is ProfileUiState.Error -> {

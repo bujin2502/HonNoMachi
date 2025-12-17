@@ -1,8 +1,12 @@
 package hr.foi.air.honnomachi
 
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.ui.test.*
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performTextClearance
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -19,43 +23,48 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-//Fake model
-class FakeHomeViewModel : HomeViewModel(
-    bookRepository = object : BookRepository {
-        override fun getBooks(): Flow<BookListState> = flowOf(BookListState.Loading)
-        override suspend fun getBookDetails(bookId: String): BookModel? = null
-    }
-){
+// Fake model
+class FakeHomeViewModel :
+    HomeViewModel(
+        bookRepository =
+            object : BookRepository {
+                override fun getBooks(): Flow<BookListState> = flowOf(BookListState.Loading)
+
+                override suspend fun getBookDetails(bookId: String): BookModel? = null
+            },
+    ) {
     init {
-        _bookListState.value = BookListState.Success(
-            listOf(
-                BookModel(
-                    bookId = "1",
-                    title = "IT",
-                    authors = listOf("Stephen King"),
-                    price = 15.0,
-                    priceCurrency = Currency.EUR
+        setBookListState(
+            BookListState.Success(
+                listOf(
+                    BookModel(
+                        bookId = "1",
+                        title = "IT",
+                        authors = listOf("Stephen King"),
+                        price = 15.0,
+                        priceCurrency = Currency.EUR,
+                    ),
+                    BookModel(
+                        bookId = "2",
+                        title = "Harry Potter",
+                        authors = listOf("J.K. Rowling"),
+                        price = 20.0,
+                        priceCurrency = Currency.USD,
+                    ),
                 ),
-                BookModel(
-                    bookId = "2",
-                    title = "Harry Potter",
-                    authors = listOf("J.K. Rowling"),
-                    price = 20.0,
-                    priceCurrency = Currency.USD
-                )
-            )
+            ),
         )
     }
+
     fun emitState(state: BookListState) {
-        _bookListState.value = state
+        setBookListState(state)
     }
 
-    override fun getBooks() { }
+    override fun getBooks() {}
 }
 
 @RunWith(AndroidJUnit4::class)
 class HomePageTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -67,7 +76,7 @@ class HomePageTest {
                 HomePage(
                     paddingValues = PaddingValues(0.dp),
                     navController = rememberNavController(),
-                    viewModel = fakeVM
+                    viewModel = fakeVM,
                 )
             }
         }
@@ -103,7 +112,14 @@ class HomePageTest {
         launchHomePage()
 
         composeTestRule.onNodeWithTag("search_field").performTextInput("Superman")
-        composeTestRule.onNodeWithText("No books found matching your search.", ignoreCase = true, substring = true).assertIsDisplayed()
+
+        val expectedText = "No books found matching your search."
+        val expectedTextHR = "Nema knjiga koje odgovaraju pretrazi."
+        try {
+            composeTestRule.onNodeWithText(expectedText, ignoreCase = true, substring = true).assertIsDisplayed()
+        } catch (e: AssertionError) {
+            composeTestRule.onNodeWithText(expectedTextHR, ignoreCase = true, substring = true).assertIsDisplayed()
+        }
     }
 
     @Test

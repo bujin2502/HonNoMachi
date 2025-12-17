@@ -53,7 +53,7 @@ fun HomePage(
     viewModel: HomeViewModel,
 ) {
     val bookListState by viewModel.bookListState.collectAsStateWithLifecycle()
-    val searchQuery by viewModel.searchQuery
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
 
     Column(
         modifier =

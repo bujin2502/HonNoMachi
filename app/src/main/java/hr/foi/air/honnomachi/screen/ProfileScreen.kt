@@ -62,6 +62,7 @@ import hr.foi.air.honnomachi.viewmodel.ViewModelFactory
 fun ProfileScreen(
     paddingValues: PaddingValues,
     onLogout: () -> Unit,
+    onNavigateToChangePassword: () -> Unit,
     profileViewModel: ProfileViewModel = viewModel(factory = ViewModelFactory())
 ) {
     val context = LocalContext.current
@@ -320,7 +321,7 @@ fun ProfileScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 OutlinedButton(
-                    onClick = { /* TODO: Reset password logic */ },
+                    onClick = onNavigateToChangePassword,
                     shape = RoundedCornerShape(24.dp),
                     modifier = Modifier.weight(1f).padding(end = 8.dp)
                 ) {

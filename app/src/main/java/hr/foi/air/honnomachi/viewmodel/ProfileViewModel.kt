@@ -3,6 +3,7 @@ package hr.foi.air.honnomachi.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.Firebase
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -73,5 +74,31 @@ class ProfileViewModel(
                 onResult(false, e.message)
             }
         }
+    }
+
+    fun changePassword(oldPass: String, newPass: String, onResult: (Boolean, String?) -> Unit) {
+        val user = auth.currentUser
+        if (user == null || user.email == null) {
+            onResult(false, "User not logged in.")
+            return
+        }
+
+        val credential = EmailAuthProvider.getCredential(user.email!!, oldPass)
+
+        user.reauthenticate(credential)
+            .addOnCompleteListener { authTask ->
+                if (authTask.isSuccessful) {
+                    user.updatePassword(newPass)
+                        .addOnCompleteListener { updateTask ->
+                            if (updateTask.isSuccessful) {
+                                onResult(true, null)
+                            } else {
+                                onResult(false, updateTask.exception?.message)
+                            }
+                        }
+                } else {
+                    onResult(false, authTask.exception?.message ?: "Re-authentication failed.")
+                }
+            }
     }
 }

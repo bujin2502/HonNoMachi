@@ -12,7 +12,8 @@ enum class ValidationErrorType {
     EMPTY_PHONE,
     EMPTY_STREET,
     EMPTY_CITY,
-    EMPTY_ZIP
+    EMPTY_ZIP,
+    PASSWORDS_DO_NOT_MATCH
 }
 
 data class ValidationResult(
@@ -43,6 +44,14 @@ data class ProfileEditValidationResult(
     val zip: ValidationResult
 ) {
     val isValid: Boolean = name.isValid && phone.isValid && street.isValid && city.isValid && zip.isValid
+}
+
+data class ChangePasswordValidationResult(
+    val oldPassword: ValidationResult,
+    val newPassword: ValidationResult,
+    val confirmPassword: ValidationResult
+) {
+    val isValid: Boolean = oldPassword.isValid && newPassword.isValid && confirmPassword.isValid
 }
 
 object FormValidator {
@@ -104,6 +113,16 @@ object FormValidator {
         return ValidationResult(isValid = true)
     }
 
+    fun validatePasswordConfirmation(password: String, confirm: String): ValidationResult {
+        if (confirm.isBlank()) {
+            return ValidationResult(isValid = false, error = ValidationErrorType.EMPTY_PASSWORD) // Confirm field is empty
+        }
+        if (password != confirm) {
+            return ValidationResult(isValid = false, error = ValidationErrorType.PASSWORDS_DO_NOT_MATCH)
+        }
+        return ValidationResult(isValid = true)
+    }
+
     fun validateSignupForm(email: String, name: String, password: String): SignupValidationResult {
         val emailValidation = validateEmail(email)
         val nameValidation = validateName(name)
@@ -131,6 +150,14 @@ object FormValidator {
             street = validateStreet(street),
             city = validateCity(city),
             zip = validateZip(zip)
+        )
+    }
+
+    fun validateChangePasswordForm(oldPass: String, newPass: String, confirmPass: String): ChangePasswordValidationResult {
+        return ChangePasswordValidationResult(
+            oldPassword = validatePassword(oldPass), // Reuse basic validation for old pass
+            newPassword = validatePassword(newPass),
+            confirmPassword = validatePasswordConfirmation(newPass, confirmPass)
         )
     }
 }

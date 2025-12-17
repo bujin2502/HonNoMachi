@@ -116,6 +116,9 @@ fun ContentScreen(
                     popUpTo("home") { inclusive = true }
                 }
             },
+            onNavigateToChangePassword = {
+                navController.navigate("changePassword")
+            },
             profileViewModel = profileViewModel
         )
     }

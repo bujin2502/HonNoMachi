@@ -67,6 +67,10 @@ fun AppNavigation(
             HomeScreen(modifier, navController, authViewModel, homeViewModel)
         }
 
+        composable("changePassword") {
+            hr.foi.air.honnomachi.screen.ChangePasswordScreen(navController = navController)
+        }
+
         composable(
             "bookDetail/{bookId}",
             arguments = listOf(navArgument("bookId") { type = NavType.StringType })

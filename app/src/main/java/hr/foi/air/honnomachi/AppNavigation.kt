@@ -2,6 +2,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -11,6 +12,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.screen.AuthScreen
 import hr.foi.air.honnomachi.screen.BookDetailScreen
 import hr.foi.air.honnomachi.screen.EmailVerificationScreen
@@ -29,6 +31,7 @@ fun AppNavigation(
 ) {
     val authViewModel: AuthViewModel = viewModel()
     val homeViewModel: HomeViewModel = viewModel(factory = ViewModelFactory())
+    val context = LocalContext.current
 
     val currentUser = Firebase.auth.currentUser
     val startDestination = when {
@@ -39,11 +42,15 @@ fun AppNavigation(
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
 
-    LaunchedEffect(navBackStackEntry) {
-        authViewModel.checkSession {
-            navController.navigate("auth") {
-                popUpTo(0) { inclusive = true }
+    LaunchedEffect(Unit) {
+        while (true) {
+            authViewModel.checkSession {
+                AppUtil.showToast(context, "Session expired. Please login again.")
+                navController.navigate("auth") {
+                    popUpTo(0) { inclusive = true }
+                }
             }
+            kotlinx.coroutines.delay(5000)
         }
     }
 

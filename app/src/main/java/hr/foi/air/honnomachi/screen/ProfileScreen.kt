@@ -68,13 +68,6 @@ fun ProfileScreen(
     val context = LocalContext.current
     val uiState by profileViewModel.uiState.collectAsState()
 
-    // Check session validity on load
-    LaunchedEffect(Unit) {
-        profileViewModel.checkSession {
-            onLogout()
-        }
-    }
-
     // Form State
     var name by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }

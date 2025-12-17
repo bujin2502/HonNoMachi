@@ -1,10 +1,13 @@
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
@@ -32,6 +35,16 @@ fun AppNavigation(
         currentUser == null -> "auth"
         currentUser.isEmailVerified -> "home"
         else -> "verification"
+    }
+
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+
+    LaunchedEffect(navBackStackEntry) {
+        authViewModel.checkSession {
+            navController.navigate("auth") {
+                popUpTo(0) { inclusive = true }
+            }
+        }
     }
 
     NavHost(navController = navController, startDestination = startDestination) {

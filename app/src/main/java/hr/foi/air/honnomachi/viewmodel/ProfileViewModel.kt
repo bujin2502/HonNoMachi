@@ -101,4 +101,11 @@ class ProfileViewModel(
                 }
             }
     }
+
+    fun checkSession(onInvalid: () -> Unit) {
+        auth.currentUser?.getIdToken(true)
+            ?.addOnFailureListener {
+                onInvalid()
+            }
+    }
 }

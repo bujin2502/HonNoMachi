@@ -200,6 +200,17 @@ open class AuthViewModel (
             }
     }
 
+    fun checkSession(onInvalid: () -> Unit) {
+        val user = auth?.currentUser
+        if (user != null) {
+            user.getIdToken(true)
+                .addOnFailureListener {
+                    signOut()
+                    onInvalid()
+                }
+        }
+    }
+
   // Funkcija za log uspjesne prijavu
     private fun logLoginSuccess(method: String, userId: String) {
         analytics?.setUserId(userId)

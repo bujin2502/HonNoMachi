@@ -189,7 +189,7 @@ fun ProfileScreen(
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             when (val state = uiState) {
                 is ProfileUiState.Loading -> {
@@ -312,7 +312,7 @@ fun ProfileScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Buttons
             Row(

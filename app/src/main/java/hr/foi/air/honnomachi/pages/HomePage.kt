@@ -22,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -52,7 +53,7 @@ fun HomePage(
     viewModel: HomeViewModel,
 ) {
     val bookListState by viewModel.bookListState.collectAsStateWithLifecycle()
-    val searchQuery by viewModel.searchQuery
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
 
     Column(
         modifier =
@@ -68,7 +69,8 @@ fun HomePage(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(top = 24.dp, bottom = 2.dp),
+                    .padding(top = 24.dp, bottom = 2.dp)
+                    .testTag("search_field"),
             leadingIcon = {
                 Icon(Icons.Default.Search, contentDescription = "Search Icon")
             },
@@ -110,7 +112,8 @@ fun HomePage(
                         modifier =
                             Modifier
                                 .fillMaxSize()
-                                .padding(top = 8.dp),
+                                .padding(top = 8.dp)
+                                .testTag("book_list"),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         items(filteredBookList) { item ->

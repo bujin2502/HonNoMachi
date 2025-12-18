@@ -51,7 +51,7 @@ fun HomePage(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 12.dp)
-            .padding(bottom = paddingValues.calculateBottomPadding())
+            .padding(paddingValues)
     ) {
         TextField(
             value = searchQuery,

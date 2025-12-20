@@ -261,6 +261,18 @@ open class AuthViewModel(
         analytics?.setUserId(null)
     }
 
+    open fun checkSession(onSessionExpired: () -> Unit) {
+        val user = auth?.currentUser
+        user
+            ?.getIdToken(true)
+            ?.addOnFailureListener { exception ->
+                if (exception is com.google.firebase.auth.FirebaseAuthInvalidUserException) {
+                    auth.signOut()
+                    onSessionExpired()
+                }
+            }
+    }
+
     // QA helper-Funkcija za testiranje tokena
     fun testSecureRead(
         onSuccess: () -> Unit,

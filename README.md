@@ -111,7 +111,7 @@ Za detaljnije upute o postavljanju projekta, pogledajte:
 
 ## 📱 Funkcionalnosti
 
-### ✅ Implementirano (Sprint 01 - Pri Završetku)
+### ✅ Implementirano (Sprint 01)
 
 #### 🔐 Autentifikacija korisnika
 | Funkcionalnost | Status | Opis |
@@ -200,7 +200,7 @@ Projekt razvija tim studenata **Fakulteta organizacije i informatike (FOI)**, Va
 | **Ivan Giljević** | igiljevic@student.foi.hr | Developer |
 | **Denis Kuzminski** | dkuzminsk22@student.foi.hr | Developer |
 | **Zlatko Pračić** | zpracic@student.foi.hr | Developer |
-| **Mislav Žnidarec** | mznidarec@foi.hr | Developer |
+| **Mislav Žnidarec** | mznidarec@student.foi.hr | Developer |
 
 📧 **Kontakt tima:** [Confluence - Informacije o timu](https://25-26-izvanredni-tim.atlassian.net/wiki/x/BACg)
 
@@ -214,7 +214,7 @@ Projekt razvija tim studenata **Fakulteta organizacije i informatike (FOI)**, Va
 
 ---
 
-**Status projekta:** 🟢 Sprint 01 - Završava se | Sprint 02 - U planiranju  
-**Zadnje ažuriranje:** 25.11.2025
+**Status projekta:** 🟢 Sprint 02 - Završava se | Sprint 03 - U planiranju
+**Zadnje ažuriranje:** 17.12.2025
 
 </div>

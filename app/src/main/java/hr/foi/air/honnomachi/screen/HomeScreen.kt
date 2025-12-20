@@ -28,7 +28,6 @@ import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.pages.AddPage
 import hr.foi.air.honnomachi.pages.CartPage
 import hr.foi.air.honnomachi.pages.HomePage
-import hr.foi.air.honnomachi.pages.ProfilePage
 import hr.foi.air.honnomachi.pages.ShelfPage
 import hr.foi.air.honnomachi.viewmodel.AuthViewModel
 import hr.foi.air.honnomachi.viewmodel.HomeViewModel
@@ -42,26 +41,27 @@ fun HomeScreen(
     navController: NavController,
     authViewModel: AuthViewModel,
     homeViewModel: HomeViewModel,
-    profileViewModel: ProfileViewModel = viewModel(factory = ViewModelFactory())
+    profileViewModel: ProfileViewModel = viewModel(factory = ViewModelFactory()),
 ) {
     val profileUiState by profileViewModel.uiState.collectAsState()
 
-    val profileIcon = if (profileUiState is ProfileUiState.Success && (profileUiState as ProfileUiState.Success).user.admin == true) {
-        Icons.Default.ManageAccounts
-    } else {
-        Icons.Default.Person
-    }
+    val profileIcon =
+        if (profileUiState is ProfileUiState.Success && (profileUiState as ProfileUiState.Success).user.admin == true) {
+            Icons.Default.ManageAccounts
+        } else {
+            Icons.Default.Person
+        }
 
-    val navItemList = listOf(
-        NavItem(label = stringResource(R.string.home), icon = Icons.AutoMirrored.Outlined.MenuBook),
-        NavItem(label = stringResource(R.string.shelf), icon = Icons.AutoMirrored.Filled.LibraryBooks),
-        NavItem(label = stringResource(R.string.add), icon = Icons.Default.AddCircle),
-        NavItem(label = stringResource(R.string.cart), icon = Icons.Default.ShoppingCart),
-        NavItem(label = stringResource(R.string.profile), icon = profileIcon)
-    )
+    val navItemList =
+        listOf(
+            NavItem(label = stringResource(R.string.home), icon = Icons.AutoMirrored.Outlined.MenuBook),
+            NavItem(label = stringResource(R.string.shelf), icon = Icons.AutoMirrored.Filled.LibraryBooks),
+            NavItem(label = stringResource(R.string.add), icon = Icons.Default.AddCircle),
+            NavItem(label = stringResource(R.string.cart), icon = Icons.Default.ShoppingCart),
+            NavItem(label = stringResource(R.string.profile), icon = profileIcon),
+        )
 
     var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
-
 
     Scaffold(
         bottomBar = {
@@ -85,9 +85,8 @@ fun HomeScreen(
             navController,
             authViewModel,
             homeViewModel,
-            profileViewModel
+            profileViewModel,
         )
-
     }
 }
 
@@ -101,27 +100,41 @@ fun ContentScreen(
     profileViewModel: ProfileViewModel,
 ) {
     when (selectedIndex) {
-        0 -> HomePage(
-            paddingValues = paddingValues,
-            navController = navController,
-            viewModel = homeViewModel
-        )
-        1 -> ShelfPage(paddingValues = paddingValues)
-        2 -> AddPage(paddingValues = paddingValues)
-        3 -> CartPage(paddingValues = paddingValues)
-        4 -> ProfileScreen(
-            paddingValues = paddingValues,
-            onLogout = {
-                authViewModel.signOut()
-                navController.navigate("auth") {
-                    popUpTo("home") { inclusive = true }
-                }
-            },
-            onNavigateToChangePassword = {
-                navController.navigate("changePassword")
-            },
-            profileViewModel = profileViewModel
-        )
+        0 -> {
+            HomePage(
+                paddingValues = paddingValues,
+                navController = navController,
+                viewModel = homeViewModel,
+            )
+        }
+
+        1 -> {
+            ShelfPage(paddingValues = paddingValues)
+        }
+
+        2 -> {
+            AddPage(paddingValues = paddingValues)
+        }
+
+        3 -> {
+            CartPage(paddingValues = paddingValues)
+        }
+
+        4 -> {
+            ProfileScreen(
+                paddingValues = paddingValues,
+                onLogout = {
+                    authViewModel.signOut()
+                    navController.navigate("auth") {
+                        popUpTo("home") { inclusive = true }
+                    }
+                },
+                onNavigateToChangePassword = {
+                    navController.navigate("changePassword")
+                },
+                profileViewModel = profileViewModel,
+            )
+        }
     }
 }
 

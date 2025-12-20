@@ -19,9 +19,8 @@ import kotlinx.coroutines.tasks.await
 
 class ProfileViewModel(
     private val auth: FirebaseAuth = Firebase.auth,
-    private val firestore: FirebaseFirestore = Firebase.firestore
+    private val firestore: FirebaseFirestore = Firebase.firestore,
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
@@ -38,7 +37,12 @@ class ProfileViewModel(
             val currentUser = auth.currentUser
             if (currentUser != null) {
                 try {
-                    val document = firestore.collection("users").document(currentUser.uid).get().await()
+                    val document =
+                        firestore
+                            .collection("users")
+                            .document(currentUser.uid)
+                            .get()
+                            .await()
                     if (document.exists()) {
                         val user = document.toObject(UserModel::class.java)
                         if (user != null) {
@@ -55,7 +59,7 @@ class ProfileViewModel(
                                     phoneError = null,
                                     streetError = null,
                                     cityError = null,
-                                    zipError = null
+                                    zipError = null,
                                 )
                             }
                         } else {
@@ -80,9 +84,9 @@ class ProfileViewModel(
     }
 
     fun onPhoneChange(newValue: String) {
-         if (newValue.length <= 16) {
-             _formState.update { it.copy(phone = newValue, phoneError = null) }
-         }
+        if (newValue.length <= 16) {
+            _formState.update { it.copy(phone = newValue, phoneError = null) }
+        }
     }
 
     fun onStreetChange(newValue: String) {
@@ -94,9 +98,9 @@ class ProfileViewModel(
     }
 
     fun onZipChange(newValue: String) {
-         if (newValue.length <= 5) {
-             _formState.update { it.copy(zip = newValue, zipError = null) }
-         }
+        if (newValue.length <= 5) {
+            _formState.update { it.copy(zip = newValue, zipError = null) }
+        }
     }
 
     // --- Validation Methods (e.g. on focus lost) ---
@@ -130,13 +134,14 @@ class ProfileViewModel(
 
     fun saveProfile(onResult: (Boolean, String?) -> Unit) {
         val currentState = _formState.value
-        val validation = FormValidator.validateProfileEditForm(
-            currentState.name,
-            currentState.phone,
-            currentState.street,
-            currentState.city,
-            currentState.zip
-        )
+        val validation =
+            FormValidator.validateProfileEditForm(
+                currentState.name,
+                currentState.phone,
+                currentState.street,
+                currentState.city,
+                currentState.zip,
+            )
 
         if (!validation.isValid) {
             _formState.update {
@@ -145,7 +150,7 @@ class ProfileViewModel(
                     phoneError = validation.phone.error,
                     streetError = validation.street.error,
                     cityError = validation.city.error,
-                    zipError = validation.zip.error
+                    zipError = validation.zip.error,
                 )
             }
             onResult(false, "Molimo ispravno popunite sva polja.") // Or return specific error
@@ -158,23 +163,27 @@ class ProfileViewModel(
         viewModelScope.launch {
             _formState.update { it.copy(isSaving = true) }
             try {
-                val updatedUser = currentUserState.user.copy(
-                    name = currentState.name,
-                    phoneNumber = currentState.phone,
-                    street = currentState.street,
-                    postNumber = currentState.zip,
-                    city = currentState.city
-                )
+                val updatedUser =
+                    currentUserState.user.copy(
+                        name = currentState.name,
+                        phoneNumber = currentState.phone,
+                        street = currentState.street,
+                        postNumber = currentState.zip,
+                        city = currentState.city,
+                    )
 
-                val updates = mapOf(
-                    "name" to updatedUser.name,
-                    "phoneNumber" to updatedUser.phoneNumber,
-                    "street" to updatedUser.street,
-                    "postNumber" to updatedUser.postNumber,
-                    "city" to updatedUser.city
-                )
+                val updates =
+                    mapOf(
+                        "name" to updatedUser.name,
+                        "phoneNumber" to updatedUser.phoneNumber,
+                        "street" to updatedUser.street,
+                        "postNumber" to updatedUser.postNumber,
+                        "city" to updatedUser.city,
+                    )
 
-                firestore.collection("users").document(updatedUser.uid)
+                firestore
+                    .collection("users")
+                    .document(updatedUser.uid)
                     .update(updates)
                     .await()
 
@@ -188,7 +197,11 @@ class ProfileViewModel(
         }
     }
 
-    fun changePassword(oldPass: String, newPass: String, onResult: (Boolean, String?) -> Unit) {
+    fun changePassword(
+        oldPass: String,
+        newPass: String,
+        onResult: (Boolean, String?) -> Unit,
+    ) {
         val user = auth.currentUser
         if (user == null || user.email == null) {
             onResult(false, "User not logged in.")
@@ -197,10 +210,12 @@ class ProfileViewModel(
 
         val credential = EmailAuthProvider.getCredential(user.email!!, oldPass)
 
-        user.reauthenticate(credential)
+        user
+            .reauthenticate(credential)
             .addOnCompleteListener { authTask ->
                 if (authTask.isSuccessful) {
-                    user.updatePassword(newPass)
+                    user
+                        .updatePassword(newPass)
                         .addOnCompleteListener { updateTask ->
                             if (updateTask.isSuccessful) {
                                 onResult(true, null)
@@ -211,13 +226,6 @@ class ProfileViewModel(
                 } else {
                     onResult(false, authTask.exception?.message ?: "Re-authentication failed.")
                 }
-            }
-    }
-
-    fun checkSession(onInvalid: () -> Unit) {
-        auth.currentUser?.getIdToken(true)
-            ?.addOnFailureListener {
-                onInvalid()
             }
     }
 }

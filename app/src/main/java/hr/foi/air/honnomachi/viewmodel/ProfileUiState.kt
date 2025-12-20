@@ -5,8 +5,14 @@ import hr.foi.air.honnomachi.model.UserModel
 
 sealed interface ProfileUiState {
     data object Loading : ProfileUiState
-    data class Success(val user: UserModel) : ProfileUiState
-    data class Error(val message: String) : ProfileUiState
+
+    data class Success(
+        val user: UserModel,
+    ) : ProfileUiState
+
+    data class Error(
+        val message: String,
+    ) : ProfileUiState
 }
 
 data class ProfileFormState(
@@ -21,5 +27,5 @@ data class ProfileFormState(
     val zip: String = "",
     val zipError: ValidationErrorType? = null,
     val isSaving: Boolean = false,
-    val isFormValid: Boolean = true // aggregated validity
+    val isFormValid: Boolean = true, // aggregated validity
 )

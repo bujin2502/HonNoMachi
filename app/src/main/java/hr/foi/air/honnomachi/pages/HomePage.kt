@@ -92,6 +92,7 @@ fun HomePage(
                     CircularProgressIndicator()
                 }
             }
+
             is BookListState.Success -> {
                 val filteredBookList =
                     if (searchQuery.isEmpty()) {
@@ -129,6 +130,7 @@ fun HomePage(
                     }
                 }
             }
+
             BookListState.Empty -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -137,6 +139,7 @@ fun HomePage(
                     Text(stringResource(R.string.no_books_available))
                 }
             }
+
             is BookListState.Error -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),

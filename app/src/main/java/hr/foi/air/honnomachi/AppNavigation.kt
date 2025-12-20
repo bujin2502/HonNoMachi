@@ -1,3 +1,5 @@
+package hr.foi.air.honnomachi
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -12,9 +14,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
-import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.screen.AuthScreen
 import hr.foi.air.honnomachi.screen.BookDetailScreen
+import hr.foi.air.honnomachi.screen.ChangePasswordScreen
 import hr.foi.air.honnomachi.screen.EmailVerificationScreen
 import hr.foi.air.honnomachi.screen.ForgotPasswordScreen
 import hr.foi.air.honnomachi.screen.HomeScreen
@@ -23,6 +25,7 @@ import hr.foi.air.honnomachi.screen.SignupScreen
 import hr.foi.air.honnomachi.viewmodel.AuthViewModel
 import hr.foi.air.honnomachi.viewmodel.HomeViewModel
 import hr.foi.air.honnomachi.viewmodel.ViewModelFactory
+import kotlinx.coroutines.delay
 
 @Composable
 fun AppNavigation(
@@ -51,7 +54,7 @@ fun AppNavigation(
                     popUpTo(0) { inclusive = true }
                 }
             }
-            kotlinx.coroutines.delay(5000)
+            delay(5000)
         }
     }
 
@@ -88,7 +91,7 @@ fun AppNavigation(
         }
 
         composable("changePassword") {
-            hr.foi.air.honnomachi.screen.ChangePasswordScreen(navController = navController)
+            ChangePasswordScreen(navController = navController)
         }
 
         composable(

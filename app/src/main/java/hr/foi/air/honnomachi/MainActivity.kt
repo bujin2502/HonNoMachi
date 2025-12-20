@@ -1,6 +1,5 @@
 package hr.foi.air.honnomachi
 
-import AppNavigation
 import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -22,10 +21,11 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             LaunchedEffect(navController) {
                 navController.currentBackStackEntryFlow.collect { backStackEntry ->
-                    requestedOrientation = when (backStackEntry.destination.route) {
-                        "home", "changePassword" -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-                        else -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                    }
+                    requestedOrientation =
+                        when (backStackEntry.destination.route) {
+                            "home", "changePassword" -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                            else -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                        }
                 }
             }
             HonNoMachiTheme {

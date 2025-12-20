@@ -1,14 +1,14 @@
 package hr.foi.air.honnomachi
 
 private val emailRegex = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")
+
 // Regex patterns
 private val nameRegex = Regex("""^[\p{L} .'-]+$""")
 private val phoneRegex = Regex("""^\+?[0-9]{9,15}$""")
-private val streetRegex = Regex("""^[\p{L}\s\.-]+ \d+[A-Za-z]?$""")
+private val streetRegex = Regex("""^[\p{L}\s.-]+ \d+[A-Za-z]?$""")
 private val cityRegex = Regex("""^[\p{L}\s-]+$""")
 private val zipRegex = Regex("""^\d{5}$""")
-private val passwordRegex = Regex("""^(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$%^&*()_+\-=\[\]{};':"\\|,.<>/?]).{6,}$""")
-
+private val passwordRegex = Regex("""^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]).{6,}$""")
 
 enum class ValidationErrorType {
     EMPTY_EMAIL,
@@ -55,7 +55,7 @@ data class ProfileEditValidationResult(
     val phone: ValidationResult,
     val street: ValidationResult,
     val city: ValidationResult,
-    val zip: ValidationResult
+    val zip: ValidationResult,
 ) {
     val isValid: Boolean = name.isValid && phone.isValid && street.isValid && city.isValid && zip.isValid
 }
@@ -63,7 +63,7 @@ data class ProfileEditValidationResult(
 data class ChangePasswordValidationResult(
     val oldPassword: ValidationResult,
     val newPassword: ValidationResult,
-    val confirmPassword: ValidationResult
+    val confirmPassword: ValidationResult,
 ) {
     val isValid: Boolean = oldPassword.isValid && newPassword.isValid && confirmPassword.isValid
 }
@@ -87,7 +87,7 @@ object FormValidator {
             return ValidationResult(isValid = false, error = ValidationErrorType.SHORT_NAME)
         }
         if (!nameRegex.matches(name)) {
-             return ValidationResult(isValid = false, error = ValidationErrorType.INVALID_NAME_FORMAT)
+            return ValidationResult(isValid = false, error = ValidationErrorType.INVALID_NAME_FORMAT)
         }
         return ValidationResult(isValid = true)
     }
@@ -152,7 +152,10 @@ object FormValidator {
         return ValidationResult(isValid = true)
     }
 
-    fun validatePasswordConfirmation(password: String, confirm: String): ValidationResult {
+    fun validatePasswordConfirmation(
+        password: String,
+        confirm: String,
+    ): ValidationResult {
         if (confirm.isBlank()) {
             return ValidationResult(isValid = false, error = ValidationErrorType.EMPTY_PASSWORD) // Confirm field is empty
         }
@@ -162,7 +165,11 @@ object FormValidator {
         return ValidationResult(isValid = true)
     }
 
-    fun validateSignupForm(email: String, name: String, password: String): SignupValidationResult {
+    fun validateSignupForm(
+        email: String,
+        name: String,
+        password: String,
+    ): SignupValidationResult {
         val emailValidation = validateEmail(email)
         val nameValidation = validateName(name)
         val passwordValidation = validatePassword(password)
@@ -185,21 +192,29 @@ object FormValidator {
         )
     }
 
-    fun validateProfileEditForm(name: String, phone: String, street: String, city: String, zip: String): ProfileEditValidationResult {
-        return ProfileEditValidationResult(
+    fun validateProfileEditForm(
+        name: String,
+        phone: String,
+        street: String,
+        city: String,
+        zip: String,
+    ): ProfileEditValidationResult =
+        ProfileEditValidationResult(
             name = validateName(name),
             phone = validatePhone(phone),
             street = validateStreet(street),
             city = validateCity(city),
-            zip = validateZip(zip)
+            zip = validateZip(zip),
         )
-    }
 
-    fun validateChangePasswordForm(oldPass: String, newPass: String, confirmPass: String): ChangePasswordValidationResult {
-        return ChangePasswordValidationResult(
+    fun validateChangePasswordForm(
+        oldPass: String,
+        newPass: String,
+        confirmPass: String,
+    ): ChangePasswordValidationResult =
+        ChangePasswordValidationResult(
             oldPassword = validateStrictPassword(oldPass),
             newPassword = validateStrictPassword(newPass),
-            confirmPassword = validatePasswordConfirmation(newPass, confirmPass)
+            confirmPassword = validatePasswordConfirmation(newPass, confirmPass),
         )
-    }
 }

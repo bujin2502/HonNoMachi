@@ -43,6 +43,12 @@
     <string name="error_city_required">Grad je obavezan</string>
     <string name="error_zip_required">Poštanski broj je obavezan</string>
     <string name="error_passwords_do_not_match">Lozinke se ne podudaraju</string>
+    <string name="error_name_invalid">Neispravan format imena</string>
+    <string name="error_phone_invalid">Neispravan format broja mobitela</string>
+    <string name="error_street_invalid">Format: Ime ulice + kućni broj</string>
+    <string name="error_city_invalid">Neispravan naziv grada</string>
+    <string name="error_zip_invalid">Neispravan poštanski broj (5 znamenki)</string>
+    <string name="error_password_weak">Lozinka mora imati min 6 znakova, 1 veliko slovo, 1 broj i 1 spec. znak</string>
     <string name="title_change_password">Promjena lozinke</string>
     <string name="label_old_password">Trenutna lozinka</string>
     <string name="label_new_password">Nova lozinka</string>

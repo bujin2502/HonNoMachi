@@ -42,6 +42,12 @@
     <string name="error_city_required">City is required</string>
     <string name="error_zip_required">Zip code is required</string>
     <string name="error_passwords_do_not_match">Passwords do not match</string>
+    <string name="error_name_invalid">Invalid name format</string>
+    <string name="error_phone_invalid">Invalid phone number format</string>
+    <string name="error_street_invalid">Format: Street Name + Number</string>
+    <string name="error_city_invalid">Invalid city name</string>
+    <string name="error_zip_invalid">Invalid zip code (5 digits)</string>
+    <string name="error_password_weak">Password must be at least 6 chars, with 1 uppercase, 1 number, and 1 special char</string>
     <string name="title_change_password">Change Password</string>
     <string name="label_old_password">Current Password</string>
     <string name="label_new_password">New Password</string>

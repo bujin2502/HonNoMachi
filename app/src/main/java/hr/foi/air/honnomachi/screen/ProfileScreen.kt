@@ -233,8 +233,10 @@ fun ProfileScreen(
                         label = stringResource(R.string.label_phone),
                         value = phone,
                         onValueChange = { 
-                            phone = it
-                            phoneError = null
+                            if (it.length <= 16) {
+                                phone = it
+                                phoneError = null
+                            }
                         },
                         isEditable = true,
                         keyboardOptions = KeyboardOptions(
@@ -271,8 +273,10 @@ fun ProfileScreen(
                         label = stringResource(R.string.label_zip),
                         value = zip,
                         onValueChange = { 
-                            zip = it
-                            zipError = null
+                            if (it.length <= 5) {
+                                zip = it
+                                zipError = null
+                            }
                         },
                         isEditable = true,
                         keyboardOptions = KeyboardOptions(
@@ -366,11 +370,7 @@ fun ProfileScreen(
                     modifier = Modifier.weight(1f).padding(start = 8.dp)
                 ) {
                     if (isSaving) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            strokeWidth = 2.dp
-                        )
+                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
                     } else {
                         Text(text = stringResource(R.string.button_save))
                     }

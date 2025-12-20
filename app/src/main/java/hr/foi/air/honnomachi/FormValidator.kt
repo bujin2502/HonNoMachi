@@ -194,7 +194,7 @@ object FormValidator {
 
     fun validateChangePasswordForm(oldPass: String, newPass: String, confirmPass: String): ChangePasswordValidationResult {
         return ChangePasswordValidationResult(
-            oldPassword = validatePassword(oldPass), // Just needs to be non-empty/valid length format, not strictly regex check as old password might predate rules
+            oldPassword = validateStrictPassword(oldPass),
             newPassword = validateStrictPassword(newPass),
             confirmPassword = validatePasswordConfirmation(newPass, confirmPass)
         )

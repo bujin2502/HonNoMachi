@@ -53,6 +53,8 @@ import hr.foi.air.honnomachi.ui.components.errorMessageFor
 import hr.foi.air.honnomachi.viewmodel.ProfileViewModel
 import hr.foi.air.honnomachi.viewmodel.ViewModelFactory
 
+import androidx.compose.ui.focus.onFocusChanged
+
 @Composable
 fun ChangePasswordScreen(
     navController: NavController,
@@ -122,7 +124,14 @@ fun ChangePasswordScreen(
             value = oldPass,
             onValueChange = { oldPass = it; oldPassError = null },
             label = { Text(stringResource(R.string.label_old_password)) },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .onFocusChanged { focusState ->
+                    if (!focusState.isFocused && oldPass.isNotEmpty()) {
+                         val result = FormValidator.validateStrictPassword(oldPass)
+                         oldPassError = result.error
+                    }
+                },
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
             isError = oldPassError != null,
@@ -135,7 +144,14 @@ fun ChangePasswordScreen(
             value = newPass,
             onValueChange = { newPass = it; newPassError = null },
             label = { Text(stringResource(R.string.label_new_password)) },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .onFocusChanged { focusState ->
+                    if (!focusState.isFocused && newPass.isNotEmpty()) {
+                        val result = FormValidator.validateStrictPassword(newPass)
+                        newPassError = result.error
+                    }
+                },
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
             isError = newPassError != null,
@@ -148,7 +164,14 @@ fun ChangePasswordScreen(
             value = confirmPass,
             onValueChange = { confirmPass = it; confirmPassError = null },
             label = { Text(stringResource(R.string.label_confirm_password)) },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .onFocusChanged { focusState ->
+                    if (!focusState.isFocused && confirmPass.isNotEmpty()) {
+                        val result = FormValidator.validatePasswordConfirmation(newPass, confirmPass)
+                        confirmPassError = result.error
+                    }
+                },
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
             isError = confirmPassError != null,

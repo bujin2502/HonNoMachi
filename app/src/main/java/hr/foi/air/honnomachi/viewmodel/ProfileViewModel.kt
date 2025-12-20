@@ -8,10 +8,12 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
+import hr.foi.air.honnomachi.FormValidator
 import hr.foi.air.honnomachi.model.UserModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -22,6 +24,9 @@ class ProfileViewModel(
 
     private val _uiState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
+
+    private val _formState = MutableStateFlow(ProfileFormState())
+    val formState: StateFlow<ProfileFormState> = _formState.asStateFlow()
 
     init {
         loadUserProfile()
@@ -38,6 +43,21 @@ class ProfileViewModel(
                         val user = document.toObject(UserModel::class.java)
                         if (user != null) {
                             _uiState.value = ProfileUiState.Success(user)
+                            // Initialize form state
+                            _formState.update {
+                                it.copy(
+                                    name = user.name,
+                                    phone = user.phoneNumber ?: "",
+                                    street = user.street ?: "",
+                                    city = user.city ?: "",
+                                    zip = user.postNumber ?: "",
+                                    nameError = null,
+                                    phoneError = null,
+                                    streetError = null,
+                                    cityError = null,
+                                    zipError = null
+                                )
+                            }
                         } else {
                             _uiState.value = ProfileUiState.Error("Failed to parse user data.")
                         }
@@ -53,9 +73,99 @@ class ProfileViewModel(
         }
     }
 
-    fun updateUserProfile(updatedUser: UserModel, onResult: (Boolean, String?) -> Unit) {
+    // --- Form Update Methods ---
+
+    fun onNameChange(newValue: String) {
+        _formState.update { it.copy(name = newValue, nameError = null) }
+    }
+
+    fun onPhoneChange(newValue: String) {
+         if (newValue.length <= 16) {
+             _formState.update { it.copy(phone = newValue, phoneError = null) }
+         }
+    }
+
+    fun onStreetChange(newValue: String) {
+        _formState.update { it.copy(street = newValue, streetError = null) }
+    }
+
+    fun onCityChange(newValue: String) {
+        _formState.update { it.copy(city = newValue, cityError = null) }
+    }
+
+    fun onZipChange(newValue: String) {
+         if (newValue.length <= 5) {
+             _formState.update { it.copy(zip = newValue, zipError = null) }
+         }
+    }
+
+    // --- Validation Methods (e.g. on focus lost) ---
+
+    fun validateName() {
+        val result = FormValidator.validateName(_formState.value.name)
+        _formState.update { it.copy(nameError = result.error) }
+    }
+
+    fun validatePhone() {
+        val result = FormValidator.validatePhone(_formState.value.phone)
+        _formState.update { it.copy(phoneError = result.error) }
+    }
+
+    fun validateStreet() {
+        val result = FormValidator.validateStreet(_formState.value.street)
+        _formState.update { it.copy(streetError = result.error) }
+    }
+
+    fun validateCity() {
+        val result = FormValidator.validateCity(_formState.value.city)
+        _formState.update { it.copy(cityError = result.error) }
+    }
+
+    fun validateZip() {
+        val result = FormValidator.validateZip(_formState.value.zip)
+        _formState.update { it.copy(zipError = result.error) }
+    }
+
+    // --- Save Logic ---
+
+    fun saveProfile(onResult: (Boolean, String?) -> Unit) {
+        val currentState = _formState.value
+        val validation = FormValidator.validateProfileEditForm(
+            currentState.name,
+            currentState.phone,
+            currentState.street,
+            currentState.city,
+            currentState.zip
+        )
+
+        if (!validation.isValid) {
+            _formState.update {
+                it.copy(
+                    nameError = validation.name.error,
+                    phoneError = validation.phone.error,
+                    streetError = validation.street.error,
+                    cityError = validation.city.error,
+                    zipError = validation.zip.error
+                )
+            }
+            onResult(false, "Molimo ispravno popunite sva polja.") // Or return specific error
+            return
+        }
+
+        val currentUserState = _uiState.value
+        if (currentUserState !is ProfileUiState.Success) return
+
         viewModelScope.launch {
+            _formState.update { it.copy(isSaving = true) }
             try {
+                val updatedUser = currentUserState.user.copy(
+                    name = currentState.name,
+                    phoneNumber = currentState.phone,
+                    street = currentState.street,
+                    postNumber = currentState.zip,
+                    city = currentState.city
+                )
+
                 val updates = mapOf(
                     "name" to updatedUser.name,
                     "phoneNumber" to updatedUser.phoneNumber,
@@ -69,8 +179,10 @@ class ProfileViewModel(
                     .await()
 
                 _uiState.value = ProfileUiState.Success(updatedUser)
+                _formState.update { it.copy(isSaving = false) }
                 onResult(true, null)
             } catch (e: Exception) {
+                _formState.update { it.copy(isSaving = false) }
                 onResult(false, e.message)
             }
         }

@@ -20,7 +20,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.ManageAccounts
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -29,12 +28,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,10 +43,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import hr.foi.air.honnomachi.AppUtil
-import hr.foi.air.honnomachi.FormValidator
 import hr.foi.air.honnomachi.R
-import hr.foi.air.honnomachi.ValidationErrorType
-import hr.foi.air.honnomachi.model.UserModel
 import hr.foi.air.honnomachi.ui.components.ProfileItem
 import hr.foi.air.honnomachi.ui.components.errorMessageFor
 import hr.foi.air.honnomachi.viewmodel.ProfileUiState
@@ -67,44 +59,17 @@ fun ProfileScreen(
 ) {
     val context = LocalContext.current
     val uiState by profileViewModel.uiState.collectAsState()
+    val formState by profileViewModel.formState.collectAsState()
 
-    // Form State
-    var name by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
-    var street by remember { mutableStateOf("") }
-    var zip by remember { mutableStateOf("") }
-    var city by remember { mutableStateOf("") }
-    var isSaving by remember { mutableStateOf(false) }
-
-    // Error State
-    var nameError by remember { mutableStateOf<ValidationErrorType?>(null) }
-    var phoneError by remember { mutableStateOf<ValidationErrorType?>(null) }
-    var streetError by remember { mutableStateOf<ValidationErrorType?>(null) }
-    var zipError by remember { mutableStateOf<ValidationErrorType?>(null) }
-    var cityError by remember { mutableStateOf<ValidationErrorType?>(null) }
-
-    // Initialize state when data is loaded
-    LaunchedEffect(uiState) {
-        if (uiState is ProfileUiState.Success) {
-            val user = (uiState as ProfileUiState.Success).user
-            name = user.name
-            phone = user.phoneNumber ?: ""
-            street = user.street ?: ""
-            zip = user.postNumber ?: ""
-            city = user.city ?: ""
-        }
-    }
-
+    // Determine if form has changes
     val hasChanges = if (uiState is ProfileUiState.Success) {
         val user = (uiState as ProfileUiState.Success).user
-        name != user.name ||
-                phone != (user.phoneNumber ?: "") ||
-                street != (user.street ?: "") ||
-                zip != (user.postNumber ?: "") ||
-                city != (user.city ?: "")
+        formState.name != user.name ||
+                formState.phone != (user.phoneNumber ?: "") ||
+                formState.street != (user.street ?: "") ||
+                formState.zip != (user.postNumber ?: "") ||
+                formState.city != (user.city ?: "")
     } else false
-
-    val isFormValid = nameError == null && phoneError == null && streetError == null && zipError == null && cityError == null
 
     Column(
         modifier = Modifier
@@ -204,21 +169,15 @@ fun ProfileScreen(
                     // Editable Fields
                     ProfileItem(
                         label = stringResource(R.string.label_name),
-                        value = name,
-                        onValueChange = { 
-                            name = it
-                            nameError = null // Reset error on change
-                        },
+                        value = formState.name,
+                        onValueChange = profileViewModel::onNameChange,
                         isEditable = true,
                         keyboardOptions = KeyboardOptions(
                             capitalization = KeyboardCapitalization.Words,
                             imeAction = ImeAction.Next
                         ),
-                        errorText = nameError?.let { stringResource(errorMessageFor(it)) },
-                        onFocusLost = {
-                            val result = FormValidator.validateName(name)
-                            nameError = result.error
-                        }
+                        errorText = formState.nameError?.let { stringResource(errorMessageFor(it)) },
+                        onFocusLost = profileViewModel::validateName
                     )
                     
                     // Read-only Email
@@ -231,81 +190,53 @@ fun ProfileScreen(
                     // Editable Phone
                     ProfileItem(
                         label = stringResource(R.string.label_phone),
-                        value = phone,
-                        onValueChange = { 
-                            if (it.length <= 16) {
-                                phone = it
-                                phoneError = null
-                            }
-                        },
+                        value = formState.phone,
+                        onValueChange = profileViewModel::onPhoneChange,
                         isEditable = true,
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Phone,
                             imeAction = ImeAction.Next
                         ),
-                        errorText = phoneError?.let { stringResource(errorMessageFor(it)) },
-                        onFocusLost = {
-                            val result = FormValidator.validatePhone(phone)
-                            phoneError = result.error
-                        }
+                        errorText = formState.phoneError?.let { stringResource(errorMessageFor(it)) },
+                        onFocusLost = profileViewModel::validatePhone
                     )
                     
                     // Editable Address Fields
                     ProfileItem(
                         label = stringResource(R.string.label_street),
-                        value = street,
-                        onValueChange = { 
-                            street = it
-                            streetError = null
-                        },
+                        value = formState.street,
+                        onValueChange = profileViewModel::onStreetChange,
                         isEditable = true,
                         keyboardOptions = KeyboardOptions(
                             capitalization = KeyboardCapitalization.Sentences,
                             imeAction = ImeAction.Next
                         ),
-                        errorText = streetError?.let { stringResource(errorMessageFor(it)) },
-                        onFocusLost = {
-                            val result = FormValidator.validateStreet(street)
-                            streetError = result.error
-                        }
+                        errorText = formState.streetError?.let { stringResource(errorMessageFor(it)) },
+                        onFocusLost = profileViewModel::validateStreet
                     )
                     ProfileItem(
                         label = stringResource(R.string.label_zip),
-                        value = zip,
-                        onValueChange = { 
-                            if (it.length <= 5) {
-                                zip = it
-                                zipError = null
-                            }
-                        },
+                        value = formState.zip,
+                        onValueChange = profileViewModel::onZipChange,
                         isEditable = true,
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Number,
                             imeAction = ImeAction.Next
                         ),
-                        errorText = zipError?.let { stringResource(errorMessageFor(it)) },
-                        onFocusLost = {
-                            val result = FormValidator.validateZip(zip)
-                            zipError = result.error
-                        }
+                        errorText = formState.zipError?.let { stringResource(errorMessageFor(it)) },
+                        onFocusLost = profileViewModel::validateZip
                     )
                     ProfileItem(
                         label = stringResource(R.string.label_city),
-                        value = city,
-                        onValueChange = { 
-                            city = it
-                            cityError = null
-                        },
+                        value = formState.city,
+                        onValueChange = profileViewModel::onCityChange,
                         isEditable = true,
                         keyboardOptions = KeyboardOptions(
                             capitalization = KeyboardCapitalization.Words,
                             imeAction = ImeAction.Done
                         ),
-                        errorText = cityError?.let { stringResource(errorMessageFor(it)) },
-                        onFocusLost = {
-                            val result = FormValidator.validateCity(city)
-                            cityError = result.error
-                        }
+                        errorText = formState.cityError?.let { stringResource(errorMessageFor(it)) },
+                        onFocusLost = profileViewModel::validateCity
                     )
                 }
                 is ProfileUiState.Error -> {
@@ -333,43 +264,20 @@ fun ProfileScreen(
                 }
 
                 Button(
-                    enabled = hasChanges && !isSaving && isFormValid,
+                    enabled = hasChanges && !formState.isSaving,
                     onClick = {
-                        if (uiState is ProfileUiState.Success) {
-                            // Final validation before save
-                            val validationResult = FormValidator.validateProfileEditForm(name, phone, street, city, zip)
-                            if (!validationResult.isValid) {
-                                nameError = validationResult.name.error
-                                phoneError = validationResult.phone.error
-                                streetError = validationResult.street.error
-                                zipError = validationResult.zip.error
-                                cityError = validationResult.city.error
-                                AppUtil.showToast(context, "Molimo ispravno popunite sva polja.")
+                        profileViewModel.saveProfile { success, message ->
+                             if (success) {
+                                AppUtil.showToast(context, "Profil uspješno ažuriran!")
                             } else {
-                                isSaving = true
-                                val currentUser = (uiState as ProfileUiState.Success).user
-                                val updatedUser = currentUser.copy(
-                                    name = name,
-                                    phoneNumber = phone,
-                                    street = street,
-                                    postNumber = zip,
-                                    city = city
-                                )
-                                profileViewModel.updateUserProfile(updatedUser) { success, message ->
-                                    isSaving = false
-                                    if (success) {
-                                        AppUtil.showToast(context, "Profil uspješno ažuriran!")
-                                    } else {
-                                        AppUtil.showToast(context, "Greška: $message")
-                                    }
-                                }
+                                AppUtil.showToast(context, "Greška: $message")
                             }
                         }
                     },
                     shape = RoundedCornerShape(24.dp),
                     modifier = Modifier.weight(1f).padding(start = 8.dp)
                 ) {
-                    if (isSaving) {
+                    if (formState.isSaving) {
                         CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
                     } else {
                         Text(text = stringResource(R.string.button_save))

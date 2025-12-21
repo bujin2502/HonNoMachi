@@ -75,7 +75,7 @@ class FormValidatorTest {
     @Test
     fun `weak password fails strict validation`() {
         // Needs Uppercase, Number, Special char
-        val result = FormValidator.validateStrictPassword("password123") 
+        val result = FormValidator.validateStrictPassword("password123")
         assertFalse(result.isValid)
         assertEquals(ValidationErrorType.WEAK_PASSWORD, result.error)
     }
@@ -99,12 +99,12 @@ class FormValidatorTest {
         val result = FormValidator.validatePasswordConfirmation("Password123!", "Password123!")
         assertTrue(result.isValid)
     }
-    
+
     @Test
     fun `empty confirm password fails`() {
-         val result = FormValidator.validatePasswordConfirmation("Password123!", "")
-         assertFalse(result.isValid)
-         assertEquals(ValidationErrorType.EMPTY_PASSWORD, result.error)
+        val result = FormValidator.validatePasswordConfirmation("Password123!", "")
+        assertFalse(result.isValid)
+        assertEquals(ValidationErrorType.EMPTY_PASSWORD, result.error)
     }
 
     // --- Phone Tests ---
@@ -142,7 +142,7 @@ class FormValidatorTest {
         assertFalse(result.isValid)
         assertEquals(ValidationErrorType.INVALID_STREET_FORMAT, result.error)
     }
-    
+
     @Test
     fun `valid street passes`() {
         val result = FormValidator.validateStreet("Main Street 12")
@@ -155,7 +155,7 @@ class FormValidatorTest {
         assertFalse(result.isValid)
         assertEquals(ValidationErrorType.EMPTY_CITY, result.error)
     }
-    
+
     @Test
     fun `valid city passes`() {
         val result = FormValidator.validateCity("New York")
@@ -175,7 +175,7 @@ class FormValidatorTest {
         assertFalse(result.isValid)
         assertEquals(ValidationErrorType.INVALID_ZIP_FORMAT, result.error)
     }
-    
+
     @Test
     fun `valid zip passes`() {
         val result = FormValidator.validateZip("10000")
@@ -201,25 +201,27 @@ class FormValidatorTest {
 
     @Test
     fun `valid profile edit form passes`() {
-        val result = FormValidator.validateProfileEditForm(
-            name = "John Doe",
-            phone = "+1234567890",
-            street = "Main St 1",
-            city = "City",
-            zip = "12345"
-        )
+        val result =
+            FormValidator.validateProfileEditForm(
+                name = "John Doe",
+                phone = "+1234567890",
+                street = "Main St 1",
+                city = "City",
+                zip = "12345",
+            )
         assertTrue(result.isValid)
     }
 
     @Test
     fun `invalid profile edit form fails`() {
-        val result = FormValidator.validateProfileEditForm(
-            name = "",
-            phone = "invalid",
-            street = "",
-            city = "",
-            zip = "1"
-        )
+        val result =
+            FormValidator.validateProfileEditForm(
+                name = "",
+                phone = "invalid",
+                street = "",
+                city = "",
+                zip = "1",
+            )
         assertFalse(result.isValid)
         assertEquals(ValidationErrorType.EMPTY_NAME, result.name.error)
         assertEquals(ValidationErrorType.INVALID_PHONE_FORMAT, result.phone.error)
@@ -227,21 +229,23 @@ class FormValidatorTest {
 
     @Test
     fun `valid change password form passes`() {
-        val result = FormValidator.validateChangePasswordForm(
-            oldPass = "OldPass1!",
-            newPass = "NewPass1!",
-            confirmPass = "NewPass1!"
-        )
+        val result =
+            FormValidator.validateChangePasswordForm(
+                oldPass = "OldPass1!",
+                newPass = "NewPass1!",
+                confirmPass = "NewPass1!",
+            )
         assertTrue(result.isValid)
     }
-    
+
     @Test
     fun `change password form fails on mismatch`() {
-         val result = FormValidator.validateChangePasswordForm(
-            oldPass = "OldPass1!",
-            newPass = "NewPass1!",
-            confirmPass = "Different1!"
-        )
+        val result =
+            FormValidator.validateChangePasswordForm(
+                oldPass = "OldPass1!",
+                newPass = "NewPass1!",
+                confirmPass = "Different1!",
+            )
         assertFalse(result.isValid)
         assertEquals(ValidationErrorType.PASSWORDS_DO_NOT_MATCH, result.confirmPassword.error)
     }

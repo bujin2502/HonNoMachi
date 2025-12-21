@@ -16,7 +16,6 @@ import org.junit.runner.RunWith
 
 // Fake ViewModel
 class FakeChangePasswordViewModel : ProfileViewModel(mockk(relaxed = true), mockk(relaxed = true)) {
-    
     var changePasswordCalled = false
     var shouldSucceed = true
 
@@ -25,7 +24,7 @@ class FakeChangePasswordViewModel : ProfileViewModel(mockk(relaxed = true), mock
     override fun changePassword(
         oldPass: String,
         newPass: String,
-        onResult: (Boolean, String?) -> Unit
+        onResult: (Boolean, String?) -> Unit,
     ) {
         changePasswordCalled = true
         if (shouldSucceed) {
@@ -48,7 +47,7 @@ class ChangePasswordScreenTest {
         composeTestRule.setContent {
             ChangePasswordScreen(
                 navController = rememberNavController(),
-                profileViewModel = fakeViewModel
+                profileViewModel = fakeViewModel,
             )
         }
     }
@@ -58,7 +57,10 @@ class ChangePasswordScreenTest {
         launchScreen()
         composeTestRule.waitForIdle()
 
-        val context = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext
+        val context =
+            androidx.test.platform.app.InstrumentationRegistry
+                .getInstrumentation()
+                .targetContext
         val labelOldPass = context.getString(hr.foi.air.honnomachi.R.string.label_old_password)
         val labelNewPass = context.getString(hr.foi.air.honnomachi.R.string.label_new_password)
         val labelConfirmPass = context.getString(hr.foi.air.honnomachi.R.string.label_confirm_password)
@@ -78,7 +80,10 @@ class ChangePasswordScreenTest {
         launchScreen()
         composeTestRule.waitForIdle()
 
-        val context = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext
+        val context =
+            androidx.test.platform.app.InstrumentationRegistry
+                .getInstrumentation()
+                .targetContext
         val labelOldPass = context.getString(hr.foi.air.honnomachi.R.string.label_old_password)
         val labelNewPass = context.getString(hr.foi.air.honnomachi.R.string.label_new_password)
         val labelConfirmPass = context.getString(hr.foi.air.honnomachi.R.string.label_confirm_password)
@@ -92,7 +97,7 @@ class ChangePasswordScreenTest {
         composeTestRule.onNodeWithText(btnSave).performClick()
 
         composeTestRule.onNodeWithText(errorMsg).assertIsDisplayed()
-        
+
         assert(!fakeViewModel.changePasswordCalled)
     }
 }

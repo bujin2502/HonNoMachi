@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-class ProfileViewModel(
+open class ProfileViewModel(
     private val auth: FirebaseAuth = Firebase.auth,
     private val firestore: FirebaseFirestore = Firebase.firestore,
 ) : ViewModel() {
@@ -31,7 +31,7 @@ class ProfileViewModel(
         loadUserProfile()
     }
 
-    fun loadUserProfile() {
+    open fun loadUserProfile() {
         viewModelScope.launch {
             _uiState.value = ProfileUiState.Loading
             val currentUser = auth.currentUser
@@ -79,25 +79,25 @@ class ProfileViewModel(
 
     // --- Form Update Methods ---
 
-    fun onNameChange(newValue: String) {
+    open fun onNameChange(newValue: String) {
         _formState.update { it.copy(name = newValue, nameError = null) }
     }
 
-    fun onPhoneChange(newValue: String) {
+    open fun onPhoneChange(newValue: String) {
         if (newValue.length <= 16) {
             _formState.update { it.copy(phone = newValue, phoneError = null) }
         }
     }
 
-    fun onStreetChange(newValue: String) {
+    open fun onStreetChange(newValue: String) {
         _formState.update { it.copy(street = newValue, streetError = null) }
     }
 
-    fun onCityChange(newValue: String) {
+    open fun onCityChange(newValue: String) {
         _formState.update { it.copy(city = newValue, cityError = null) }
     }
 
-    fun onZipChange(newValue: String) {
+    open fun onZipChange(newValue: String) {
         if (newValue.length <= 5) {
             _formState.update { it.copy(zip = newValue, zipError = null) }
         }
@@ -105,34 +105,34 @@ class ProfileViewModel(
 
     // --- Validation Methods (e.g. on focus lost) ---
 
-    fun validateName() {
+    open fun validateName() {
         val result = FormValidator.validateName(_formState.value.name)
         _formState.update { it.copy(nameError = result.error) }
     }
 
-    fun validatePhone() {
+    open fun validatePhone() {
         val result = FormValidator.validatePhone(_formState.value.phone)
         _formState.update { it.copy(phoneError = result.error) }
     }
 
-    fun validateStreet() {
+    open fun validateStreet() {
         val result = FormValidator.validateStreet(_formState.value.street)
         _formState.update { it.copy(streetError = result.error) }
     }
 
-    fun validateCity() {
+    open fun validateCity() {
         val result = FormValidator.validateCity(_formState.value.city)
         _formState.update { it.copy(cityError = result.error) }
     }
 
-    fun validateZip() {
+    open fun validateZip() {
         val result = FormValidator.validateZip(_formState.value.zip)
         _formState.update { it.copy(zipError = result.error) }
     }
 
     // --- Save Logic ---
 
-    fun saveProfile(onResult: (Boolean, String?) -> Unit) {
+    open fun saveProfile(onResult: (Boolean, String?) -> Unit) {
         val currentState = _formState.value
         val validation =
             FormValidator.validateProfileEditForm(
@@ -197,7 +197,7 @@ class ProfileViewModel(
         }
     }
 
-    fun changePassword(
+    open fun changePassword(
         oldPass: String,
         newPass: String,
         onResult: (Boolean, String?) -> Unit,

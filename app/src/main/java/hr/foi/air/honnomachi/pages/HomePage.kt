@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -31,6 +32,8 @@ import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.ui.components.BookItemView
 import hr.foi.air.honnomachi.viewmodel.HomeViewModel
+
+private const val SHOW_DEBUG_BUTTON = false
 
 sealed interface BookListState {
     object Loading : BookListState
@@ -82,6 +85,11 @@ fun HomePage(
                     disabledIndicatorColor = Color.Transparent,
                 ),
         )
+        if (SHOW_DEBUG_BUTTON) {
+            Button(onClick = { throw RuntimeException("Testni crash") }) {
+                Text("CRASH TEST")
+            }
+        }
 
         when (val currentState = bookListState) {
             BookListState.Loading -> {

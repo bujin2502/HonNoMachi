@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.gms.google.services)
     alias(libs.plugins.ktlint)
+    alias(libs.plugins.firebase.crashlytics)
 }
 
 android {
@@ -96,4 +97,5 @@ dependencies {
     implementation(libs.play.services.auth)
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.coil.compose)
+    implementation(libs.firebase.crashlytics)
 }

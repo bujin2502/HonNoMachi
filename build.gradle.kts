@@ -5,4 +5,5 @@ plugins {
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.gms.google.services) apply false
     alias(libs.plugins.ktlint) apply false
+    alias(libs.plugins.firebase.crashlytics) apply false
 }

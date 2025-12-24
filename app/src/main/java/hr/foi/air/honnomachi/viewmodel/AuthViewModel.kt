@@ -175,6 +175,7 @@ open class AuthViewModel(
 
     open fun signOut() {
         logLogout("user_logout")
+        CrashlyticsManager.setUserId(null)
         auth?.signOut()
     }
 
@@ -241,6 +242,7 @@ open class AuthViewModel(
         method: String,
         userId: String,
     ) {
+        CrashlyticsManager.setUserId(userId)
         analytics?.setUserId(userId)
         val bundle =
             Bundle().apply {

@@ -36,6 +36,7 @@ import androidx.navigation.NavHostController
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import hr.foi.air.honnomachi.AppUtil
+import hr.foi.air.honnomachi.CrashlyticsManager
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.ui.components.OrDivider
 import hr.foi.air.honnomachi.viewmodel.AuthViewModel
@@ -149,9 +150,11 @@ fun AuthScreen(
                             }
                         }
                     } catch (e: GetCredentialException) {
+                        CrashlyticsManager.logException(e)
                         isGoogleLoading = false
                         AppUtil.showToast(context, e.message ?: "Google sign-in canceled.")
                     } catch (e: Exception) {
+                        CrashlyticsManager.logException(e)
                         isGoogleLoading = false
                         AppUtil.showToast(context, e.message ?: "Google sign-in failed.")
                     }

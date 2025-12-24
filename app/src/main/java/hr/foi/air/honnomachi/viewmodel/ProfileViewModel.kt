@@ -8,6 +8,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
+import hr.foi.air.honnomachi.CrashlyticsManager
 import hr.foi.air.honnomachi.FormValidator
 import hr.foi.air.honnomachi.model.UserModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -69,6 +70,7 @@ open class ProfileViewModel(
                         _uiState.value = ProfileUiState.Error("User document not found.")
                     }
                 } catch (e: Exception) {
+                    CrashlyticsManager.logException(e)
                     _uiState.value = ProfileUiState.Error(e.message ?: "An error occurred.")
                 }
             } else {
@@ -191,6 +193,7 @@ open class ProfileViewModel(
                 _formState.update { it.copy(isSaving = false) }
                 onResult(true, null)
             } catch (e: Exception) {
+                CrashlyticsManager.logException(e)
                 _formState.update { it.copy(isSaving = false) }
                 onResult(false, e.message)
             }
@@ -220,10 +223,12 @@ open class ProfileViewModel(
                             if (updateTask.isSuccessful) {
                                 onResult(true, null)
                             } else {
+                                updateTask.exception?.let { CrashlyticsManager.logException(it) }
                                 onResult(false, updateTask.exception?.message)
                             }
                         }
                 } else {
+                    authTask.exception?.let { CrashlyticsManager.logException(it) }
                     onResult(false, authTask.exception?.message ?: "Re-authentication failed.")
                 }
             }

@@ -132,6 +132,9 @@ fun ContentScreen(
                 onNavigateToChangePassword = {
                     navController.navigate("changePassword")
                 },
+                onNavigateToPrivacyPolicy = {
+                    navController.navigate("privacyPolicy")
+                },
                 profileViewModel = profileViewModel,
             )
         }

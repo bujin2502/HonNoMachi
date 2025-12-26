@@ -22,6 +22,7 @@ import hr.foi.air.honnomachi.screen.EmailVerificationScreen
 import hr.foi.air.honnomachi.screen.ForgotPasswordScreen
 import hr.foi.air.honnomachi.screen.HomeScreen
 import hr.foi.air.honnomachi.screen.LoginScreen
+import hr.foi.air.honnomachi.screen.PrivacyPolicyScreen
 import hr.foi.air.honnomachi.screen.SignupScreen
 import hr.foi.air.honnomachi.viewmodel.AuthViewModel
 import hr.foi.air.honnomachi.viewmodel.HomeViewModel
@@ -100,6 +101,10 @@ fun AppNavigation(
 
         composable("changePassword") {
             ChangePasswordScreen(navController = navController)
+        }
+
+        composable("privacyPolicy") {
+            PrivacyPolicyScreen(onNavigateBack = { navController.navigateUp() })
         }
 
         composable(

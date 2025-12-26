@@ -29,6 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -57,6 +58,7 @@ fun ProfileScreen(
     paddingValues: PaddingValues,
     onLogout: () -> Unit,
     onNavigateToChangePassword: () -> Unit,
+    onNavigateToPrivacyPolicy: () -> Unit,
     profileViewModel: ProfileViewModel = viewModel(factory = ViewModelFactory()),
 ) {
     val context = LocalContext.current
@@ -295,6 +297,9 @@ fun ProfileScreen(
                         profileViewModel.onAnalyticsToggled(isEnabled)
                     }
                 )
+            }
+            TextButton(onClick = onNavigateToPrivacyPolicy) {
+                Text(text = stringResource(id = R.string.title_privacy_policy))
             }
 
             Spacer(modifier = Modifier.height(24.dp))

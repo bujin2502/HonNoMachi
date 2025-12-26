@@ -146,4 +146,12 @@
     <string name="label_privacy_settings">Privacy Settings</string>
     <string name="label_analytics_consent">Allow Usage Data</string>
     <string name="desc_analytics_consent">Help improve the app by sending anonymous usage and crash data.</string>
+    <string name="title_privacy_policy">Privacy Policy</string>
+    <string name="desc_navigate_back">Navigate back</string>
+    <string name="title_data_collection">What data do we collect?</string>
+    <string name="content_data_collection">We collect anonymous data about your use of the application (via Firebase Analytics) and error reports (via Firebase Crashlytics) to improve the stability and functionality of the application.</string>
+    <string name="title_user_id">User ID</string>
+    <string name="content_user_id">If you are logged in, your unique user ID is attached to the error report to help us resolve the issue more easily. We do not collect your email, name, or other personal data for this purpose.</string>
+    <string name="title_data_management">Data Management</string>
+    <string name="content_data_management">You can withdraw your consent for the collection of this data at any time in your profile settings.</string>
 </resources>

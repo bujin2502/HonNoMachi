@@ -143,4 +143,7 @@
     <string name="value_user">Korisnik</string>
     <string name="value_active">Aktivan</string>
     <string name="value_suspended">Suspenzija</string>
+    <string name="label_privacy_settings">Privacy Settings</string>
+    <string name="label_analytics_consent">Allow Usage Data</string>
+    <string name="desc_analytics_consent">Help improve the app by sending anonymous usage and crash data.</string>
 </resources>

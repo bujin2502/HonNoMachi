@@ -143,4 +143,7 @@
     <string name="value_user">Korisnik</string>
     <string name="value_active">Aktivan</string>
     <string name="value_suspended">Suspendiran</string>
+    <string name="label_privacy_settings">Postavke privatnosti</string>
+    <string name="label_analytics_consent">Dopusti podatke o korištenju</string>
+    <string name="desc_analytics_consent">Pomozite poboljšati aplikaciju slanjem anonimnih podataka o korištenju i rušenju.</string>
 </resources>

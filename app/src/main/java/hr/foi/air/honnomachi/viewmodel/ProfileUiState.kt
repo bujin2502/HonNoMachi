@@ -26,6 +26,7 @@ data class ProfileFormState(
     val cityError: ValidationErrorType? = null,
     val zip: String = "",
     val zipError: ValidationErrorType? = null,
+    val analyticsEnabled: Boolean = true,
     val isSaving: Boolean = false,
     val isFormValid: Boolean = true, // aggregated validity
 )

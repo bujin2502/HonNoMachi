@@ -8,6 +8,7 @@ import com.google.firebase.analytics.analytics
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
+import com.google.firebase.crashlytics.crashlytics
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import hr.foi.air.honnomachi.CrashlyticsManager
@@ -44,6 +45,7 @@ open class AuthViewModel(
                                         email = email,
                                         uid = userId,
                                         isVerified = false,
+                                        analyticsEnabled = true
                                     )
                                 firestore
                                     ?.collection("users")
@@ -147,17 +149,24 @@ open class AuthViewModel(
                                                 email = user.email ?: "",
                                                 uid = userId,
                                                 isVerified = user.isEmailVerified,
+                                                analyticsEnabled = true
                                             )
                                         userDocRef.set(userModel)
                                     }
-                                writeTask.addOnCompleteListener {
-                                    logLoginSuccess("google", userId)
-                                    onResult(true, null)
+                                writeTask.addOnCompleteListener { writeTaskResult ->
+                                    if (writeTaskResult.isSuccessful) {
+                                        logLoginSuccess("google", userId)
+                                        onResult(true, null)
+                                    } else {
+                                        writeTaskResult.exception?.let { CrashlyticsManager.logException(it) }
+                                        logLoginFailure(writeTaskResult.exception, "google")
+                                        onResult(false, writeTaskResult.exception?.localizedMessage ?: "Failed to write user data.")
+                                    }
                                 }
-                            }.addOnFailureListener {
-                                CrashlyticsManager.logException(it)
-                                logLoginSuccess("google", userId)
-                                onResult(true, null)
+                            }.addOnFailureListener { e ->
+                                CrashlyticsManager.logException(e)
+                                logLoginFailure(e, "google")
+                                onResult(false, e.localizedMessage ?: "Failed to read user data.")
                             }
                     } else {
                         logLoginSuccess("google", userId ?: "")
@@ -176,6 +185,9 @@ open class AuthViewModel(
     open fun signOut() {
         logLogout("user_logout")
         CrashlyticsManager.setUserId(null)
+        //Default (enabled) for the next user/session
+        Firebase.analytics.setAnalyticsCollectionEnabled(true)
+        Firebase.crashlytics.setCrashlyticsCollectionEnabled(true)
         auth?.signOut()
     }
 
@@ -249,6 +261,9 @@ open class AuthViewModel(
                 putString(FirebaseAnalytics.Param.METHOD, method)
             }
         analytics?.logEvent(FirebaseAnalytics.Event.LOGIN, bundle)
+
+        //Primjena postavki privatnosti nakon uspjesne prijave mail/google
+        applyUserConsent(userId)
     }
 
     // Funkcija za log  neuspjesne prijave
@@ -273,6 +288,25 @@ open class AuthViewModel(
         analytics?.logEvent("logout", logoutBundle)
         analytics?.setUserId(null)
     }
+
+    private fun applyUserConsent(userId: String) {
+        firestore?.collection("users")?.document(userId)?.get()
+            ?.addOnSuccessListener { document ->
+                val isEnabled = if (document.exists()) {
+                    document.toObject(UserModel::class.java)?.analyticsEnabled ?: true
+                } else {
+                    true
+                }
+                Firebase.analytics.setAnalyticsCollectionEnabled(isEnabled)
+                Firebase.crashlytics.setCrashlyticsCollectionEnabled(isEnabled)
+            }
+            ?.addOnFailureListener {
+                CrashlyticsManager.logException(it)
+                Firebase.analytics.setAnalyticsCollectionEnabled(true)
+                Firebase.crashlytics.setCrashlyticsCollectionEnabled(true)
+            }
+    }
+
 
     open fun checkSession(onSessionExpired: () -> Unit) {
         val user = auth?.currentUser

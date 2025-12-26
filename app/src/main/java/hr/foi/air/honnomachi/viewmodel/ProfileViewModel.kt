@@ -3,9 +3,11 @@ package hr.foi.air.honnomachi.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.Firebase
+import com.google.firebase.analytics.analytics
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
+import com.google.firebase.crashlytics.crashlytics
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import hr.foi.air.honnomachi.CrashlyticsManager
@@ -56,6 +58,7 @@ open class ProfileViewModel(
                                     street = user.street ?: "",
                                     city = user.city ?: "",
                                     zip = user.postNumber ?: "",
+                                    analyticsEnabled = user.analyticsEnabled,
                                     nameError = null,
                                     phoneError = null,
                                     streetError = null,
@@ -102,6 +105,33 @@ open class ProfileViewModel(
     open fun onZipChange(newValue: String) {
         if (newValue.length <= 5) {
             _formState.update { it.copy(zip = newValue, zipError = null) }
+        }
+    }
+
+    //Postavke privatnosti switch button
+    open fun onAnalyticsToggled(isEnabled: Boolean) {
+        _formState.update { it.copy(analyticsEnabled = isEnabled) }
+
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            viewModelScope.launch {
+                try {
+                    Firebase.analytics.setAnalyticsCollectionEnabled(isEnabled)
+                    Firebase.crashlytics.setCrashlyticsCollectionEnabled(isEnabled)
+
+                    firestore.collection("users").document(currentUser.uid)
+                        .update("analyticsEnabled", isEnabled).await()
+
+                    val uiStateValue = _uiState.value
+                    if (uiStateValue is ProfileUiState.Success) {
+                        val updatedUser = uiStateValue.user.copy(analyticsEnabled = isEnabled)
+                        _uiState.value = ProfileUiState.Success(updatedUser)
+                    }
+                } catch (e: Exception) {
+                    CrashlyticsManager.logException(e)
+                    _formState.update { it.copy(analyticsEnabled = !isEnabled) }
+                }
+            }
         }
     }
 

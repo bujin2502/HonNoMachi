@@ -1,8 +1,8 @@
-package hr.foi.air.honnomachi.viewmodel
+package hr.foi.air.honnomachi.ui.book
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import hr.foi.air.honnomachi.repository.BookRepository
+import hr.foi.air.honnomachi.data.BookRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch

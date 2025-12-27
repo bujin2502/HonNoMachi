@@ -1,4 +1,4 @@
-package hr.foi.air.honnomachi.viewmodel
+package hr.foi.air.honnomachi.ui.book
 
 import hr.foi.air.honnomachi.model.BookModel
 

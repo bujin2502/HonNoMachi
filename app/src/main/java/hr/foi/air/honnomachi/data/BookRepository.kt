@@ -1,10 +1,10 @@
-package hr.foi.air.honnomachi.repository
+package hr.foi.air.honnomachi.data
 
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import hr.foi.air.honnomachi.CrashlyticsManager
 import hr.foi.air.honnomachi.model.BookModel
-import hr.foi.air.honnomachi.pages.BookListState
+import hr.foi.air.honnomachi.ui.home.BookListState
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow

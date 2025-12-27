@@ -1,4 +1,4 @@
-package hr.foi.air.honnomachi.screen
+package hr.foi.air.honnomachi.ui.auth
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -48,8 +48,8 @@ import hr.foi.air.honnomachi.FormValidator
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.ValidationErrorType
 import hr.foi.air.honnomachi.ui.components.errorMessageFor
-import hr.foi.air.honnomachi.viewmodel.ProfileViewModel
-import hr.foi.air.honnomachi.viewmodel.ViewModelFactory
+import hr.foi.air.honnomachi.ui.profile.ProfileViewModel
+import hr.foi.air.honnomachi.di.ViewModelFactory
 
 @Composable
 fun ChangePasswordScreen(

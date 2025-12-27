@@ -1,4 +1,4 @@
-package hr.foi.air.honnomachi.screen
+package hr.foi.air.honnomachi.ui.policy
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding

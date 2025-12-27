@@ -15,18 +15,18 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
-import hr.foi.air.honnomachi.screen.AuthScreen
-import hr.foi.air.honnomachi.screen.BookDetailScreen
-import hr.foi.air.honnomachi.screen.ChangePasswordScreen
-import hr.foi.air.honnomachi.screen.EmailVerificationScreen
-import hr.foi.air.honnomachi.screen.ForgotPasswordScreen
-import hr.foi.air.honnomachi.screen.HomeScreen
-import hr.foi.air.honnomachi.screen.LoginScreen
-import hr.foi.air.honnomachi.screen.PrivacyPolicyScreen
-import hr.foi.air.honnomachi.screen.SignupScreen
-import hr.foi.air.honnomachi.viewmodel.AuthViewModel
-import hr.foi.air.honnomachi.viewmodel.HomeViewModel
-import hr.foi.air.honnomachi.viewmodel.ViewModelFactory
+import hr.foi.air.honnomachi.ui.auth.AuthScreen
+import hr.foi.air.honnomachi.ui.book.BookDetailScreen
+import hr.foi.air.honnomachi.ui.auth.ChangePasswordScreen
+import hr.foi.air.honnomachi.ui.auth.EmailVerificationScreen
+import hr.foi.air.honnomachi.ui.auth.ForgotPasswordScreen
+import hr.foi.air.honnomachi.ui.home.HomeScreen
+import hr.foi.air.honnomachi.ui.auth.LoginScreen
+import hr.foi.air.honnomachi.ui.policy.PrivacyPolicyScreen
+import hr.foi.air.honnomachi.ui.auth.SignupScreen
+import hr.foi.air.honnomachi.ui.auth.AuthViewModel
+import hr.foi.air.honnomachi.ui.home.HomeViewModel
+import hr.foi.air.honnomachi.di.ViewModelFactory
 import kotlinx.coroutines.delay
 
 @Composable

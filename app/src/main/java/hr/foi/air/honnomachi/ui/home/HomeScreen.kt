@@ -1,4 +1,4 @@
-package hr.foi.air.honnomachi.screen
+package hr.foi.air.honnomachi.ui.home
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material.icons.Icons
@@ -25,15 +25,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import hr.foi.air.honnomachi.R
-import hr.foi.air.honnomachi.pages.AddPage
-import hr.foi.air.honnomachi.pages.CartPage
-import hr.foi.air.honnomachi.pages.HomePage
-import hr.foi.air.honnomachi.pages.ShelfPage
-import hr.foi.air.honnomachi.viewmodel.AuthViewModel
-import hr.foi.air.honnomachi.viewmodel.HomeViewModel
-import hr.foi.air.honnomachi.viewmodel.ProfileUiState
-import hr.foi.air.honnomachi.viewmodel.ProfileViewModel
-import hr.foi.air.honnomachi.viewmodel.ViewModelFactory
+import hr.foi.air.honnomachi.ui.add.AddPage
+import hr.foi.air.honnomachi.ui.cart.CartPage
+import hr.foi.air.honnomachi.ui.home.HomePage
+import hr.foi.air.honnomachi.ui.shelf.ShelfPage
+import hr.foi.air.honnomachi.ui.auth.AuthViewModel
+import hr.foi.air.honnomachi.ui.home.HomeViewModel
+import hr.foi.air.honnomachi.ui.profile.ProfileUiState
+import hr.foi.air.honnomachi.ui.profile.ProfileViewModel
+import hr.foi.air.honnomachi.di.ViewModelFactory
+import hr.foi.air.honnomachi.ui.profile.ProfileScreen
 
 @Composable
 fun HomeScreen(

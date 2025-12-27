@@ -1,4 +1,4 @@
-package hr.foi.air.honnomachi.pages
+package hr.foi.air.honnomachi.ui.add
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 import hr.foi.air.honnomachi.R
 
 @Composable
-fun CartPage(paddingValues: PaddingValues) {
+fun AddPage(paddingValues: PaddingValues) {
     Column(
         modifier =
             Modifier
@@ -24,6 +24,6 @@ fun CartPage(paddingValues: PaddingValues) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(text = stringResource(R.string.cart_page))
+        Text(text = stringResource(R.string.add_page))
     }
 }

@@ -1,4 +1,4 @@
-package hr.foi.air.honnomachi.viewmodel
+package hr.foi.air.honnomachi.ui.profile
 
 import hr.foi.air.honnomachi.ValidationErrorType
 import hr.foi.air.honnomachi.model.UserModel

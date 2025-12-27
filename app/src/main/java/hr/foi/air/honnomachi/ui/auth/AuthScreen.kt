@@ -1,4 +1,4 @@
-package hr.foi.air.honnomachi.screen
+package hr.foi.air.honnomachi.ui.auth
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -39,7 +39,7 @@ import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.CrashlyticsManager
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.ui.components.OrDivider
-import hr.foi.air.honnomachi.viewmodel.AuthViewModel
+import hr.foi.air.honnomachi.ui.auth.AuthViewModel
 import kotlinx.coroutines.launch
 
 @Composable

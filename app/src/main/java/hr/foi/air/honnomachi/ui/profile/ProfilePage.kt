@@ -1,4 +1,4 @@
-package hr.foi.air.honnomachi.pages
+package hr.foi.air.honnomachi.ui.profile
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import hr.foi.air.honnomachi.R
-import hr.foi.air.honnomachi.viewmodel.AuthViewModel
+import hr.foi.air.honnomachi.ui.auth.AuthViewModel
 
 private const val SHOW_QA_BUTTON = false
 

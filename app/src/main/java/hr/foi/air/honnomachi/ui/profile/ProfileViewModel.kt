@@ -1,4 +1,4 @@
-package hr.foi.air.honnomachi.viewmodel
+package hr.foi.air.honnomachi.ui.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

@@ -1,8 +1,10 @@
-package hr.foi.air.honnomachi.viewmodel
+package hr.foi.air.honnomachi.di
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import hr.foi.air.honnomachi.repository.BookRepositoryImpl
+import hr.foi.air.honnomachi.data.BookRepositoryImpl
+import hr.foi.air.honnomachi.ui.home.HomeViewModel
+import hr.foi.air.honnomachi.ui.profile.ProfileViewModel
 
 class ViewModelFactory : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")

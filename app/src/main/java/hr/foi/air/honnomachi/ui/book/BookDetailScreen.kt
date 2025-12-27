@@ -1,4 +1,4 @@
-package hr.foi.air.honnomachi.screen
+package hr.foi.air.honnomachi.ui.book
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -43,10 +43,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.model.BookModel
-import hr.foi.air.honnomachi.repository.BookRepository
-import hr.foi.air.honnomachi.repository.BookRepositoryImpl
-import hr.foi.air.honnomachi.viewmodel.BookDetailViewModel
-import hr.foi.air.honnomachi.viewmodel.BookUiState
+import hr.foi.air.honnomachi.data.BookRepository
+import hr.foi.air.honnomachi.data.BookRepositoryImpl
+import hr.foi.air.honnomachi.ui.book.BookDetailViewModel
+import hr.foi.air.honnomachi.ui.book.BookUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

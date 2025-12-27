@@ -1,4 +1,4 @@
-package hr.foi.air.honnomachi.pages
+package hr.foi.air.honnomachi.ui.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,7 +31,7 @@ import androidx.navigation.NavController
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.ui.components.BookItemView
-import hr.foi.air.honnomachi.viewmodel.HomeViewModel
+import hr.foi.air.honnomachi.ui.home.HomeViewModel
 
 private const val SHOW_DEBUG_BUTTON = false
 

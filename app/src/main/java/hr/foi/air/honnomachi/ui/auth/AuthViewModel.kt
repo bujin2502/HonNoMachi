@@ -1,4 +1,4 @@
-package hr.foi.air.honnomachi.viewmodel
+package hr.foi.air.honnomachi.ui.auth
 
 import android.os.Bundle
 import androidx.lifecycle.ViewModel

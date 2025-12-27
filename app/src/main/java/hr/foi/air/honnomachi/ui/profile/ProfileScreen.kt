@@ -1,4 +1,4 @@
-package hr.foi.air.honnomachi.screen
+package hr.foi.air.honnomachi.ui.profile
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -49,9 +49,9 @@ import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.ui.components.ProfileItem
 import hr.foi.air.honnomachi.ui.components.errorMessageFor
-import hr.foi.air.honnomachi.viewmodel.ProfileUiState
-import hr.foi.air.honnomachi.viewmodel.ProfileViewModel
-import hr.foi.air.honnomachi.viewmodel.ViewModelFactory
+import hr.foi.air.honnomachi.ui.profile.ProfileUiState
+import hr.foi.air.honnomachi.ui.profile.ProfileViewModel
+import hr.foi.air.honnomachi.di.ViewModelFactory
 
 @Composable
 fun ProfileScreen(

@@ -1,4 +1,4 @@
-package hr.foi.air.honnomachi.pages
+package hr.foi.air.honnomachi.ui.shelf
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

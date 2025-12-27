@@ -266,7 +266,7 @@ fun ProfileScreen(
                 }
             }
 
-            //Postavke privatnosti
+            // Postavke privatnosti
             Spacer(modifier = Modifier.height(24.dp))
             Text(
                 text = stringResource(R.string.label_privacy_settings),
@@ -277,25 +277,25 @@ fun ProfileScreen(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = stringResource(R.string.label_analytics_consent),
                         style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
                     )
                     Text(
                         text = stringResource(R.string.desc_analytics_consent),
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
+                        color = Color.Gray,
                     )
                 }
                 Switch(
                     checked = formState.analyticsEnabled,
-                    onCheckedChange = { isEnabled ->
-                        profileViewModel.onAnalyticsToggled(isEnabled)
-                    }
+                    onCheckedChange = {
+                        profileViewModel.onAnalyticsToggled(it)
+                    },
                 )
             }
             TextButton(onClick = onNavigateToPrivacyPolicy) {

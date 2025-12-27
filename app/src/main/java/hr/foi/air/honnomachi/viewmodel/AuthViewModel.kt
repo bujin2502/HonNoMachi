@@ -45,7 +45,7 @@ open class AuthViewModel(
                                         email = email,
                                         uid = userId,
                                         isVerified = false,
-                                        analyticsEnabled = true
+                                        analyticsEnabled = true,
                                     )
                                 firestore
                                     ?.collection("users")
@@ -149,7 +149,7 @@ open class AuthViewModel(
                                                 email = user.email ?: "",
                                                 uid = userId,
                                                 isVerified = user.isEmailVerified,
-                                                analyticsEnabled = true
+                                                analyticsEnabled = true,
                                             )
                                         userDocRef.set(userModel)
                                     }
@@ -185,7 +185,7 @@ open class AuthViewModel(
     open fun signOut() {
         logLogout("user_logout")
         CrashlyticsManager.setUserId(null)
-        //Default (enabled) for the next user/session
+        // Default (enabled) for the next user/session
         Firebase.analytics.setAnalyticsCollectionEnabled(true)
         Firebase.crashlytics.setCrashlyticsCollectionEnabled(true)
         auth?.signOut()
@@ -262,7 +262,7 @@ open class AuthViewModel(
             }
         analytics?.logEvent(FirebaseAnalytics.Event.LOGIN, bundle)
 
-        //Primjena postavki privatnosti nakon uspjesne prijave mail/google
+        // Primjena postavki privatnosti nakon uspjesne prijave mail/google
         applyUserConsent(userId)
     }
 
@@ -290,7 +290,10 @@ open class AuthViewModel(
     }
 
     private fun applyUserConsent(userId: String) {
-        firestore?.collection("users")?.document(userId)?.get()
+        firestore
+            ?.collection("users")
+            ?.document(userId)
+            ?.get()
             ?.addOnSuccessListener { document ->
                 val isEnabled = if (document.exists()) {
                     document.toObject(UserModel::class.java)?.analyticsEnabled ?: true
@@ -307,11 +310,9 @@ open class AuthViewModel(
             }
     }
 
-
     open fun checkSession(onSessionExpired: () -> Unit) {
         val user = auth?.currentUser
-        user
-            ?.getIdToken(true)
+        user?.getIdToken(true)
             ?.addOnFailureListener { exception ->
                 CrashlyticsManager.logException(exception)
                 if (exception is com.google.firebase.auth.FirebaseAuthInvalidUserException) {
@@ -345,7 +346,8 @@ open class AuthViewModel(
                         CrashlyticsManager.logException(e)
                         onError(e)
                     }
-            }.addOnFailureListener { e ->
+            }
+            .addOnFailureListener { e ->
                 CrashlyticsManager.logException(e)
                 onError(e)
             }

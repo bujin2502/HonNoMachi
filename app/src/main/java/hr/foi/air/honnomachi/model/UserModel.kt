@@ -11,5 +11,5 @@ data class UserModel(
     val postNumber: String? = null,
     val phoneNumber: String? = null,
     val isVerified: Boolean = false,
-    val analyticsEnabled: Boolean = true
+    val analyticsEnabled: Boolean = true,
 )

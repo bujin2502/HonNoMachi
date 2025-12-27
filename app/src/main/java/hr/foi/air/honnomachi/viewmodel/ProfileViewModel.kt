@@ -108,7 +108,7 @@ open class ProfileViewModel(
         }
     }
 
-    //Postavke privatnosti switch button
+    // Postavke privatnosti switch button
     open fun onAnalyticsToggled(isEnabled: Boolean) {
         _formState.update { it.copy(analyticsEnabled = isEnabled) }
 
@@ -119,8 +119,10 @@ open class ProfileViewModel(
                     Firebase.analytics.setAnalyticsCollectionEnabled(isEnabled)
                     Firebase.crashlytics.setCrashlyticsCollectionEnabled(isEnabled)
 
-                    firestore.collection("users").document(currentUser.uid)
-                        .update("analyticsEnabled", isEnabled).await()
+                    firestore.collection("users")
+                        .document(currentUser.uid)
+                        .update("analyticsEnabled", isEnabled)
+                        .await()
 
                     val uiStateValue = _uiState.value
                     if (uiStateValue is ProfileUiState.Success) {

@@ -48,7 +48,7 @@ fun AppNavigation(
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
 
-    //automatsko pracenje naziva trenutnog ekrana za Crashlytics
+    // automatsko pracenje naziva trenutnog ekrana za Crashlytics
     DisposableEffect(navBackStackEntry) {
         val currentScreen = navBackStackEntry?.destination?.route ?: "Unknown"
         CrashlyticsManager.updateCurrentScreen(currentScreen)

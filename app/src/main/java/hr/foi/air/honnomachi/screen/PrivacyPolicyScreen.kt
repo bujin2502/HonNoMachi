@@ -22,9 +22,7 @@ import hr.foi.air.honnomachi.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PrivacyPolicyScreen(
-    onNavigateBack: () -> Unit
-) {
+fun PrivacyPolicyScreen(onNavigateBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -33,18 +31,19 @@ fun PrivacyPolicyScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(id = R.string.desc_navigate_back)
+                            contentDescription = stringResource(id = R.string.desc_navigate_back),
                         )
                     }
-                }
+                },
             )
-        }
+        },
     ) { paddingValues ->
         Column(
-            modifier = Modifier
-                .padding(paddingValues)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState())
+            modifier =
+                Modifier
+                    .padding(paddingValues)
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState()),
         ) {
             SectionTitle(title = stringResource(id = R.string.title_data_collection))
             SectionContent(content = stringResource(id = R.string.content_data_collection))
@@ -64,7 +63,7 @@ private fun SectionTitle(title: String) {
         text = title,
         style = MaterialTheme.typography.titleLarge,
         fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+        modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
     )
 }
 
@@ -72,6 +71,6 @@ private fun SectionTitle(title: String) {
 private fun SectionContent(content: String) {
     Text(
         text = content,
-        style = MaterialTheme.typography.bodyLarge
+        style = MaterialTheme.typography.bodyLarge,
     )
 }

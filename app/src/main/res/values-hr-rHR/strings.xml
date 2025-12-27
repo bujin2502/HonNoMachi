@@ -143,4 +143,15 @@
     <string name="value_user">Korisnik</string>
     <string name="value_active">Aktivan</string>
     <string name="value_suspended">Suspendiran</string>
+    <string name="label_privacy_settings">Postavke privatnosti</string>
+    <string name="label_analytics_consent">Dopusti podatke o korištenju</string>
+    <string name="desc_analytics_consent">Pomozite poboljšati aplikaciju slanjem anonimnih podataka o korištenju i rušenju.</string>
+    <string name="title_privacy_policy">Pravila o privatnosti</string>
+    <string name="desc_navigate_back">Natrag</string>
+    <string name="title_data_collection">Koje podatke prikupljamo?</string>
+    <string name="content_data_collection">Prikupljamo anonimne podatke o Vašem korištenju aplikacije (putem Firebase Analytics) i izvješća o pogreškama (putem Firebase Crashlytics) kako bismo poboljšali stabilnost i funkcionalnost aplikacije.</string>
+    <string name="title_user_id">Korisnički ID</string>
+    <string name="content_user_id">Ako ste prijavljeni, Vaš jedinstveni korisnički ID prilaže se izvješću o pogrešci kako bismo lakše riješili problem. U tu svrhu ne prikupljamo Vašu e-poštu, ime ili druge osobne podatke.</string>
+    <string name="title_data_management">Upravljanje podacima</string>
+    <string name="content_data_management">Svoj pristanak za prikupljanje ovih podataka možete povući u bilo kojem trenutku u postavkama Vašeg profila.</string>
 </resources>

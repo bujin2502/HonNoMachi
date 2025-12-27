@@ -2,6 +2,7 @@ package hr.foi.air.honnomachi.repository
 
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
+import hr.foi.air.honnomachi.CrashlyticsManager
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.pages.BookListState
 import kotlinx.coroutines.channels.awaitClose
@@ -23,6 +24,7 @@ class BookRepositoryImpl : BookRepository {
                     .collection("books")
                     .addSnapshotListener { snapshot, error ->
                         if (error != null) {
+                            CrashlyticsManager.logException(error)
                             trySend(BookListState.Error(error.message ?: "Unknown error occurred."))
                             return@addSnapshotListener
                         }
@@ -52,7 +54,8 @@ class BookRepositoryImpl : BookRepository {
                 .get()
                 .await()
                 .toObject(BookModel::class.java)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            CrashlyticsManager.logException(e)
             null
         }
 }

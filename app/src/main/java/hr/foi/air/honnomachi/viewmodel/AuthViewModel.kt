@@ -8,8 +8,10 @@ import com.google.firebase.analytics.analytics
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
+import com.google.firebase.crashlytics.crashlytics
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
+import hr.foi.air.honnomachi.CrashlyticsManager
 import hr.foi.air.honnomachi.model.UserModel
 
 open class AuthViewModel(
@@ -43,6 +45,7 @@ open class AuthViewModel(
                                         email = email,
                                         uid = userId,
                                         isVerified = false,
+                                        analyticsEnabled = true,
                                     )
                                 firestore
                                     ?.collection("users")
@@ -53,14 +56,17 @@ open class AuthViewModel(
                                             auth.signOut()
                                             onResult(true, null)
                                         } else {
+                                            dbTask.exception?.let { CrashlyticsManager.logException(it) }
                                             onResult(false, "Database error.")
                                         }
                                     }
                             } else {
+                                verificationTask.exception?.let { CrashlyticsManager.logException(it) }
                                 onResult(false, "Failed to send verification email.")
                             }
                         }
                 } else {
+                    task.exception?.let { CrashlyticsManager.logException(it) }
                     onResult(false, task.exception?.localizedMessage)
                 }
             } ?: run {
@@ -93,6 +99,7 @@ open class AuthViewModel(
                                     logLoginSuccess("email_password", user.uid)
                                     onResult(true, null)
                                 } else {
+                                    updateTask.exception?.let { CrashlyticsManager.logException(it) }
                                     onResult(false, "Failed to update verification status.")
                                 }
                             }
@@ -101,6 +108,7 @@ open class AuthViewModel(
                         onResult(false, "Please verify your email before logging in.")
                     }
                 } else {
+                    task.exception?.let { CrashlyticsManager.logException(it) }
                     logLoginFailure(task.exception, "email_password")
                     onResult(false, task.exception?.localizedMessage)
                 }
@@ -141,22 +149,31 @@ open class AuthViewModel(
                                                 email = user.email ?: "",
                                                 uid = userId,
                                                 isVerified = user.isEmailVerified,
+                                                analyticsEnabled = true,
                                             )
                                         userDocRef.set(userModel)
                                     }
-                                writeTask.addOnCompleteListener {
-                                    logLoginSuccess("google", userId)
-                                    onResult(true, null)
+                                writeTask.addOnCompleteListener { writeTaskResult ->
+                                    if (writeTaskResult.isSuccessful) {
+                                        logLoginSuccess("google", userId)
+                                        onResult(true, null)
+                                    } else {
+                                        writeTaskResult.exception?.let { CrashlyticsManager.logException(it) }
+                                        logLoginFailure(writeTaskResult.exception, "google")
+                                        onResult(false, writeTaskResult.exception?.localizedMessage ?: "Failed to write user data.")
+                                    }
                                 }
-                            }.addOnFailureListener {
-                                logLoginSuccess("google", userId)
-                                onResult(true, null)
+                            }.addOnFailureListener { e ->
+                                CrashlyticsManager.logException(e)
+                                logLoginFailure(e, "google")
+                                onResult(false, e.localizedMessage ?: "Failed to read user data.")
                             }
                     } else {
                         logLoginSuccess("google", userId ?: "")
                         onResult(true, null)
                     }
                 } else {
+                    task.exception?.let { CrashlyticsManager.logException(it) }
                     logLoginFailure(task.exception, "google")
                     onResult(false, task.exception?.localizedMessage ?: "Google sign-in failed.")
                 }
@@ -167,6 +184,10 @@ open class AuthViewModel(
 
     open fun signOut() {
         logLogout("user_logout")
+        CrashlyticsManager.setUserId(null)
+        // Default (enabled) for the next user/session
+        Firebase.analytics.setAnalyticsCollectionEnabled(true)
+        Firebase.crashlytics.setCrashlyticsCollectionEnabled(true)
         auth?.signOut()
     }
 
@@ -184,6 +205,7 @@ open class AuthViewModel(
                 if (task.isSuccessful) {
                     onResult(true, null)
                 } else {
+                    task.exception?.let { CrashlyticsManager.logException(it) }
                     onResult(false, task.exception?.localizedMessage)
                 }
             } ?: run {
@@ -209,6 +231,7 @@ open class AuthViewModel(
                                     auth.signOut()
                                     onResult(true, "Verification email sent. Please check your inbox.")
                                 } else {
+                                    verificationTask.exception?.let { CrashlyticsManager.logException(it) }
                                     auth.signOut()
                                     onResult(false, "Failed to send verification email.")
                                 }
@@ -218,6 +241,7 @@ open class AuthViewModel(
                         onResult(false, "This email is already verified.")
                     }
                 } else {
+                    task.exception?.let { CrashlyticsManager.logException(it) }
                     onResult(false, task.exception?.localizedMessage)
                 }
             } ?: run {
@@ -230,12 +254,16 @@ open class AuthViewModel(
         method: String,
         userId: String,
     ) {
+        CrashlyticsManager.setUserId(userId)
         analytics?.setUserId(userId)
         val bundle =
             Bundle().apply {
                 putString(FirebaseAnalytics.Param.METHOD, method)
             }
         analytics?.logEvent(FirebaseAnalytics.Event.LOGIN, bundle)
+
+        // Primjena postavki privatnosti nakon uspjesne prijave mail/google
+        applyUserConsent(userId)
     }
 
     // Funkcija za log  neuspjesne prijave
@@ -261,11 +289,33 @@ open class AuthViewModel(
         analytics?.setUserId(null)
     }
 
+    private fun applyUserConsent(userId: String) {
+        firestore
+            ?.collection("users")
+            ?.document(userId)
+            ?.get()
+            ?.addOnSuccessListener { document ->
+                val isEnabled =
+                    if (document.exists()) {
+                        document.toObject(UserModel::class.java)?.analyticsEnabled ?: true
+                    } else {
+                        true
+                    }
+                Firebase.analytics.setAnalyticsCollectionEnabled(isEnabled)
+                Firebase.crashlytics.isCrashlyticsCollectionEnabled = isEnabled
+            }?.addOnFailureListener {
+                CrashlyticsManager.logException(it)
+                Firebase.analytics.setAnalyticsCollectionEnabled(true)
+                Firebase.crashlytics.isCrashlyticsCollectionEnabled = true
+            }
+    }
+
     open fun checkSession(onSessionExpired: () -> Unit) {
         val user = auth?.currentUser
         user
             ?.getIdToken(true)
             ?.addOnFailureListener { exception ->
+                CrashlyticsManager.logException(exception)
                 if (exception is com.google.firebase.auth.FirebaseAuthInvalidUserException) {
                     auth.signOut()
                     onSessionExpired()
@@ -293,8 +343,12 @@ open class AuthViewModel(
                     .document(user.uid)
                     .get()
                     .addOnSuccessListener { onSuccess() }
-                    .addOnFailureListener { e -> onError(e) }
+                    .addOnFailureListener { e ->
+                        CrashlyticsManager.logException(e)
+                        onError(e)
+                    }
             }.addOnFailureListener { e ->
+                CrashlyticsManager.logException(e)
                 onError(e)
             }
     }

@@ -3,11 +3,14 @@ package hr.foi.air.honnomachi.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.Firebase
+import com.google.firebase.analytics.analytics
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
+import com.google.firebase.crashlytics.crashlytics
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
+import hr.foi.air.honnomachi.CrashlyticsManager
 import hr.foi.air.honnomachi.FormValidator
 import hr.foi.air.honnomachi.model.UserModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -55,6 +58,7 @@ open class ProfileViewModel(
                                     street = user.street ?: "",
                                     city = user.city ?: "",
                                     zip = user.postNumber ?: "",
+                                    analyticsEnabled = user.analyticsEnabled,
                                     nameError = null,
                                     phoneError = null,
                                     streetError = null,
@@ -69,6 +73,7 @@ open class ProfileViewModel(
                         _uiState.value = ProfileUiState.Error("User document not found.")
                     }
                 } catch (e: Exception) {
+                    CrashlyticsManager.logException(e)
                     _uiState.value = ProfileUiState.Error(e.message ?: "An error occurred.")
                 }
             } else {
@@ -100,6 +105,36 @@ open class ProfileViewModel(
     open fun onZipChange(newValue: String) {
         if (newValue.length <= 5) {
             _formState.update { it.copy(zip = newValue, zipError = null) }
+        }
+    }
+
+    // Postavke privatnosti switch button
+    open fun onAnalyticsToggled(isEnabled: Boolean) {
+        _formState.update { it.copy(analyticsEnabled = isEnabled) }
+
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            viewModelScope.launch {
+                try {
+                    Firebase.analytics.setAnalyticsCollectionEnabled(isEnabled)
+                    Firebase.crashlytics.isCrashlyticsCollectionEnabled = isEnabled
+
+                    firestore
+                        .collection("users")
+                        .document(currentUser.uid)
+                        .update("analyticsEnabled", isEnabled)
+                        .await()
+
+                    val uiStateValue = _uiState.value
+                    if (uiStateValue is ProfileUiState.Success) {
+                        val updatedUser = uiStateValue.user.copy(analyticsEnabled = isEnabled)
+                        _uiState.value = ProfileUiState.Success(updatedUser)
+                    }
+                } catch (e: Exception) {
+                    CrashlyticsManager.logException(e)
+                    _formState.update { it.copy(analyticsEnabled = !isEnabled) }
+                }
+            }
         }
     }
 
@@ -191,6 +226,7 @@ open class ProfileViewModel(
                 _formState.update { it.copy(isSaving = false) }
                 onResult(true, null)
             } catch (e: Exception) {
+                CrashlyticsManager.logException(e)
                 _formState.update { it.copy(isSaving = false) }
                 onResult(false, e.message)
             }
@@ -220,10 +256,12 @@ open class ProfileViewModel(
                             if (updateTask.isSuccessful) {
                                 onResult(true, null)
                             } else {
+                                updateTask.exception?.let { CrashlyticsManager.logException(it) }
                                 onResult(false, updateTask.exception?.message)
                             }
                         }
                 } else {
+                    authTask.exception?.let { CrashlyticsManager.logException(it) }
                     onResult(false, authTask.exception?.message ?: "Re-authentication failed.")
                 }
             }

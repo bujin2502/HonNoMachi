@@ -82,6 +82,7 @@ class ProfileScreenTest {
                 paddingValues = PaddingValues(0.dp),
                 onLogout = {},
                 onNavigateToChangePassword = {},
+                onNavigateToPrivacyPolicy = {}, // <-- Add this line
                 profileViewModel = fakeViewModel,
             )
         }
@@ -103,10 +104,16 @@ class ProfileScreenTest {
         // Find text field via initial value, then update it
         composeTestRule.onNodeWithText("Initial Name").performTextClearance()
         // Find by label now that value is gone, or use label from start
-        composeTestRule.onNodeWithText(labelName).performTextInput("Updated Name")
+        composeTestRule
+            .onNodeWithText(
+                labelName,
+            ).performTextInput("Updated Name")
 
         // Click Save
-        composeTestRule.onNodeWithText(btnSave).performScrollTo().performClick()
+        composeTestRule
+            .onNodeWithText(btnSave)
+            .performScrollTo()
+            .performClick()
     }
 
     @Test
@@ -121,10 +128,16 @@ class ProfileScreenTest {
         val errorMsg = context.getString(hr.foi.air.honnomachi.R.string.error_name_required)
 
         // Clear Name
-        composeTestRule.onNodeWithText("Initial Name").performScrollTo().performTextClearance()
+        composeTestRule
+            .onNodeWithText("Initial Name")
+            .performScrollTo()
+            .performTextClearance()
 
         // Click Save
-        composeTestRule.onNodeWithText(btnSave).performScrollTo().performClick()
+        composeTestRule
+            .onNodeWithText(btnSave)
+            .performScrollTo()
+            .performClick()
 
         // Verify Error Message
         composeTestRule.onNodeWithText(errorMsg).assertIsDisplayed()

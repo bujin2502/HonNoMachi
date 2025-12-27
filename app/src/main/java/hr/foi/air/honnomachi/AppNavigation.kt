@@ -1,6 +1,7 @@
 package hr.foi.air.honnomachi
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -21,6 +22,7 @@ import hr.foi.air.honnomachi.screen.EmailVerificationScreen
 import hr.foi.air.honnomachi.screen.ForgotPasswordScreen
 import hr.foi.air.honnomachi.screen.HomeScreen
 import hr.foi.air.honnomachi.screen.LoginScreen
+import hr.foi.air.honnomachi.screen.PrivacyPolicyScreen
 import hr.foi.air.honnomachi.screen.SignupScreen
 import hr.foi.air.honnomachi.viewmodel.AuthViewModel
 import hr.foi.air.honnomachi.viewmodel.HomeViewModel
@@ -45,6 +47,13 @@ fun AppNavigation(
         }
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
+
+    // automatsko pracenje naziva trenutnog ekrana za Crashlytics
+    DisposableEffect(navBackStackEntry) {
+        val currentScreen = navBackStackEntry?.destination?.route ?: "Unknown"
+        CrashlyticsManager.updateCurrentScreen(currentScreen)
+        onDispose { }
+    }
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -92,6 +101,10 @@ fun AppNavigation(
 
         composable("changePassword") {
             ChangePasswordScreen(navController = navController)
+        }
+
+        composable("privacyPolicy") {
+            PrivacyPolicyScreen(onNavigateBack = { navController.navigateUp() })
         }
 
         composable(

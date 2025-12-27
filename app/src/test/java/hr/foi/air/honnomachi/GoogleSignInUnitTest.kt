@@ -12,6 +12,7 @@ import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import hr.foi.air.honnomachi.model.UserModel
 import hr.foi.air.honnomachi.viewmodel.AuthViewModel
 import io.mockk.Runs
 import io.mockk.clearAllMocks
@@ -19,7 +20,9 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkConstructor
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
+import io.mockk.slot
 import io.mockk.verify
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -37,7 +40,7 @@ class GoogleSignInUnitTest {
 
     private val mockAuthResult: AuthResult = mockk()
     private val mockFirebaseUser: FirebaseUser = mockk()
-    private val mockDocumentReference: DocumentReference = mockk()
+    private val mockDocumentReference: DocumentReference = mockk(relaxed = true)
     private val mockCollectionReference: CollectionReference = mockk()
     private val mockDocumentSnapshot: DocumentSnapshot = mockk()
     private val mockCredential: AuthCredential = mockk()
@@ -51,6 +54,11 @@ class GoogleSignInUnitTest {
         mockkConstructor(Bundle::class)
         every { constructedWith<Bundle>().putString(any(), any()) } just Runs
 
+        // Mock CrashlyticsManager
+        mockkObject(CrashlyticsManager)
+        every { CrashlyticsManager.setUserId(any()) } just Runs
+        every { CrashlyticsManager.logException(any()) } just Runs
+
         authViewModel = AuthViewModel(mockAuth, mockFirestore, mockAnalytics)
 
         every { mockAuthResult.user } returns mockFirebaseUser
@@ -61,6 +69,11 @@ class GoogleSignInUnitTest {
 
         every { mockFirestore.collection("users") } returns mockCollectionReference
         every { mockCollectionReference.document("test_uid") } returns mockDocumentReference
+
+        // Mock toObject for applyUserConsent
+        val mockUserModel = mockk<UserModel>(relaxed = true)
+        every { mockUserModel.analyticsEnabled } returns true
+        every { mockDocumentSnapshot.toObject(UserModel::class.java) } returns mockUserModel
 
         every { mockAnalytics.setUserId(any()) } just Runs
         every { mockAnalytics.logEvent(any(), any()) } just Runs
@@ -77,28 +90,36 @@ class GoogleSignInUnitTest {
         var successResult = false
         var errorMessage: String? = "initial"
 
-        val mockAuthTask: Task<AuthResult> = mockk()
+        val mockAuthTask: Task<AuthResult> = mockk(relaxed = true)
         every { mockAuth.signInWithCredential(mockCredential) } returns mockAuthTask
         every { mockAuthTask.isSuccessful } returns true
         every { mockAuthTask.result } returns mockAuthResult
-        every { mockAuthTask.addOnCompleteListener(any()) } answers {
-            firstArg<com.google.android.gms.tasks.OnCompleteListener<AuthResult>>().onComplete(mockAuthTask)
+        val authCompleteListener = slot<com.google.android.gms.tasks.OnCompleteListener<AuthResult>>()
+        every { mockAuthTask.addOnCompleteListener(capture(authCompleteListener)) } answers {
+            authCompleteListener.captured.onComplete(mockAuthTask)
             mockAuthTask
         }
 
-        val mockSnapshotTask: Task<DocumentSnapshot> = mockk()
-        every { mockDocumentReference.get() } returns mockSnapshotTask
+        val mockSnapshotTask: Task<DocumentSnapshot> = mockk(relaxed = true)
+        val mockApplyConsentTask: Task<DocumentSnapshot> = mockk(relaxed = true)
+        every { mockDocumentReference.get() } returnsMany listOf(mockSnapshotTask, mockApplyConsentTask)
         every { mockDocumentSnapshot.exists() } returns false
-        every { mockSnapshotTask.addOnSuccessListener(any()) } answers {
-            firstArg<com.google.android.gms.tasks.OnSuccessListener<DocumentSnapshot>>().onSuccess(mockDocumentSnapshot)
+        val snapshotSuccessListener = slot<com.google.android.gms.tasks.OnSuccessListener<DocumentSnapshot>>()
+        every { mockSnapshotTask.addOnSuccessListener(capture(snapshotSuccessListener)) } answers {
+            snapshotSuccessListener.captured.onSuccess(mockDocumentSnapshot)
             mockSnapshotTask
         }
         every { mockSnapshotTask.addOnFailureListener(any()) } returns mockSnapshotTask
+        // Don't trigger listeners for applyUserConsent's get() call
+        every { mockApplyConsentTask.addOnSuccessListener(any()) } returns mockApplyConsentTask
+        every { mockApplyConsentTask.addOnFailureListener(any()) } returns mockApplyConsentTask
 
-        val mockSetTask: Task<Void> = mockk()
+        val mockSetTask: Task<Void> = mockk(relaxed = true)
         every { mockDocumentReference.set(any()) } returns mockSetTask
-        every { mockSetTask.addOnCompleteListener(any()) } answers {
-            firstArg<com.google.android.gms.tasks.OnCompleteListener<Void>>().onComplete(mockSetTask)
+        every { mockSetTask.isSuccessful } returns true
+        val setCompleteListener = slot<com.google.android.gms.tasks.OnCompleteListener<Void>>()
+        every { mockSetTask.addOnCompleteListener(capture(setCompleteListener)) } answers {
+            setCompleteListener.captured.onComplete(mockSetTask)
             mockSetTask
         }
 
@@ -119,28 +140,36 @@ class GoogleSignInUnitTest {
         var successResult = false
         var errorMessage: String? = "initial"
 
-        val mockAuthTask: Task<AuthResult> = mockk()
+        val mockAuthTask: Task<AuthResult> = mockk(relaxed = true)
         every { mockAuth.signInWithCredential(mockCredential) } returns mockAuthTask
         every { mockAuthTask.isSuccessful } returns true
         every { mockAuthTask.result } returns mockAuthResult
-        every { mockAuthTask.addOnCompleteListener(any()) } answers {
-            firstArg<com.google.android.gms.tasks.OnCompleteListener<AuthResult>>().onComplete(mockAuthTask)
+        val authCompleteListener = slot<com.google.android.gms.tasks.OnCompleteListener<AuthResult>>()
+        every { mockAuthTask.addOnCompleteListener(capture(authCompleteListener)) } answers {
+            authCompleteListener.captured.onComplete(mockAuthTask)
             mockAuthTask
         }
 
-        val mockSnapshotTask: Task<DocumentSnapshot> = mockk()
-        every { mockDocumentReference.get() } returns mockSnapshotTask
+        val mockSnapshotTask: Task<DocumentSnapshot> = mockk(relaxed = true)
+        val mockApplyConsentTask: Task<DocumentSnapshot> = mockk(relaxed = true)
+        every { mockDocumentReference.get() } returnsMany listOf(mockSnapshotTask, mockApplyConsentTask)
         every { mockDocumentSnapshot.exists() } returns true
-        every { mockSnapshotTask.addOnSuccessListener(any()) } answers {
-            firstArg<com.google.android.gms.tasks.OnSuccessListener<DocumentSnapshot>>().onSuccess(mockDocumentSnapshot)
+        val snapshotSuccessListener = slot<com.google.android.gms.tasks.OnSuccessListener<DocumentSnapshot>>()
+        every { mockSnapshotTask.addOnSuccessListener(capture(snapshotSuccessListener)) } answers {
+            snapshotSuccessListener.captured.onSuccess(mockDocumentSnapshot)
             mockSnapshotTask
         }
         every { mockSnapshotTask.addOnFailureListener(any()) } returns mockSnapshotTask
+        // Don't trigger listeners for applyUserConsent's get() call
+        every { mockApplyConsentTask.addOnSuccessListener(any()) } returns mockApplyConsentTask
+        every { mockApplyConsentTask.addOnFailureListener(any()) } returns mockApplyConsentTask
 
-        val mockUpdateTask: Task<Void> = mockk()
+        val mockUpdateTask: Task<Void> = mockk(relaxed = true)
         every { mockDocumentReference.update("isVerified", true) } returns mockUpdateTask
-        every { mockUpdateTask.addOnCompleteListener(any()) } answers {
-            firstArg<com.google.android.gms.tasks.OnCompleteListener<Void>>().onComplete(mockUpdateTask)
+        every { mockUpdateTask.isSuccessful } returns true
+        val updateCompleteListener = slot<com.google.android.gms.tasks.OnCompleteListener<Void>>()
+        every { mockUpdateTask.addOnCompleteListener(capture(updateCompleteListener)) } answers {
+            updateCompleteListener.captured.onComplete(mockUpdateTask)
             mockUpdateTask
         }
 
@@ -163,12 +192,13 @@ class GoogleSignInUnitTest {
         var successResult = true
         var errorMessage: String? = null
 
-        val mockAuthTask: Task<AuthResult> = mockk()
+        val mockAuthTask: Task<AuthResult> = mockk(relaxed = true)
         every { mockAuth.signInWithCredential(mockCredential) } returns mockAuthTask
         every { mockAuthTask.isSuccessful } returns false
         every { mockAuthTask.exception } returns expectedException
-        every { mockAuthTask.addOnCompleteListener(any()) } answers {
-            firstArg<com.google.android.gms.tasks.OnCompleteListener<AuthResult>>().onComplete(mockAuthTask)
+        val authCompleteListener = slot<com.google.android.gms.tasks.OnCompleteListener<AuthResult>>()
+        every { mockAuthTask.addOnCompleteListener(capture(authCompleteListener)) } answers {
+            authCompleteListener.captured.onComplete(mockAuthTask)
             mockAuthTask
         }
 

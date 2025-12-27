@@ -117,9 +117,10 @@ open class ProfileViewModel(
             viewModelScope.launch {
                 try {
                     Firebase.analytics.setAnalyticsCollectionEnabled(isEnabled)
-                    Firebase.crashlytics.setCrashlyticsCollectionEnabled(isEnabled)
+                    Firebase.crashlytics.isCrashlyticsCollectionEnabled = isEnabled
 
-                    firestore.collection("users")
+                    firestore
+                        .collection("users")
                         .document(currentUser.uid)
                         .update("analyticsEnabled", isEnabled)
                         .await()

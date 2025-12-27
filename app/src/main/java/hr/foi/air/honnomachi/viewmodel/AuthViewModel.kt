@@ -295,24 +295,25 @@ open class AuthViewModel(
             ?.document(userId)
             ?.get()
             ?.addOnSuccessListener { document ->
-                val isEnabled = if (document.exists()) {
-                    document.toObject(UserModel::class.java)?.analyticsEnabled ?: true
-                } else {
-                    true
-                }
+                val isEnabled =
+                    if (document.exists()) {
+                        document.toObject(UserModel::class.java)?.analyticsEnabled ?: true
+                    } else {
+                        true
+                    }
                 Firebase.analytics.setAnalyticsCollectionEnabled(isEnabled)
-                Firebase.crashlytics.setCrashlyticsCollectionEnabled(isEnabled)
-            }
-            ?.addOnFailureListener {
+                Firebase.crashlytics.isCrashlyticsCollectionEnabled = isEnabled
+            }?.addOnFailureListener {
                 CrashlyticsManager.logException(it)
                 Firebase.analytics.setAnalyticsCollectionEnabled(true)
-                Firebase.crashlytics.setCrashlyticsCollectionEnabled(true)
+                Firebase.crashlytics.isCrashlyticsCollectionEnabled = true
             }
     }
 
     open fun checkSession(onSessionExpired: () -> Unit) {
         val user = auth?.currentUser
-        user?.getIdToken(true)
+        user
+            ?.getIdToken(true)
             ?.addOnFailureListener { exception ->
                 CrashlyticsManager.logException(exception)
                 if (exception is com.google.firebase.auth.FirebaseAuthInvalidUserException) {
@@ -346,8 +347,7 @@ open class AuthViewModel(
                         CrashlyticsManager.logException(e)
                         onError(e)
                     }
-            }
-            .addOnFailureListener { e ->
+            }.addOnFailureListener { e ->
                 CrashlyticsManager.logException(e)
                 onError(e)
             }

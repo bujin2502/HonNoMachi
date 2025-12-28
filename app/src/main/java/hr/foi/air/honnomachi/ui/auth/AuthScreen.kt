@@ -149,11 +149,11 @@ fun AuthScreen(
                             }
                         }
                     } catch (e: GetCredentialException) {
-                        CrashlyticsManager.logException(e)
+                        CrashlyticsManager.instance.logException(e)
                         isGoogleLoading = false
                         AppUtil.showToast(context, e.message ?: "Google sign-in canceled.")
                     } catch (e: Exception) {
-                        CrashlyticsManager.logException(e)
+                        CrashlyticsManager.instance.logException(e)
                         isGoogleLoading = false
                         AppUtil.showToast(context, e.message ?: "Google sign-in failed.")
                     }

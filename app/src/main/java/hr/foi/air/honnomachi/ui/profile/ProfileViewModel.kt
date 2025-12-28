@@ -73,7 +73,7 @@ open class ProfileViewModel(
                         _uiState.value = ProfileUiState.Error("User document not found.")
                     }
                 } catch (e: Exception) {
-                    CrashlyticsManager.logException(e)
+                    CrashlyticsManager.instance.logException(e)
                     _uiState.value = ProfileUiState.Error(e.message ?: "An error occurred.")
                 }
             } else {
@@ -131,7 +131,7 @@ open class ProfileViewModel(
                         _uiState.value = ProfileUiState.Success(updatedUser)
                     }
                 } catch (e: Exception) {
-                    CrashlyticsManager.logException(e)
+                    CrashlyticsManager.instance.logException(e)
                     _formState.update { it.copy(analyticsEnabled = !isEnabled) }
                 }
             }
@@ -226,7 +226,7 @@ open class ProfileViewModel(
                 _formState.update { it.copy(isSaving = false) }
                 onResult(true, null)
             } catch (e: Exception) {
-                CrashlyticsManager.logException(e)
+                CrashlyticsManager.instance.logException(e)
                 _formState.update { it.copy(isSaving = false) }
                 onResult(false, e.message)
             }
@@ -256,12 +256,12 @@ open class ProfileViewModel(
                             if (updateTask.isSuccessful) {
                                 onResult(true, null)
                             } else {
-                                updateTask.exception?.let { CrashlyticsManager.logException(it) }
+                                updateTask.exception?.let { CrashlyticsManager.instance.logException(it) }
                                 onResult(false, updateTask.exception?.message)
                             }
                         }
                 } else {
-                    authTask.exception?.let { CrashlyticsManager.logException(it) }
+                    authTask.exception?.let { CrashlyticsManager.instance.logException(it) }
                     onResult(false, authTask.exception?.message ?: "Re-authentication failed.")
                 }
             }

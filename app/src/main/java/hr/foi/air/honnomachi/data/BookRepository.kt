@@ -24,7 +24,7 @@ class BookRepositoryImpl : BookRepository {
                     .collection("books")
                     .addSnapshotListener { snapshot, error ->
                         if (error != null) {
-                            CrashlyticsManager.logException(error)
+                            CrashlyticsManager.instance.logException(error)
                             trySend(BookListState.Error(error.message ?: "Unknown error occurred."))
                             return@addSnapshotListener
                         }
@@ -55,7 +55,7 @@ class BookRepositoryImpl : BookRepository {
                 .await()
                 .toObject(BookModel::class.java)
         } catch (e: Exception) {
-            CrashlyticsManager.logException(e)
+            CrashlyticsManager.instance.logException(e)
             null
         }
 }

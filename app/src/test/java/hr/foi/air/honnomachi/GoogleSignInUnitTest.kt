@@ -56,8 +56,8 @@ class GoogleSignInUnitTest {
 
         // Mock CrashlyticsManager
         mockkObject(CrashlyticsManager)
-        every { CrashlyticsManager.setUserId(any()) } just Runs
-        every { CrashlyticsManager.logException(any()) } just Runs
+        every { CrashlyticsManager.instance.setUserId(any()) } just Runs
+        every { CrashlyticsManager.instance.logException(any()) } just Runs
 
         authViewModel = AuthViewModel(mockAuth, mockFirestore, mockAnalytics)
 

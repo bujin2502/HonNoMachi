@@ -1,22 +1,29 @@
 package hr.foi.air.honnomachi
 
 import com.google.firebase.Firebase
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.crashlytics.crashlytics
 
-object CrashlyticsManager {
+class CrashlyticsManager(
+    private val crashlytics: FirebaseCrashlytics = Firebase.crashlytics,
+) : CrashlyticsService {
     private var currentVisibleScreen: String = "Unknown"
 
-    fun updateCurrentScreen(screenName: String) {
+    override fun updateCurrentScreen(screenName: String) {
         currentVisibleScreen = screenName
     }
 
-    fun setUserId(userId: String?) {
-        Firebase.crashlytics.setUserId(userId ?: "")
+    override fun setUserId(userId: String?) {
+        crashlytics.setUserId(userId ?: "")
     }
 
     // Biljezenje trenutnog ekrana na kojem je greska nastala i same greske
-    fun logException(exception: Throwable) {
-        Firebase.crashlytics.setCustomKey("current_screen", currentVisibleScreen)
-        Firebase.crashlytics.recordException(exception)
+    override fun logException(exception: Throwable) {
+        crashlytics.setCustomKey("current_screen", currentVisibleScreen)
+        crashlytics.recordException(exception)
+    }
+
+    companion object {
+        val instance: CrashlyticsService by lazy { CrashlyticsManager() }
     }
 }

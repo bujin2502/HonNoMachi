@@ -39,7 +39,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import hr.foi.air.honnomachi.R
-import hr.foi.air.honnomachi.ui.auth.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -31,7 +31,6 @@ import androidx.navigation.NavController
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.ui.components.BookItemView
-import hr.foi.air.honnomachi.ui.home.HomeViewModel
 
 private const val SHOW_DEBUG_BUTTON = false
 

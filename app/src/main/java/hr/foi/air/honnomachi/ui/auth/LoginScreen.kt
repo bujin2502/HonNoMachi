@@ -1,4 +1,5 @@
 package hr.foi.air.honnomachi.ui.auth
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -43,7 +44,6 @@ import hr.foi.air.honnomachi.FormValidator
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.ValidationErrorType
 import hr.foi.air.honnomachi.ui.components.errorMessageFor
-import hr.foi.air.honnomachi.ui.auth.AuthViewModel
 
 @Composable
 fun LoginScreen(

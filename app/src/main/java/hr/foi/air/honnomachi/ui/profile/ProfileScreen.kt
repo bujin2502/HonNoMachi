@@ -47,11 +47,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.R
+import hr.foi.air.honnomachi.di.ViewModelFactory
 import hr.foi.air.honnomachi.ui.components.ProfileItem
 import hr.foi.air.honnomachi.ui.components.errorMessageFor
-import hr.foi.air.honnomachi.ui.profile.ProfileUiState
-import hr.foi.air.honnomachi.ui.profile.ProfileViewModel
-import hr.foi.air.honnomachi.di.ViewModelFactory
 
 @Composable
 fun ProfileScreen(

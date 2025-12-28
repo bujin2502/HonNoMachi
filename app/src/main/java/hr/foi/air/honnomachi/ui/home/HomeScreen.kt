@@ -25,16 +25,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import hr.foi.air.honnomachi.R
+import hr.foi.air.honnomachi.di.ViewModelFactory
 import hr.foi.air.honnomachi.ui.add.AddPage
-import hr.foi.air.honnomachi.ui.cart.CartPage
-import hr.foi.air.honnomachi.ui.home.HomePage
-import hr.foi.air.honnomachi.ui.shelf.ShelfPage
 import hr.foi.air.honnomachi.ui.auth.AuthViewModel
-import hr.foi.air.honnomachi.ui.home.HomeViewModel
+import hr.foi.air.honnomachi.ui.cart.CartPage
+import hr.foi.air.honnomachi.ui.profile.ProfileScreen
 import hr.foi.air.honnomachi.ui.profile.ProfileUiState
 import hr.foi.air.honnomachi.ui.profile.ProfileViewModel
-import hr.foi.air.honnomachi.di.ViewModelFactory
-import hr.foi.air.honnomachi.ui.profile.ProfileScreen
+import hr.foi.air.honnomachi.ui.shelf.ShelfPage
 
 @Composable
 fun HomeScreen(

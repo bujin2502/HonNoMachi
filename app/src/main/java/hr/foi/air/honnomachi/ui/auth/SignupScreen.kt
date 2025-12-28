@@ -43,7 +43,6 @@ import hr.foi.air.honnomachi.FormValidator
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.ValidationErrorType
 import hr.foi.air.honnomachi.ui.components.errorMessageFor
-import hr.foi.air.honnomachi.ui.auth.AuthViewModel
 
 @Composable
 fun SignupScreen(

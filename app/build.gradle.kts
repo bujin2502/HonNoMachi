@@ -5,6 +5,8 @@ plugins {
     alias(libs.plugins.gms.google.services)
     alias(libs.plugins.ktlint)
     alias(libs.plugins.firebase.crashlytics)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt.android)
 }
 
 android {
@@ -98,4 +100,6 @@ dependencies {
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.coil.compose)
     implementation(libs.firebase.crashlytics)
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
 }

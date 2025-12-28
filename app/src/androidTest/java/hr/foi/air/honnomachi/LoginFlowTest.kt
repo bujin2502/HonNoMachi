@@ -12,9 +12,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.testing.TestNavHostController
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import hr.foi.air.honnomachi.screen.EmailVerificationScreen
-import hr.foi.air.honnomachi.screen.LoginScreen
-import hr.foi.air.honnomachi.viewmodel.AuthViewModel
+import hr.foi.air.honnomachi.ui.auth.AuthViewModel
+import hr.foi.air.honnomachi.ui.auth.EmailVerificationScreen
+import hr.foi.air.honnomachi.ui.auth.LoginScreen
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before

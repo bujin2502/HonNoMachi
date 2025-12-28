@@ -8,6 +8,8 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import hr.foi.air.honnomachi.model.UserModel
+import hr.foi.air.honnomachi.ui.profile.ProfileUiState
+import hr.foi.air.honnomachi.ui.profile.ProfileViewModel
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk

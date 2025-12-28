@@ -12,8 +12,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.testing.TestNavHostController
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import hr.foi.air.honnomachi.screen.SignupScreen
-import hr.foi.air.honnomachi.viewmodel.AuthViewModel
+import hr.foi.air.honnomachi.ui.auth.AuthViewModel
+import hr.foi.air.honnomachi.ui.auth.SignupScreen
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule

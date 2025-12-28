@@ -10,13 +10,13 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import hr.foi.air.honnomachi.data.BookRepository
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.model.Currency
-import hr.foi.air.honnomachi.pages.BookListState
-import hr.foi.air.honnomachi.pages.HomePage
-import hr.foi.air.honnomachi.repository.BookRepository
+import hr.foi.air.honnomachi.ui.home.BookListState
+import hr.foi.air.honnomachi.ui.home.HomePage
+import hr.foi.air.honnomachi.ui.home.HomeViewModel
 import hr.foi.air.honnomachi.ui.theme.HonNoMachiTheme
-import hr.foi.air.honnomachi.viewmodel.HomeViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import org.junit.Rule

@@ -8,7 +8,7 @@ import hr.foi.air.honnomachi.model.BookGenre
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.model.Currency
 import hr.foi.air.honnomachi.model.Language
-import hr.foi.air.honnomachi.screen.BookDetailContent
+import hr.foi.air.honnomachi.ui.book.BookDetailContent
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith

@@ -11,9 +11,9 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import hr.foi.air.honnomachi.model.UserModel
-import hr.foi.air.honnomachi.screen.ProfileScreen
-import hr.foi.air.honnomachi.viewmodel.ProfileUiState
-import hr.foi.air.honnomachi.viewmodel.ProfileViewModel
+import hr.foi.air.honnomachi.ui.profile.ProfileScreen
+import hr.foi.air.honnomachi.ui.profile.ProfileUiState
+import hr.foi.air.honnomachi.ui.profile.ProfileViewModel
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Rule

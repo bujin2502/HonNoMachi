@@ -13,7 +13,7 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import hr.foi.air.honnomachi.model.UserModel
-import hr.foi.air.honnomachi.viewmodel.AuthViewModel
+import hr.foi.air.honnomachi.ui.auth.AuthViewModel
 import io.mockk.Runs
 import io.mockk.clearAllMocks
 import io.mockk.every

@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
 interface BookRepository {
-    fun getBooks(): Flow<BookListState>
+    fun getBooks(): Flow<hr.foi.air.honnomachi.ui.home.BookListState>
 
     suspend fun getBookDetails(bookId: String): BookModel?
 }

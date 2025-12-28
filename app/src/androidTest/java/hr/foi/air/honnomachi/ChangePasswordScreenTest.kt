@@ -7,8 +7,8 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.navigation.compose.rememberNavController
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import hr.foi.air.honnomachi.screen.ChangePasswordScreen
-import hr.foi.air.honnomachi.viewmodel.ProfileViewModel
+import hr.foi.air.honnomachi.ui.auth.ChangePasswordScreen
+import hr.foi.air.honnomachi.ui.profile.ProfileViewModel
 import io.mockk.mockk
 import org.junit.Rule
 import org.junit.Test

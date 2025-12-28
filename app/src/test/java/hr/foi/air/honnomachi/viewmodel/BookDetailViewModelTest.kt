@@ -1,7 +1,9 @@
 package hr.foi.air.honnomachi.viewmodel
 
+import hr.foi.air.honnomachi.data.BookRepository
 import hr.foi.air.honnomachi.model.BookModel
-import hr.foi.air.honnomachi.repository.BookRepository
+import hr.foi.air.honnomachi.ui.book.BookDetailViewModel
+import hr.foi.air.honnomachi.ui.book.BookUiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -21,7 +23,7 @@ class FakeBookRepository : BookRepository {
         book.bookId?.let { books[it] = book }
     }
 
-    override fun getBooks(): kotlinx.coroutines.flow.Flow<hr.foi.air.honnomachi.pages.BookListState> = throw NotImplementedError()
+    override fun getBooks(): kotlinx.coroutines.flow.Flow<hr.foi.air.honnomachi.ui.home.BookListState> = throw NotImplementedError()
 
     override suspend fun getBookDetails(bookId: String): BookModel? = books[bookId]
 }

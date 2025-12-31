@@ -3,6 +3,7 @@ package hr.foi.air.honnomachi.ui.book
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import hr.foi.air.honnomachi.data.BookRepository
+import hr.foi.air.honnomachi.util.Result
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -22,12 +23,19 @@ class BookDetailViewModel(
         viewModelScope.launch {
             _uiState.value = BookUiState.Loading
 
-            val book = bookRepository.getBookDetails(bookId)
+            when (val result = bookRepository.getBookDetails(bookId)) {
+                is Result.Success -> {
+                    val book = result.data
+                    if (book != null) {
+                        _uiState.value = BookUiState.Success(book)
+                    } else {
+                        _uiState.value = BookUiState.BookNotFound
+                    }
+                }
 
-            if (book != null) {
-                _uiState.value = BookUiState.Success(book)
-            } else {
-                _uiState.value = BookUiState.BookNotFound
+                is Result.Error -> {
+                    _uiState.value = BookUiState.Error(result.exception.message ?: "Unknown error")
+                }
             }
         }
     }

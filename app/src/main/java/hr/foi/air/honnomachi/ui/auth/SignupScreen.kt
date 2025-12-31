@@ -15,6 +15,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,7 +38,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.FormValidator
@@ -48,7 +50,7 @@ import hr.foi.air.honnomachi.ui.components.errorMessageFor
 fun SignupScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
-    authViewModel: AuthViewModel = viewModel(),
+    authViewModel: AuthViewModel = hiltViewModel(),
 ) {
     var email by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
@@ -56,14 +58,25 @@ fun SignupScreen(
     var emailError by remember { mutableStateOf<ValidationErrorType?>(null) }
     var nameError by remember { mutableStateOf<ValidationErrorType?>(null) }
     var passwordError by remember { mutableStateOf<ValidationErrorType?>(null) }
-
     val context = LocalContext.current
-
-    var isLoading by remember { mutableStateOf(false) }
+    val uiState by authViewModel.uiState.collectAsState()
 
     val nameFocusRequester = remember { FocusRequester() }
     val passwordFocusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
+
+    LaunchedEffect(key1 = uiState.needsVerification) {
+        if (uiState.needsVerification) {
+            AppUtil.showToast(context, R.string.verification_email_sent)
+            navController.navigate("verification") {
+                popUpTo("auth") { inclusive = true }
+            }
+        }
+        uiState.errorMessage?.let {
+            AppUtil.showToast(context, it)
+            authViewModel.consumeErrorMessage()
+        }
+    }
 
     Column(
         modifier =
@@ -219,31 +232,18 @@ fun SignupScreen(
                 emailError = validation.email.error
                 nameError = validation.name.error
                 passwordError = validation.password.error
-                if (!validation.isValid) {
-                    isLoading = false
-                    return@Button
-                }
-                isLoading = true
-                authViewModel.signup(email, name, password) { success, _ ->
-                    isLoading = false
-                    if (success) {
-                        AppUtil.showToast(context, R.string.verification_email_sent)
-                        navController.navigate("verification") {
-                            popUpTo("auth") { inclusive = true }
-                        }
-                    } else {
-                        AppUtil.showToast(context, R.string.something_went_wrong)
-                    }
+                if (validation.isValid) {
+                    authViewModel.signup(name, email, password)
                 }
             },
-            enabled = !isLoading,
+            enabled = !uiState.isLoading,
             modifier =
                 Modifier
                     .fillMaxWidth()
                     .height(60.dp)
                     .testTag("signup_button"),
         ) {
-            Text(if (isLoading) stringResource(R.string.creating_account) else stringResource(R.string.signup), fontSize = 22.sp)
+            Text(if (uiState.isLoading) stringResource(R.string.creating_account) else stringResource(R.string.signup), fontSize = 22.sp)
         }
     }
 }

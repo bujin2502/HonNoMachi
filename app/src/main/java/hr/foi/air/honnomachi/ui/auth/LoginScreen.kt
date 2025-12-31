@@ -16,6 +16,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,7 +39,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.FormValidator
@@ -49,7 +51,7 @@ import hr.foi.air.honnomachi.ui.components.errorMessageFor
 fun LoginScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
-    authViewModel: AuthViewModel = viewModel(),
+    authViewModel: AuthViewModel = hiltViewModel(),
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -58,7 +60,26 @@ fun LoginScreen(
     val passwordFocusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
     val context = LocalContext.current
-    var isLoading by remember { mutableStateOf(false) }
+    val uiState by authViewModel.uiState.collectAsState()
+
+    LaunchedEffect(key1 = uiState) {
+        if (uiState.isUserLoggedIn) {
+            navController.navigate("home") {
+                popUpTo("auth") { inclusive = true }
+            }
+        }
+        uiState.errorMessage?.let {
+            if (it == "Please verify your email.") {
+                navController.navigate("verification") {
+                    popUpTo("auth") { inclusive = true }
+                }
+            } else {
+                AppUtil.showToast(context, it)
+            }
+            authViewModel.consumeErrorMessage()
+        }
+    }
+
     Column(
         modifier =
             modifier
@@ -167,41 +188,18 @@ fun LoginScreen(
                 val validation = FormValidator.validateLoginForm(email, password)
                 emailError = validation.email.error
                 passwordError = validation.password.error
-                if (!validation.isValid) {
-                    isLoading = false
-                    return@Button
-                }
-                isLoading = true
-                authViewModel.login(email, password) { success, errorMessage ->
-                    isLoading = false
-                    if (success) {
-                        navController.navigate("home") {
-                            popUpTo("auth") { inclusive = true }
-                        }
-                    } else {
-                        val message = errorMessage ?: "Something went wrong"
-                        if (message == "Please verify your email before logging in.") {
-                            navController.navigate("verification") {
-                                popUpTo("auth") { inclusive = true }
-                            }
-                        } else {
-                            if (errorMessage != null) {
-                                AppUtil.showToast(context, errorMessage)
-                            } else {
-                                AppUtil.showToast(context, R.string.something_went_wrong)
-                            }
-                        }
-                    }
+                if (validation.isValid) {
+                    authViewModel.login(email, password)
                 }
             },
-            enabled = !isLoading,
+            enabled = !uiState.isLoading,
             modifier =
                 Modifier
                     .fillMaxWidth()
                     .height(60.dp)
                     .testTag("login_button"),
         ) {
-            Text(text = if (isLoading) stringResource(R.string.logging_in) else stringResource(R.string.login), fontSize = 22.sp)
+            Text(text = if (uiState.isLoading) stringResource(R.string.logging_in) else stringResource(R.string.login), fontSize = 22.sp)
         }
         Spacer(modifier = Modifier.height(10.dp))
         TextButton(onClick = { navController.navigate("forgotPassword") }) {

@@ -3,19 +3,16 @@ package hr.foi.air.honnomachi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
-import hr.foi.air.honnomachi.di.ViewModelFactory
 import hr.foi.air.honnomachi.ui.auth.AuthScreen
 import hr.foi.air.honnomachi.ui.auth.AuthViewModel
 import hr.foi.air.honnomachi.ui.auth.ChangePasswordScreen
@@ -27,47 +24,52 @@ import hr.foi.air.honnomachi.ui.book.BookDetailScreen
 import hr.foi.air.honnomachi.ui.home.HomeScreen
 import hr.foi.air.honnomachi.ui.home.HomeViewModel
 import hr.foi.air.honnomachi.ui.policy.PrivacyPolicyScreen
-import kotlinx.coroutines.delay
 
 @Composable
 fun AppNavigation(
     modifier: Modifier = Modifier,
     navController: NavHostController,
 ) {
-    val authViewModel: AuthViewModel = viewModel()
-    val homeViewModel: HomeViewModel = viewModel(factory = ViewModelFactory())
-    val context = LocalContext.current
+    val authViewModel: AuthViewModel = hiltViewModel()
+    val homeViewModel: HomeViewModel = hiltViewModel()
 
-    val currentUser = Firebase.auth.currentUser
-    val startDestination =
-        when {
-            currentUser == null -> "auth"
-            currentUser.isEmailVerified -> "home"
-            else -> "verification"
+    val uiState by authViewModel.uiState.collectAsState()
+
+    LaunchedEffect(uiState.isUserLoggedIn, uiState.needsVerification) {
+        val route =
+            when {
+                uiState.isUserLoggedIn -> "home"
+                uiState.needsVerification -> "verification"
+                else -> "auth"
+            }
+
+        val currentRoute =
+            navController.currentBackStackEntry
+                ?.destination
+                ?.route
+                ?.substringBefore("/")
+        val destinationRoute = route.substringBefore("/")
+        if (destinationRoute == currentRoute) {
+            return@LaunchedEffect
         }
 
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
+        navController.navigate(route) {
+            // Briše sve prethodne ekrane sa stacka
+            popUpTo(navController.graph.startDestinationId) { inclusive = true }
+            // Osigurava da se ne stvori nova instanca ako smo već na cilju
+            launchSingleTop = true
+        }
+    }
 
-    // automatsko pracenje naziva trenutnog ekrana za Crashlytics
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
     DisposableEffect(navBackStackEntry) {
         val currentScreen = navBackStackEntry?.destination?.route ?: "Unknown"
         CrashlyticsManager.instance.updateCurrentScreen(currentScreen)
         onDispose { }
     }
 
-    LaunchedEffect(Unit) {
-        while (true) {
-            authViewModel.checkSession {
-                AppUtil.showToast(context, "Session expired. Please login again.")
-                navController.navigate("auth") {
-                    popUpTo(0) { inclusive = true }
-                }
-            }
-            delay(5000)
-        }
-    }
-
-    NavHost(navController = navController, startDestination = startDestination) {
+    NavHost(navController = navController, startDestination = "auth") {
+        // Svi vaši `composable` pozivi ostaju potpuno isti
         composable("auth") {
             AuthScreen(modifier, navController, authViewModel)
         }

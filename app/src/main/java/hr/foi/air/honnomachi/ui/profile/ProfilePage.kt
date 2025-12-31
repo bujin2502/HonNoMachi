@@ -55,8 +55,8 @@ fun ProfilePage(
             Button(
                 onClick = {
                     authViewModel.testSecureRead(
-                        onSuccess = { message.value = "Secure read OK — token is valid" },
-                        onError = { e -> message.value = "Error: ${e.message}" },
+                        onSuccess = { msg -> message.value = msg },
+                        onError = { error -> message.value = "Error: $error" },
                     )
                 },
             ) {

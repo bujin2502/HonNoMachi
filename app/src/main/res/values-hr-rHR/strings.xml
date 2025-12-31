@@ -32,6 +32,7 @@
     <string name="enter_your_email_address_to_receive_a_password_reset_link">Unesite svoju adresu e-pošte kako biste primili poveznicu za resetiranje lozinke.</string>
     <string name="back_to_login">Natrag na prijavu</string>
     <string name="send_reset_link">Pošalji poveznicu za resetiranje</string>
+    <string name="password_reset_link_sent">Poveznica za resetiranje lozinke poslana je na vašu email adresu.</string>
     <string name="error_email_required">Email je obavezan</string>
     <string name="error_email_invalid">Unesite ispravnu email adresu</string>
     <string name="error_name_required">Ime je obavezno</string>

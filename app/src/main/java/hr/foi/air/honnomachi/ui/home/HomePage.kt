@@ -29,24 +29,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import hr.foi.air.honnomachi.R
-import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.ui.components.BookItemView
 
 private const val SHOW_DEBUG_BUTTON = false
-
-sealed interface BookListState {
-    object Loading : BookListState
-
-    data class Success(
-        val books: List<BookModel>,
-    ) : BookListState
-
-    object Empty : BookListState
-
-    data class Error(
-        val message: String,
-    ) : BookListState
-}
 
 @Composable
 fun HomePage(
@@ -54,8 +39,7 @@ fun HomePage(
     navController: NavController,
     viewModel: HomeViewModel,
 ) {
-    val bookListState by viewModel.bookListState.collectAsStateWithLifecycle()
-    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Column(
         modifier =
@@ -65,7 +49,7 @@ fun HomePage(
                 .padding(bottom = paddingValues.calculateBottomPadding()),
     ) {
         TextField(
-            value = searchQuery,
+            value = uiState.searchQuery,
             onValueChange = { viewModel.onSearchQueryChange(it) },
             placeholder = { Text(stringResource(R.string.search_by_title)) },
             modifier =
@@ -90,69 +74,61 @@ fun HomePage(
             }
         }
 
-        when (val currentState = bookListState) {
-            BookListState.Loading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CircularProgressIndicator()
-                }
+        if (uiState.isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator()
             }
-
-            is BookListState.Success -> {
-                val filteredBookList =
-                    if (searchQuery.isEmpty()) {
-                        currentState.books
-                    } else {
-                        currentState.books.filter { it.title.contains(searchQuery, ignoreCase = true) }
-                    }
-
-                if (filteredBookList.isEmpty()) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(stringResource(R.string.no_books_found))
-                    }
+        } else if (uiState.errorMessage != null) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(stringResource(R.string.error_occurred) + ": ${uiState.errorMessage}")
+            }
+        } else if (uiState.books.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(stringResource(R.string.no_books_available))
+            }
+        } else {
+            val filteredBookList =
+                if (uiState.searchQuery.isEmpty()) {
+                    uiState.books
                 } else {
-                    LazyColumn(
-                        modifier =
-                            Modifier
-                                .fillMaxSize()
-                                .padding(top = 8.dp)
-                                .testTag("book_list"),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        items(filteredBookList) { item ->
-                            BookItemView(
-                                book = item,
-                                onBookClick = { bookId ->
-                                    bookId?.let {
-                                        navController.navigate("bookDetail/$it")
-                                    }
-                                },
-                            )
-                        }
+                    uiState.books.filter { it.title.contains(uiState.searchQuery, ignoreCase = true) }
+                }
+
+            if (filteredBookList.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(stringResource(R.string.no_books_found))
+                }
+            } else {
+                LazyColumn(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(top = 8.dp)
+                            .testTag("book_list"),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(filteredBookList) { item ->
+                        BookItemView(
+                            book = item,
+                            onBookClick = { bookId ->
+                                bookId?.let {
+                                    navController.navigate("bookDetail/$it")
+                                }
+                            },
+                        )
                     }
-                }
-            }
-
-            BookListState.Empty -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(stringResource(R.string.no_books_available))
-                }
-            }
-
-            is BookListState.Error -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(stringResource(R.string.error_occurred) + ": ${currentState.message}")
                 }
             }
         }

@@ -1,61 +1,61 @@
 package hr.foi.air.honnomachi.data
 
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
+import com.google.firebase.firestore.FirebaseFirestore
 import hr.foi.air.honnomachi.CrashlyticsManager
 import hr.foi.air.honnomachi.model.BookModel
-import hr.foi.air.honnomachi.ui.home.BookListState
+import hr.foi.air.honnomachi.util.Result
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
 
 interface BookRepository {
-    fun getBooks(): Flow<hr.foi.air.honnomachi.ui.home.BookListState>
+    fun getBooks(): Flow<Result<List<BookModel>>>
 
-    suspend fun getBookDetails(bookId: String): BookModel?
+    suspend fun getBookDetails(bookId: String): Result<BookModel?>
 }
 
-class BookRepositoryImpl : BookRepository {
-    override fun getBooks(): Flow<BookListState> =
-        callbackFlow {
-            val listener =
-                Firebase.firestore
-                    .collection("books")
-                    .addSnapshotListener { snapshot, error ->
-                        if (error != null) {
-                            CrashlyticsManager.instance.logException(error)
-                            trySend(BookListState.Error(error.message ?: "Unknown error occurred."))
-                            return@addSnapshotListener
-                        }
+class BookRepositoryImpl
+    @Inject
+    constructor(
+        private val firestore: FirebaseFirestore,
+    ) : BookRepository {
+        override fun getBooks(): Flow<Result<List<BookModel>>> =
+            callbackFlow {
+                val listener =
+                    firestore
+                        .collection("books")
+                        .addSnapshotListener { snapshot, error ->
+                            if (error != null) {
+                                CrashlyticsManager.instance.logException(error) // Keep Crashlytics logging
+                                trySend(Result.Error(error))
+                                return@addSnapshotListener
+                            }
 
-                        if (snapshot != null) {
-                            val resultList =
-                                snapshot.documents.mapNotNull { doc ->
-                                    doc.toObject(BookModel::class.java)
-                                }
-                            val state =
-                                if (resultList.isEmpty()) {
-                                    BookListState.Empty
-                                } else {
-                                    BookListState.Success(resultList)
-                                }
-                            trySend(state)
+                            if (snapshot != null) {
+                                val resultList =
+                                    snapshot.documents.mapNotNull { doc ->
+                                        doc.toObject(BookModel::class.java)
+                                    }
+                                trySend(Result.Success(resultList))
+                            }
                         }
-                    }
-            awaitClose { listener.remove() }
-        }
+                awaitClose { listener.remove() }
+            }
 
-    override suspend fun getBookDetails(bookId: String): BookModel? =
-        try {
-            Firebase.firestore
-                .collection("books")
-                .document(bookId)
-                .get()
-                .await()
-                .toObject(BookModel::class.java)
-        } catch (e: Exception) {
-            CrashlyticsManager.instance.logException(e)
-            null
-        }
-}
+        override suspend fun getBookDetails(bookId: String): Result<BookModel?> =
+            try {
+                val book =
+                    firestore
+                        .collection("books")
+                        .document(bookId)
+                        .get()
+                        .await()
+                        .toObject(BookModel::class.java)
+                Result.Success(book)
+            } catch (e: Exception) {
+                CrashlyticsManager.instance.logException(e) // Keep Crashlytics logging
+                Result.Error(e)
+            }
+    }

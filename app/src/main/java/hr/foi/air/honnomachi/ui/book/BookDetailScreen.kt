@@ -41,6 +41,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.data.BookRepository
 import hr.foi.air.honnomachi.data.BookRepositoryImpl
@@ -52,7 +54,7 @@ fun BookDetailScreen(
     bookId: String?,
     viewModel: BookDetailViewModel =
         viewModel(
-            factory = BookDetailViewModelFactory(BookRepositoryImpl()),
+            factory = BookDetailViewModelFactory(BookRepositoryImpl(Firebase.firestore)),
         ),
 ) {
     LaunchedEffect(key1 = bookId) {

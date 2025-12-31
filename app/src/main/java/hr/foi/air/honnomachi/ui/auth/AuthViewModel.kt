@@ -1,355 +1,257 @@
 package hr.foi.air.honnomachi.ui.auth
 
-import android.os.Bundle
 import androidx.lifecycle.ViewModel
-import com.google.firebase.Firebase
-import com.google.firebase.analytics.FirebaseAnalytics
-import com.google.firebase.analytics.analytics
+import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.auth.auth
-import com.google.firebase.crashlytics.crashlytics
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.firestore
-import hr.foi.air.honnomachi.CrashlyticsManager
-import hr.foi.air.honnomachi.model.UserModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+import hr.foi.air.honnomachi.data.AuthRepository
+import hr.foi.air.honnomachi.util.Result
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-open class AuthViewModel(
-    private val auth: FirebaseAuth? = Firebase.auth,
-    private val firestore: FirebaseFirestore? = Firebase.firestore,
-    private val analytics: FirebaseAnalytics? = Firebase.analytics,
-) : ViewModel() {
-    open fun signup(
-        email: String,
-        name: String,
-        password: String,
-        onResult: (Boolean, String?) -> Unit,
-    ) {
-        if (email.isBlank() || name.isBlank() || password.isBlank()) {
-            onResult(false, "Email, name, and password cannot be empty.")
-            return
-        }
-        auth
-            ?.createUserWithEmailAndPassword(email, password)
-            ?.addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val user = task.result?.user
-                    user
-                        ?.sendEmailVerification()
-                        ?.addOnCompleteListener { verificationTask ->
-                            if (verificationTask.isSuccessful) {
-                                val userId = user.uid
-                                val userModel =
-                                    UserModel(
-                                        name = name,
-                                        email = email,
-                                        uid = userId,
-                                        isVerified = false,
-                                        analyticsEnabled = true,
+@HiltViewModel
+class AuthViewModel
+    @Inject
+    constructor(
+        private val authRepository: AuthRepository,
+        private val firebaseAuth: FirebaseAuth,
+    ) : ViewModel() {
+        private val _uiState = MutableStateFlow(AuthUiState())
+        val uiState = _uiState.asStateFlow()
+
+        init {
+            // Sluša promjene stanja prijave (login, logout, istek tokena)
+            firebaseAuth.addAuthStateListener { auth ->
+                viewModelScope.launch {
+                    val user = auth.currentUser
+                    if (user == null) {
+                        _uiState.update { it.copy(isUserLoggedIn = false, needsVerification = false) }
+                    } else {
+                        // Firebase može imati zastarjele podatke, pozovi reload() za svježe stanje
+                        user.reload().addOnCompleteListener { task ->
+                            val freshUser = firebaseAuth.currentUser
+                            if (task.isSuccessful && freshUser != null) {
+                                val isVerified = freshUser.isEmailVerified
+                                _uiState.update {
+                                    it.copy(
+                                        isUserLoggedIn = isVerified,
+                                        needsVerification = !isVerified,
                                     )
-                                firestore
-                                    ?.collection("users")
-                                    ?.document(userId)
-                                    ?.set(userModel)
-                                    ?.addOnCompleteListener { dbTask ->
-                                        if (dbTask.isSuccessful) {
-                                            auth.signOut()
-                                            onResult(true, null)
-                                        } else {
-                                            dbTask.exception?.let { CrashlyticsManager.instance.logException(it) }
-                                            onResult(false, "Database error.")
-                                        }
-                                    }
+                                }
                             } else {
-                                verificationTask.exception?.let { CrashlyticsManager.instance.logException(it) }
-                                onResult(false, "Failed to send verification email.")
+                                // Ako reload ne uspije (npr. nema interneta, token istekao),
+                                // smatraj korisnika odjavljenim za svaki slučaj.
+                                _uiState.update { it.copy(isUserLoggedIn = false, needsVerification = false) }
                             }
                         }
-                } else {
-                    task.exception?.let { CrashlyticsManager.instance.logException(it) }
-                    onResult(false, task.exception?.localizedMessage)
-                }
-            } ?: run {
-            onResult(false, "Authentication service is not available.")
-        }
-    }
-
-    open fun login(
-        email: String,
-        password: String,
-        onResult: (Boolean, String?) -> Unit,
-    ) {
-        if (email.isBlank() || password.isBlank()) {
-            onResult(false, "Email and password cannot be empty.")
-            return
-        }
-        auth
-            ?.signInWithEmailAndPassword(email, password)
-            ?.addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val user = task.result?.user
-                    if (user?.isEmailVerified == true) {
-                        val userId = user.uid
-                        firestore
-                            ?.collection("users")
-                            ?.document(userId)
-                            ?.update("isVerified", true)
-                            ?.addOnCompleteListener { updateTask ->
-                                if (updateTask.isSuccessful) {
-                                    logLoginSuccess("email_password", user.uid)
-                                    onResult(true, null)
-                                } else {
-                                    updateTask.exception?.let { CrashlyticsManager.instance.logException(it) }
-                                    onResult(false, "Failed to update verification status.")
-                                }
-                            }
-                    } else {
-                        auth.signOut()
-                        onResult(false, "Please verify your email before logging in.")
                     }
-                } else {
-                    task.exception?.let { CrashlyticsManager.instance.logException(it) }
-                    logLoginFailure(task.exception, "email_password")
-                    onResult(false, task.exception?.localizedMessage)
                 }
-            } ?: run {
-            onResult(false, "Authentication service is not available.")
+            }
         }
-    }
 
-    open fun loginWithGoogle(
-        idToken: String,
-        onResult: (Boolean, String?) -> Unit,
-    ) {
-        val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
-        auth
-            ?.signInWithCredential(firebaseCredential)
-            ?.addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val user = task.result?.user
-                    val userId = user?.uid
-                    if (user != null && userId != null) {
-                        val userDocRef = firestore?.collection("users")?.document(userId)
-                        if (userDocRef == null) {
-                            logLoginSuccess("google", userId)
-                            onResult(true, null)
-                            return@addOnCompleteListener
+        fun signup(
+            name: String,
+            email: String,
+            password: String,
+        ) {
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+                val result = authRepository.register(name, email, password)
+                when (result) {
+                    is Result.Success -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                user = result.data,
+                                needsVerification = true,
+                                errorMessage = null,
+                            )
+                        }
+                    }
+
+                    is Result.Error -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                errorMessage = result.exception.message,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        fun login(
+            email: String,
+            password: String,
+        ) {
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+                val result = authRepository.login(email, password)
+                when (result) {
+                    is Result.Success -> {
+                        val isVerified = result.data.isVerified
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                user = result.data,
+                                isUserLoggedIn = isVerified,
+                                needsVerification = !isVerified,
+                                errorMessage = if (isVerified) null else "Please verify your email.",
+                            )
+                        }
+                    }
+
+                    is Result.Error -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                errorMessage = result.exception.message,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        fun signOut() {
+            viewModelScope.launch {
+                authRepository.signOut()
+                _uiState.update { AuthUiState() } // Reset state
+            }
+        }
+
+        fun forgotPassword(email: String) {
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+                val result = authRepository.sendPasswordResetEmail(email)
+                _uiState.update {
+                    when (result) {
+                        is Result.Success -> {
+                            it.copy(isLoading = false, errorMessage = null)
                         }
 
-                        userDocRef
-                            .get()
-                            .addOnSuccessListener { snapshot ->
-                                val writeTask =
-                                    if (snapshot.exists()) {
-                                        userDocRef.update("isVerified", true)
-                                    } else {
-                                        val userModel =
-                                            UserModel(
-                                                name = user.displayName ?: "",
-                                                email = user.email ?: "",
-                                                uid = userId,
-                                                isVerified = user.isEmailVerified,
-                                                analyticsEnabled = true,
-                                            )
-                                        userDocRef.set(userModel)
-                                    }
-                                writeTask.addOnCompleteListener { writeTaskResult ->
-                                    if (writeTaskResult.isSuccessful) {
-                                        logLoginSuccess("google", userId)
-                                        onResult(true, null)
-                                    } else {
-                                        writeTaskResult.exception?.let { CrashlyticsManager.instance.logException(it) }
-                                        logLoginFailure(writeTaskResult.exception, "google")
-                                        onResult(false, writeTaskResult.exception?.localizedMessage ?: "Failed to write user data.")
-                                    }
-                                }
-                            }.addOnFailureListener { e ->
-                                CrashlyticsManager.instance.logException(e)
-                                logLoginFailure(e, "google")
-                                onResult(false, e.localizedMessage ?: "Failed to read user data.")
-                            }
-                    } else {
-                        logLoginSuccess("google", userId ?: "")
-                        onResult(true, null)
+                        is Result.Error -> {
+                            it.copy(
+                                isLoading = false,
+                                errorMessage = result.exception.message,
+                            )
+                        }
                     }
-                } else {
-                    task.exception?.let { CrashlyticsManager.instance.logException(it) }
-                    logLoginFailure(task.exception, "google")
-                    onResult(false, task.exception?.localizedMessage ?: "Google sign-in failed.")
-                }
-            } ?: run {
-            onResult(false, "Authentication service is not available.")
-        }
-    }
-
-    open fun signOut() {
-        logLogout("user_logout")
-        CrashlyticsManager.instance.setUserId(null)
-        // Default (enabled) for the next user/session
-        Firebase.analytics.setAnalyticsCollectionEnabled(true)
-        Firebase.crashlytics.setCrashlyticsCollectionEnabled(true)
-        auth?.signOut()
-    }
-
-    open fun forgotPassword(
-        email: String,
-        onResult: (Boolean, String?) -> Unit,
-    ) {
-        if (email.isBlank()) {
-            onResult(false, "Email cannot be empty.")
-            return
-        }
-        auth
-            ?.sendPasswordResetEmail(email)
-            ?.addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    onResult(true, null)
-                } else {
-                    task.exception?.let { CrashlyticsManager.instance.logException(it) }
-                    onResult(false, task.exception?.localizedMessage)
-                }
-            } ?: run {
-            onResult(false, "Authentication service is not available.")
-        }
-    }
-
-    open fun resendVerificationEmail(
-        email: String,
-        password: String,
-        onResult: (Boolean, String?) -> Unit,
-    ) {
-        auth
-            ?.signInWithEmailAndPassword(email, password)
-            ?.addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val user = task.result?.user
-                    if (user?.isEmailVerified == false) {
-                        user
-                            .sendEmailVerification()
-                            .addOnCompleteListener { verificationTask ->
-                                if (verificationTask.isSuccessful) {
-                                    auth.signOut()
-                                    onResult(true, "Verification email sent. Please check your inbox.")
-                                } else {
-                                    verificationTask.exception?.let { CrashlyticsManager.instance.logException(it) }
-                                    auth.signOut()
-                                    onResult(false, "Failed to send verification email.")
-                                }
-                            }
-                    } else {
-                        auth.signOut()
-                        onResult(false, "This email is already verified.")
-                    }
-                } else {
-                    task.exception?.let { CrashlyticsManager.instance.logException(it) }
-                    onResult(false, task.exception?.localizedMessage)
-                }
-            } ?: run {
-            onResult(false, "Authentication service is not available.")
-        }
-    }
-
-    // Funkcija za log uspjesne prijavu
-    private fun logLoginSuccess(
-        method: String,
-        userId: String,
-    ) {
-        CrashlyticsManager.instance.setUserId(userId)
-        analytics?.setUserId(userId)
-        val bundle =
-            Bundle().apply {
-                putString(FirebaseAnalytics.Param.METHOD, method)
-            }
-        analytics?.logEvent(FirebaseAnalytics.Event.LOGIN, bundle)
-
-        // Primjena postavki privatnosti nakon uspjesne prijave mail/google
-        applyUserConsent(userId)
-    }
-
-    // Funkcija za log  neuspjesne prijave
-    private fun logLoginFailure(
-        exception: Throwable?,
-        method: String,
-    ) {
-        val bundle =
-            Bundle().apply {
-                putString("error_type", exception?.javaClass?.simpleName ?: "unknown")
-                putString("method", method)
-            }
-        analytics?.logEvent("login_failed", bundle)
-    }
-
-    // Funkcija za log odjave
-    private fun logLogout(method: String) {
-        val logoutBundle =
-            Bundle().apply {
-                putString(FirebaseAnalytics.Param.METHOD, method)
-            }
-        analytics?.logEvent("logout", logoutBundle)
-        analytics?.setUserId(null)
-    }
-
-    private fun applyUserConsent(userId: String) {
-        firestore
-            ?.collection("users")
-            ?.document(userId)
-            ?.get()
-            ?.addOnSuccessListener { document ->
-                val isEnabled =
-                    if (document.exists()) {
-                        document.toObject(UserModel::class.java)?.analyticsEnabled ?: true
-                    } else {
-                        true
-                    }
-                Firebase.analytics.setAnalyticsCollectionEnabled(isEnabled)
-                Firebase.crashlytics.isCrashlyticsCollectionEnabled = isEnabled
-            }?.addOnFailureListener {
-                CrashlyticsManager.instance.logException(it)
-                Firebase.analytics.setAnalyticsCollectionEnabled(true)
-                Firebase.crashlytics.isCrashlyticsCollectionEnabled = true
-            }
-    }
-
-    open fun checkSession(onSessionExpired: () -> Unit) {
-        val user = auth?.currentUser
-        user
-            ?.getIdToken(true)
-            ?.addOnFailureListener { exception ->
-                CrashlyticsManager.instance.logException(exception)
-                if (exception is com.google.firebase.auth.FirebaseAuthInvalidUserException) {
-                    auth.signOut()
-                    onSessionExpired()
                 }
             }
-    }
+        }
 
-    // QA helper-Funkcija za testiranje tokena
-    fun testSecureRead(
-        onSuccess: () -> Unit,
-        onError: (Exception) -> Unit,
-    ) {
-        val user =
-            auth?.currentUser
-                ?: return onError(IllegalStateException("No logged-in user"))
-        val firestoreInstance =
-            firestore
-                ?: return onError(IllegalStateException("Firestore service is not available"))
+        fun consumeErrorMessage() {
+            _uiState.update { it.copy(errorMessage = null) }
+        }
 
-        user
-            .getIdToken(true) // 'true' prisiljava osvjezavanje i provjeru statusa
-            .addOnSuccessListener {
-                firestoreInstance
-                    .collection("users")
-                    .document(user.uid)
-                    .get()
-                    .addOnSuccessListener { onSuccess() }
-                    .addOnFailureListener { e ->
-                        CrashlyticsManager.instance.logException(e)
-                        onError(e)
+        fun checkSession() {
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+                val result = authRepository.checkSession()
+                when (result) {
+                    is Result.Success -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                user = result.data,
+                                isUserLoggedIn = true,
+                                needsVerification = false,
+                                errorMessage = null,
+                            )
+                        }
                     }
-            }.addOnFailureListener { e ->
-                CrashlyticsManager.instance.logException(e)
-                onError(e)
+
+                    is Result.Error -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                isUserLoggedIn = false,
+                                needsVerification = false,
+                                errorMessage = result.exception.message,
+                            )
+                        }
+                    }
+                }
             }
+        }
+
+        fun testSecureRead(
+            onSuccess: (String) -> Unit,
+            onError: (String) -> Unit,
+        ) {
+            viewModelScope.launch {
+                val result = authRepository.testSecureRead()
+                when (result) {
+                    is Result.Success -> onSuccess(result.data)
+                    is Result.Error -> onError(result.exception.message ?: "Unknown error")
+                }
+            }
+        }
+
+        fun loginWithGoogle(
+            idToken: String,
+            onComplete: (success: Boolean, errorMessage: String?) -> Unit,
+        ) {
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+                val result = authRepository.loginWithGoogle(idToken)
+                when (result) {
+                    is Result.Success -> {
+                        val isVerified = result.data.isVerified
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                user = result.data,
+                                isUserLoggedIn = true,
+                                needsVerification = !isVerified,
+                                errorMessage = null,
+                            )
+                        }
+                        onComplete(true, null)
+                    }
+
+                    is Result.Error -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                errorMessage = result.exception.message,
+                            )
+                        }
+                        onComplete(false, result.exception.message)
+                    }
+                }
+            }
+        }
+
+        fun resendVerificationEmail(
+            email: String,
+            password: String,
+            onComplete: (success: Boolean, message: String) -> Unit,
+        ) {
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+                val result = authRepository.resendVerificationEmail(email, password)
+                when (result) {
+                    is Result.Success -> {
+                        _uiState.update { it.copy(isLoading = false, errorMessage = null) }
+                        onComplete(true, "Verification email sent successfully")
+                    }
+
+                    is Result.Error -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                errorMessage = result.exception.message,
+                            )
+                        }
+                        onComplete(false, result.exception.message ?: "Failed to send verification email")
+                    }
+                }
+            }
+        }
     }
-}

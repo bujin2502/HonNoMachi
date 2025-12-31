@@ -101,5 +101,6 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.firebase.crashlytics)
     implementation(libs.hilt.android)
+    implementation(libs.hilt.navigation.compose)
     ksp(libs.hilt.compiler)
 }

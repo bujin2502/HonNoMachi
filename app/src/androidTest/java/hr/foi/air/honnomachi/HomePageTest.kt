@@ -13,54 +13,56 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import hr.foi.air.honnomachi.data.BookRepository
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.model.Currency
-import hr.foi.air.honnomachi.ui.home.BookListState
 import hr.foi.air.honnomachi.ui.home.HomePage
+import hr.foi.air.honnomachi.ui.home.HomeUiState
 import hr.foi.air.honnomachi.ui.home.HomeViewModel
 import hr.foi.air.honnomachi.ui.theme.HonNoMachiTheme
+import hr.foi.air.honnomachi.util.Result
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.update
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 // Fake model
-class FakeHomeViewModel :
-    HomeViewModel(
-        bookRepository =
-            object : BookRepository {
-                override fun getBooks(): Flow<BookListState> = flowOf(BookListState.Loading)
+class FakeHomeViewModel(
+    bookRepository: BookRepository,
+) : HomeViewModel(bookRepository) {
+    private val _uiState = MutableStateFlow(HomeUiState(isLoading = true))
+    override val uiState: Flow<HomeUiState> = _uiState
 
-                override suspend fun getBookDetails(bookId: String): BookModel? = null
-            },
-    ) {
     init {
-        setBookListState(
-            BookListState.Success(
-                listOf(
-                    BookModel(
-                        bookId = "1",
-                        title = "IT",
-                        authors = listOf("Stephen King"),
-                        price = 15.0,
-                        priceCurrency = Currency.EUR,
+        _uiState.update {
+            it.copy(
+                isLoading = false,
+                books =
+                    listOf(
+                        BookModel(
+                            bookId = "1",
+                            title = "IT",
+                            authors = listOf("Stephen King"),
+                            price = 15.0,
+                            priceCurrency = Currency.EUR,
+                        ),
+                        BookModel(
+                            bookId = "2",
+                            title = "Harry Potter",
+                            authors = listOf("J.K. Rowling"),
+                            price = 20.0,
+                            priceCurrency = Currency.USD,
+                        ),
                     ),
-                    BookModel(
-                        bookId = "2",
-                        title = "Harry Potter",
-                        authors = listOf("J.K. Rowling"),
-                        price = 20.0,
-                        priceCurrency = Currency.USD,
-                    ),
-                ),
-            ),
-        )
+            )
+        }
     }
 
-    fun emitState(state: BookListState) {
-        setBookListState(state)
+    fun emitState(state: HomeUiState) {
+        _uiState.value = state
     }
 
-    override fun getBooks() {}
+    override fun getBooks() {} // Override to prevent actual data fetching
 }
 
 @RunWith(AndroidJUnit4::class)
@@ -70,7 +72,13 @@ class HomePageTest {
 
     // Pomocna funkcija za pokretanje ekrana
     private fun launchHomePage(): FakeHomeViewModel {
-        val fakeVM = FakeHomeViewModel()
+        val fakeBookRepository =
+            object : BookRepository {
+                override fun getBooks(): Flow<Result<List<BookModel>>> = flowOf(Result.Success(emptyList()))
+
+                override suspend fun getBookDetails(bookId: String): Result<BookModel?> = Result.Success(null)
+            }
+        val fakeVM = FakeHomeViewModel(fakeBookRepository)
         composeTestRule.setContent {
             HonNoMachiTheme {
                 HomePage(
@@ -140,7 +148,7 @@ class HomePageTest {
         val viewModel = launchHomePage()
 
         val errorMessage = "Failed to connect to server"
-        viewModel.emitState(BookListState.Error(errorMessage))
+        viewModel.emitState(HomeUiState(errorMessage = errorMessage))
         composeTestRule.waitForIdle()
         composeTestRule
             .onNodeWithText(errorMessage, substring = true, ignoreCase = true)

@@ -12,8 +12,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.testing.TestNavHostController
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import hr.foi.air.honnomachi.data.AuthRepository
 import hr.foi.air.honnomachi.ui.auth.AuthViewModel
 import hr.foi.air.honnomachi.ui.profile.ProfilePage
+import io.mockk.mockk
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -30,7 +32,7 @@ class LogoutFlowTest {
 
     @Before
     fun setup() {
-        fakeLogoutViewModel = FakeLogoutViewModel()
+        fakeLogoutViewModel = FakeLogoutViewModel(mockk(relaxed = true), mockk(relaxed = true))
 
         composeRule.setContent {
             val context = LocalContext.current
@@ -67,7 +69,10 @@ class LogoutFlowTest {
 }
 
 // Fake koji oponasa ponasanje stvarnog AuthViewModel-a
-private class FakeLogoutViewModel : AuthViewModel() {
+private class FakeLogoutViewModel(
+    authRepository: AuthRepository,
+    firebaseAuth: com.google.firebase.auth.FirebaseAuth,
+) : AuthViewModel(authRepository, firebaseAuth) {
     var logoutCalled: Boolean = false
 
     override fun signOut() {

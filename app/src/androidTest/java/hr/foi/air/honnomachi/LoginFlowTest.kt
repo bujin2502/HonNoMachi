@@ -12,9 +12,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.testing.TestNavHostController
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import hr.foi.air.honnomachi.data.AuthRepository
+import hr.foi.air.honnomachi.ui.auth.AuthUiState
 import hr.foi.air.honnomachi.ui.auth.AuthViewModel
 import hr.foi.air.honnomachi.ui.auth.EmailVerificationScreen
 import hr.foi.air.honnomachi.ui.auth.LoginScreen
+import io.mockk.mockk
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -38,7 +44,7 @@ class LoginFlowTest {
 
     @Before
     fun setup() {
-        fakeLoginViewModel = FakeLoginViewModel()
+        fakeLoginViewModel = FakeLoginViewModel(mockk(relaxed = true), mockk(relaxed = true))
 
         composeRule.setContent {
             val context = LocalContext.current
@@ -126,7 +132,10 @@ class LoginFlowTest {
 }
 
 // Fake koji oponasa stvarni AuthViewModel-a
-private class FakeLoginViewModel : AuthViewModel() {
+private class FakeLoginViewModel(
+    authRepository: AuthRepository,
+    firebaseAuth: com.google.firebase.auth.FirebaseAuth,
+) : AuthViewModel(authRepository, firebaseAuth) {
     var loginCalled: Boolean = false
     var capturedEmail: String? = null
     var capturedPassword: String? = null
@@ -137,32 +146,45 @@ private class FakeLoginViewModel : AuthViewModel() {
     var resendCapturedPassword: String? = null
     var nextErrorMessage: String? = null
 
+    private val _uiState = MutableStateFlow(AuthUiState())
+    override val uiState = _uiState.asStateFlow()
+
     override fun login(
         email: String,
         password: String,
-        onResult: (Boolean, String?) -> Unit,
     ) {
         loginCalled = true
         capturedEmail = email
         capturedPassword = password
 
         if (shouldLoginSucceed) {
-            onResult(true, null)
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    isUserLoggedIn = true,
+                    errorMessage = null,
+                )
+            }
         } else {
-            val error = nextErrorMessage ?: "Invalid credentials"
-            onResult(false, error)
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    isUserLoggedIn = false,
+                    errorMessage = nextErrorMessage ?: "Login failed",
+                )
+            }
         }
     }
 
     override fun resendVerificationEmail(
         email: String,
         password: String,
-        onResult: (Boolean, String?) -> Unit,
+        onComplete: (Boolean, String) -> Unit,
     ) {
         resendCalled = true
         resendCapturedEmail = email
         resendCapturedPassword = password
 
-        onResult(true, "Verification email sent.")
+        onComplete(true, "Verification email sent.")
     }
 }

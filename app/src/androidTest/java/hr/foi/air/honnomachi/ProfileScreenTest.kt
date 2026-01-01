@@ -10,10 +10,13 @@ import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import hr.foi.air.honnomachi.data.ProfileRepository
 import hr.foi.air.honnomachi.model.UserModel
 import hr.foi.air.honnomachi.ui.profile.ProfileScreen
 import hr.foi.air.honnomachi.ui.profile.ProfileUiState
 import hr.foi.air.honnomachi.ui.profile.ProfileViewModel
+import hr.foi.air.honnomachi.util.Result
+import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Rule
@@ -21,7 +24,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 // Create a Fake ViewModel to bypass Firebase
-class FakeProfileViewModel : ProfileViewModel(mockk(relaxed = true), mockk(relaxed = true)) {
+class FakeProfileViewModel(
+    repository: ProfileRepository,
+) : ProfileViewModel(repository) {
     // Helper to set private state via reflection
     fun setState(state: ProfileUiState) {
         val field = ProfileViewModel::class.java.getDeclaredField("_uiState")
@@ -60,10 +65,9 @@ class ProfileScreenTest {
     val composeTestRule = createComposeRule()
 
     private lateinit var fakeViewModel: FakeProfileViewModel
+    private lateinit var mockRepository: ProfileRepository
 
     private fun launchScreen() {
-        fakeViewModel = FakeProfileViewModel()
-
         // Set initial state
         val user =
             UserModel(
@@ -75,6 +79,11 @@ class ProfileScreenTest {
                 city = "City",
                 postNumber = "10000",
             )
+
+        mockRepository = mockk(relaxed = true)
+        coEvery { mockRepository.getUserProfile() } returns Result.Success(user)
+
+        fakeViewModel = FakeProfileViewModel(mockRepository)
         fakeViewModel.setState(ProfileUiState.Success(user))
 
         composeTestRule.setContent {

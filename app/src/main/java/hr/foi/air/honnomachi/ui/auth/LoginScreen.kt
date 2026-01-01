@@ -62,19 +62,18 @@ fun LoginScreen(
     val context = LocalContext.current
     val uiState by authViewModel.uiState.collectAsState()
 
-    LaunchedEffect(key1 = uiState) {
-        if (uiState.isUserLoggedIn) {
-            navController.navigate("home") {
-                popUpTo("auth") { inclusive = true }
-            }
-        }
-        uiState.errorMessage?.let {
-            if (it == "Please verify your email.") {
-                navController.navigate("verification") {
+            LaunchedEffect(key1 = uiState) {
+            if (uiState.isUserLoggedIn) {
+                navController.navigate("home") {
                     popUpTo("auth") { inclusive = true }
                 }
-            } else {
-                AppUtil.showToast(context, it)
+            }
+            uiState.errorMessage?.let {
+                if (it == "Please verify your email before logging in.") {
+                    navController.navigate("verification") {
+                        popUpTo("auth") { inclusive = true }
+                    }
+                } else {                AppUtil.showToast(context, it)
             }
             authViewModel.consumeErrorMessage()
         }

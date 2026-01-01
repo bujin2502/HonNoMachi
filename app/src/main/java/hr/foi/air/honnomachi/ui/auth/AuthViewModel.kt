@@ -13,14 +13,14 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class AuthViewModel
+open class AuthViewModel
     @Inject
     constructor(
         private val authRepository: AuthRepository,
         private val firebaseAuth: FirebaseAuth,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(AuthUiState())
-        val uiState = _uiState.asStateFlow()
+        open val uiState = _uiState.asStateFlow()
 
         init {
             // Sluša promjene stanja prijave (login, logout, istek tokena)
@@ -52,7 +52,7 @@ class AuthViewModel
             }
         }
 
-        fun signup(
+        open fun signup(
             name: String,
             email: String,
             password: String,
@@ -84,7 +84,7 @@ class AuthViewModel
             }
         }
 
-        fun login(
+        open fun login(
             email: String,
             password: String,
         ) {
@@ -117,7 +117,7 @@ class AuthViewModel
             }
         }
 
-        fun signOut() {
+        open fun signOut() {
             viewModelScope.launch {
                 authRepository.signOut()
                 _uiState.update { AuthUiState() } // Reset state
@@ -228,7 +228,7 @@ class AuthViewModel
             }
         }
 
-        fun resendVerificationEmail(
+        open fun resendVerificationEmail(
             email: String,
             password: String,
             onComplete: (success: Boolean, message: String) -> Unit,

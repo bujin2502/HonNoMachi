@@ -19,7 +19,7 @@ open class HomeViewModel
         private val bookRepository: BookRepository,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(HomeUiState(isLoading = true))
-        val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+        open val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
         init {
             getBooks()
@@ -54,7 +54,7 @@ open class HomeViewModel
             }
         }
 
-        fun onSearchQueryChange(newQuery: String) {
+        open fun onSearchQueryChange(newQuery: String) {
             _uiState.update { it.copy(searchQuery = newQuery) }
         }
     }

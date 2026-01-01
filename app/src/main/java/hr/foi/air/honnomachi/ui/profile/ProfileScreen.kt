@@ -44,10 +44,9 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.R
-import hr.foi.air.honnomachi.di.ViewModelFactory
 import hr.foi.air.honnomachi.ui.components.ProfileItem
 import hr.foi.air.honnomachi.ui.components.errorMessageFor
 
@@ -57,7 +56,7 @@ fun ProfileScreen(
     onLogout: () -> Unit,
     onNavigateToChangePassword: () -> Unit,
     onNavigateToPrivacyPolicy: () -> Unit,
-    profileViewModel: ProfileViewModel = viewModel(factory = ViewModelFactory()),
+    profileViewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
     val uiState by profileViewModel.uiState.collectAsState()

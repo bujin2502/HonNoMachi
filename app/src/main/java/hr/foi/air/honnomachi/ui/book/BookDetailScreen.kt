@@ -39,23 +39,16 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
 import hr.foi.air.honnomachi.R
-import hr.foi.air.honnomachi.data.BookRepository
-import hr.foi.air.honnomachi.data.BookRepositoryImpl
 import hr.foi.air.honnomachi.model.BookModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookDetailScreen(
     bookId: String?,
-    viewModel: BookDetailViewModel =
-        viewModel(
-            factory = BookDetailViewModelFactory(BookRepositoryImpl(Firebase.firestore)),
-        ),
+    viewModel: BookDetailViewModel = hiltViewModel(),
 ) {
     LaunchedEffect(key1 = bookId) {
         viewModel.loadBookDetails(bookId)
@@ -96,18 +89,6 @@ fun BookDetailScreen(
                 }
             }
         }
-    }
-}
-
-class BookDetailViewModelFactory(
-    private val repository: BookRepository,
-) : androidx.lifecycle.ViewModelProvider.Factory {
-    override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(BookDetailViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return BookDetailViewModel(repository) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
 

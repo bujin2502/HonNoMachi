@@ -20,6 +20,7 @@ import hr.foi.air.honnomachi.ui.theme.HonNoMachiTheme
 import hr.foi.air.honnomachi.util.Result
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
 import org.junit.Rule
@@ -31,7 +32,7 @@ class FakeHomeViewModel(
     bookRepository: BookRepository,
 ) : HomeViewModel(bookRepository) {
     private val _uiState = MutableStateFlow(HomeUiState(isLoading = true))
-    override val uiState: Flow<HomeUiState> = _uiState
+    override val uiState: StateFlow<HomeUiState> = _uiState
 
     init {
         _uiState.update {
@@ -60,6 +61,10 @@ class FakeHomeViewModel(
 
     fun emitState(state: HomeUiState) {
         _uiState.value = state
+    }
+
+    override fun onSearchQueryChange(newQuery: String) {
+        _uiState.update { it.copy(searchQuery = newQuery) }
     }
 
     override fun getBooks() {} // Override to prevent actual data fetching

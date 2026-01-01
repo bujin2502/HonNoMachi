@@ -22,10 +22,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import hr.foi.air.honnomachi.R
-import hr.foi.air.honnomachi.di.ViewModelFactory
 import hr.foi.air.honnomachi.ui.add.AddPage
 import hr.foi.air.honnomachi.ui.auth.AuthViewModel
 import hr.foi.air.honnomachi.ui.cart.CartPage
@@ -40,7 +39,7 @@ fun HomeScreen(
     navController: NavController,
     authViewModel: AuthViewModel,
     homeViewModel: HomeViewModel,
-    profileViewModel: ProfileViewModel = viewModel(factory = ViewModelFactory()),
+    profileViewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val profileUiState by profileViewModel.uiState.collectAsState()
 

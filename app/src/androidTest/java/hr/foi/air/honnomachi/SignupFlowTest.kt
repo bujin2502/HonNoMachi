@@ -12,8 +12,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.testing.TestNavHostController
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import hr.foi.air.honnomachi.data.AuthRepository
+import hr.foi.air.honnomachi.ui.auth.AuthUiState
 import hr.foi.air.honnomachi.ui.auth.AuthViewModel
 import hr.foi.air.honnomachi.ui.auth.SignupScreen
+import io.mockk.mockk
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -30,7 +36,7 @@ class SignupFlowTest {
 
     @Before
     fun setup() {
-        fakeAuthViewModel = FakeAuthViewModel()
+        fakeAuthViewModel = FakeAuthViewModel(mockk(relaxed = true), mockk(relaxed = true))
         composeRule.setContent {
             val context = LocalContext.current
             navController =
@@ -119,18 +125,40 @@ class SignupFlowTest {
     }
 }
 
-private class FakeAuthViewModel : AuthViewModel() {
+private class FakeAuthViewModel(
+    authRepository: AuthRepository,
+    firebaseAuth: com.google.firebase.auth.FirebaseAuth,
+) : AuthViewModel(authRepository, firebaseAuth) {
     var lastSignup: Triple<String, String, String>? = null
     var nextResult: Boolean = true
     var nextErrorMessage: String? = null
 
+    private val _uiState = MutableStateFlow(AuthUiState())
+    override val uiState = _uiState.asStateFlow()
+
     override fun signup(
-        email: String,
         name: String,
+        email: String,
         password: String,
-        onResult: (Boolean, String?) -> Unit,
     ) {
         lastSignup = Triple(email, name, password)
-        onResult(nextResult, nextErrorMessage)
+
+        if (nextResult) {
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    needsVerification = true,
+                    errorMessage = null,
+                )
+            }
+        } else {
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    needsVerification = false,
+                    errorMessage = nextErrorMessage ?: "Signup failed",
+                )
+            }
+        }
     }
 }

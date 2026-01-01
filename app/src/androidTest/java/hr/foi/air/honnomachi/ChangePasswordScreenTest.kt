@@ -7,15 +7,21 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.navigation.compose.rememberNavController
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import hr.foi.air.honnomachi.data.ProfileRepository
+import hr.foi.air.honnomachi.model.UserModel
 import hr.foi.air.honnomachi.ui.auth.ChangePasswordScreen
 import hr.foi.air.honnomachi.ui.profile.ProfileViewModel
+import hr.foi.air.honnomachi.util.Result
+import io.mockk.coEvery
 import io.mockk.mockk
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 // Fake ViewModel
-class FakeChangePasswordViewModel : ProfileViewModel(mockk(relaxed = true), mockk(relaxed = true)) {
+class FakeChangePasswordViewModel(
+    repository: ProfileRepository,
+) : ProfileViewModel(repository) {
     var changePasswordCalled = false
     var shouldSucceed = true
 
@@ -41,9 +47,19 @@ class ChangePasswordScreenTest {
     val composeTestRule = createComposeRule()
 
     private lateinit var fakeViewModel: FakeChangePasswordViewModel
+    private lateinit var mockRepository: ProfileRepository
 
     private fun launchScreen() {
-        fakeViewModel = FakeChangePasswordViewModel()
+        mockRepository = mockk(relaxed = true)
+        coEvery { mockRepository.getUserProfile() } returns
+            Result.Success(
+                UserModel(
+                    uid = "test-uid",
+                    name = "Test User",
+                    email = "test@example.com",
+                ),
+            )
+        fakeViewModel = FakeChangePasswordViewModel(mockRepository)
         composeTestRule.setContent {
             ChangePasswordScreen(
                 navController = rememberNavController(),

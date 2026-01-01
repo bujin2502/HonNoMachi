@@ -41,20 +41,19 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.FormValidator
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.ValidationErrorType
-import hr.foi.air.honnomachi.di.ViewModelFactory
 import hr.foi.air.honnomachi.ui.components.errorMessageFor
 import hr.foi.air.honnomachi.ui.profile.ProfileViewModel
 
 @Composable
 fun ChangePasswordScreen(
     navController: NavController,
-    profileViewModel: ProfileViewModel = viewModel(factory = ViewModelFactory()),
+    profileViewModel: ProfileViewModel = hiltViewModel(),
 ) {
     var oldPass by remember { mutableStateOf("") }
     var newPass by remember { mutableStateOf("") }

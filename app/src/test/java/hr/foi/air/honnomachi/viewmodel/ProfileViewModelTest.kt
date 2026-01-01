@@ -1,23 +1,13 @@
 package hr.foi.air.honnomachi.viewmodel
 
-import com.google.android.gms.tasks.Task
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.firestore.CollectionReference
-import com.google.firebase.firestore.DocumentReference
-import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FirebaseFirestore
 import hr.foi.air.honnomachi.model.UserModel
 import hr.foi.air.honnomachi.ui.profile.ProfileUiState
 import hr.foi.air.honnomachi.ui.profile.ProfileViewModel
 import io.mockk.coEvery
-import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -33,38 +23,12 @@ import org.junit.Test
 class ProfileViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
 
-    private lateinit var auth: FirebaseAuth
-    private lateinit var firestore: FirebaseFirestore
-    private lateinit var user: FirebaseUser
-    private lateinit var collectionRef: CollectionReference
-    private lateinit var docRef: DocumentReference
-    private lateinit var docSnapshot: DocumentSnapshot
-    private lateinit var getTask: Task<DocumentSnapshot>
-    private lateinit var updateTask: Task<Void>
+    private lateinit var profileRepository: hr.foi.air.honnomachi.data.ProfileRepository
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-
-        // Mock static for await() which is an extension function
-        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
-
-        auth = mockk()
-        firestore = mockk()
-        user = mockk()
-        collectionRef = mockk()
-        docRef = mockk()
-        docSnapshot = mockk()
-        getTask = mockk()
-        updateTask = mockk()
-
-        // Common Mocks setup
-        every { auth.currentUser } returns user
-        every { user.uid } returns "test-uid"
-        every { user.email } returns "test@example.com"
-
-        every { firestore.collection("users") } returns collectionRef
-        every { collectionRef.document("test-uid") } returns docRef
+        profileRepository = mockk()
     }
 
     @After
@@ -76,11 +40,6 @@ class ProfileViewModelTest {
     @Test
     fun `loadUserProfile success updates uiState`() =
         runTest(testDispatcher) {
-            // Mock Firestore get
-            every { docRef.get() } returns getTask
-            coEvery { getTask.await() } returns docSnapshot
-            every { docSnapshot.exists() } returns true
-
             val userModel =
                 UserModel(
                     name = "Test User",
@@ -91,10 +50,12 @@ class ProfileViewModelTest {
                     city = "Test City",
                     postNumber = "12345",
                 )
-            every { docSnapshot.toObject(UserModel::class.java) } returns userModel
+            coEvery { profileRepository.getUserProfile() } returns
+                hr.foi.air.honnomachi.util.Result
+                    .Success(userModel)
 
             // Init ViewModel (triggers loadUserProfile)
-            val viewModel = ProfileViewModel(auth, firestore)
+            val viewModel = ProfileViewModel(profileRepository)
             advanceUntilIdle()
 
             // Verify Success State
@@ -115,18 +76,17 @@ class ProfileViewModelTest {
     fun `saveProfile success updates uiState`() =
         runTest(testDispatcher) {
             // --- Setup Load ---
-            every { docRef.get() } returns getTask
-            coEvery { getTask.await() } returns docSnapshot
-            every { docSnapshot.exists() } returns true
             val initialUser =
                 UserModel(
                     name = "Old Name",
                     email = "test@example.com",
                     uid = "test-uid",
                 )
-            every { docSnapshot.toObject(UserModel::class.java) } returns initialUser
+            coEvery { profileRepository.getUserProfile() } returns
+                hr.foi.air.honnomachi.util.Result
+                    .Success(initialUser)
 
-            val viewModel = ProfileViewModel(auth, firestore)
+            val viewModel = ProfileViewModel(profileRepository)
             advanceUntilIdle()
 
             // --- Perform Change ---
@@ -137,8 +97,17 @@ class ProfileViewModelTest {
             viewModel.onZipChange("54321")
 
             // --- Mock Save ---
-            every { docRef.update(any<Map<String, Any>>()) } returns updateTask
-            coEvery { updateTask.await() } returns mockk()
+            val updatedUser =
+                initialUser.copy(
+                    name = "New Name",
+                    phoneNumber = "0912345678",
+                    street = "New Street 1",
+                    city = "New City",
+                    postNumber = "54321",
+                )
+            coEvery { profileRepository.updateUserProfile(any(), any(), any(), any(), any()) } returns
+                hr.foi.air.honnomachi.util.Result
+                    .Success(updatedUser)
 
             // Execute Save
             var successCalled = false
@@ -149,23 +118,22 @@ class ProfileViewModelTest {
             assertTrue(successCalled)
             val state = viewModel.uiState.value
             assertTrue(state is ProfileUiState.Success)
-            val updatedUser = (state as ProfileUiState.Success).user
-            assertEquals("New Name", updatedUser.name)
-            assertEquals("New Street 1", updatedUser.street)
-            assertEquals("54321", updatedUser.postNumber)
+            val returnedUser = (state as ProfileUiState.Success).user
+            assertEquals("New Name", returnedUser.name)
+            assertEquals("New Street 1", returnedUser.street)
+            assertEquals("54321", returnedUser.postNumber)
         }
 
     @Test
     fun `saveProfile fails with validation error`() =
         runTest(testDispatcher) {
             // --- Setup Load ---
-            every { docRef.get() } returns getTask
-            coEvery { getTask.await() } returns docSnapshot
-            every { docSnapshot.exists() } returns true
             val initialUser = UserModel(uid = "test-uid")
-            every { docSnapshot.toObject(UserModel::class.java) } returns initialUser
+            coEvery { profileRepository.getUserProfile() } returns
+                hr.foi.air.honnomachi.util.Result
+                    .Success(initialUser)
 
-            val viewModel = ProfileViewModel(auth, firestore)
+            val viewModel = ProfileViewModel(profileRepository)
             advanceUntilIdle()
 
             // --- Invalid Data ---

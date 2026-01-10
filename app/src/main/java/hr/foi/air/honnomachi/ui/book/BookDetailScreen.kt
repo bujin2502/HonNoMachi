@@ -41,10 +41,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.model.BookModel
 
-import hr.foi.air.honnomachi.AppUtil
+import hr.foi.air.honnomachi.ui.cart.CartUiState
 import hr.foi.air.honnomachi.ui.cart.CartViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,8 +60,17 @@ fun BookDetailScreen(
     }
 
     val uiState by viewModel.uiState.collectAsState()
+    val cartState by cartViewModel.uiState.collectAsState()
     val actionMessage by cartViewModel.actionMessage.collectAsState()
     val context = androidx.compose.ui.platform.LocalContext.current
+
+    // Provjera je li knjiga već u košarici
+    val isItemInCart =
+        if (cartState is CartUiState.Success && bookId != null) {
+            (cartState as CartUiState.Success).items.any { it.bookId == bookId }
+        } else {
+            false
+        }
 
     LaunchedEffect(actionMessage) {
         actionMessage?.let {
@@ -94,7 +104,11 @@ fun BookDetailScreen(
 
                 is BookUiState.Success -> {
                     val book = (uiState as BookUiState.Success).book
-                    BookDetailContent(book = book, onAddToCart = { cartViewModel.addToCart(book) })
+                    BookDetailContent(
+                        book = book,
+                        isItemInCart = isItemInCart,
+                        onAddToCart = { cartViewModel.addToCart(book) },
+                    )
                 }
 
                 BookUiState.BookNotFound -> {
@@ -145,6 +159,7 @@ fun BookDetailNotFound(bookId: String?) {
 @Composable
 fun BookDetailContent(
     book: BookModel,
+    isItemInCart: Boolean,
     onAddToCart: () -> Unit,
 ) {
     Column(
@@ -250,6 +265,7 @@ fun BookDetailContent(
 
         Button(
             onClick = onAddToCart,
+            enabled = !isItemInCart, // Onemogući gumb ako je u košarici
             modifier =
                 Modifier
                     .fillMaxWidth(0.6f)
@@ -259,7 +275,10 @@ fun BookDetailContent(
                     containerColor = colorResource(id = R.color.blue),
                 ),
         ) {
-            Text(stringResource(id = R.string.button_add_to_cart), color = colorResource(id = R.color.black))
+            Text(
+                text = if (isItemInCart) "Već u košarici" else stringResource(id = R.string.button_add_to_cart),
+                color = colorResource(id = R.color.black),
+            )
         }
 
         Spacer(modifier = Modifier.height(24.dp))

@@ -44,17 +44,30 @@ import coil.compose.AsyncImage
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.model.BookModel
 
+import hr.foi.air.honnomachi.AppUtil
+import hr.foi.air.honnomachi.ui.cart.CartViewModel
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookDetailScreen(
     bookId: String?,
     viewModel: BookDetailViewModel = hiltViewModel(),
+    cartViewModel: CartViewModel = hiltViewModel(),
 ) {
     LaunchedEffect(key1 = bookId) {
         viewModel.loadBookDetails(bookId)
     }
 
     val uiState by viewModel.uiState.collectAsState()
+    val actionMessage by cartViewModel.actionMessage.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    LaunchedEffect(actionMessage) {
+        actionMessage?.let {
+            AppUtil.showToast(context, it)
+            cartViewModel.consumeMessage()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -81,7 +94,7 @@ fun BookDetailScreen(
 
                 is BookUiState.Success -> {
                     val book = (uiState as BookUiState.Success).book
-                    BookDetailContent(book = book)
+                    BookDetailContent(book = book, onAddToCart = { cartViewModel.addToCart(book) })
                 }
 
                 BookUiState.BookNotFound -> {
@@ -130,7 +143,10 @@ fun BookDetailNotFound(bookId: String?) {
 }
 
 @Composable
-fun BookDetailContent(book: BookModel) {
+fun BookDetailContent(
+    book: BookModel,
+    onAddToCart: () -> Unit,
+) {
     Column(
         modifier =
             Modifier
@@ -233,7 +249,7 @@ fun BookDetailContent(book: BookModel) {
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = { /* TODO: Implementirat dodavanje u kosaricu */ },
+            onClick = onAddToCart,
             modifier =
                 Modifier
                     .fillMaxWidth(0.6f)

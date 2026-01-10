@@ -42,7 +42,6 @@ import hr.foi.air.honnomachi.ui.cart.CartViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    modifier: Modifier = Modifier,
     navController: NavController,
     authViewModel: AuthViewModel,
     homeViewModel: HomeViewModel,

@@ -43,6 +43,7 @@ import coil.compose.AsyncImage
 import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.model.CartItemModel
+import java.util.Locale
 
 @Composable
 fun CartPage(
@@ -134,7 +135,7 @@ fun CartContent(
                 fontWeight = FontWeight.Bold,
             )
             Text(
-                text = String.format("%.2f EUR", totalPrice),
+                text = String.format(Locale.getDefault(), "%.2f EUR", totalPrice),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,

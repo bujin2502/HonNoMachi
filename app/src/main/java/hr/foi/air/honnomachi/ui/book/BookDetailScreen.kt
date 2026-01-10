@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -44,7 +45,6 @@ import coil.compose.AsyncImage
 import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.model.BookModel
-
 import hr.foi.air.honnomachi.ui.cart.CartUiState
 import hr.foi.air.honnomachi.ui.cart.CartViewModel
 
@@ -62,7 +62,7 @@ fun BookDetailScreen(
     val uiState by viewModel.uiState.collectAsState()
     val cartState by cartViewModel.uiState.collectAsState()
     val actionMessage by cartViewModel.actionMessage.collectAsState()
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
 
     // Provjera je li knjiga već u košarici
     val isItemInCart =

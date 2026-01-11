@@ -8,6 +8,8 @@ import hr.foi.air.honnomachi.data.AuthRepository
 import hr.foi.air.honnomachi.data.AuthRepositoryImpl
 import hr.foi.air.honnomachi.data.BookRepository
 import hr.foi.air.honnomachi.data.BookRepositoryImpl
+import hr.foi.air.honnomachi.data.CartRepository
+import hr.foi.air.honnomachi.data.CartRepositoryImpl
 import hr.foi.air.honnomachi.data.ProfileRepository
 import hr.foi.air.honnomachi.data.ProfileRepositoryImpl
 
@@ -19,6 +21,9 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindBookRepository(bookRepositoryImpl: BookRepositoryImpl): BookRepository
+
+    @Binds
+    abstract fun bindCartRepository(cartRepositoryImpl: CartRepositoryImpl): CartRepository
 
     @Binds
     abstract fun bindProfileRepository(profileRepositoryImpl: ProfileRepositoryImpl): ProfileRepository

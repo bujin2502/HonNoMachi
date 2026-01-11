@@ -46,7 +46,10 @@ fun HomePage(
             Modifier
                 .fillMaxSize()
                 .padding(horizontal = 12.dp)
-                .padding(bottom = paddingValues.calculateBottomPadding()),
+                .padding(
+                    top = paddingValues.calculateTopPadding(),
+                    bottom = paddingValues.calculateBottomPadding(),
+                ),
     ) {
         TextField(
             value = uiState.searchQuery,

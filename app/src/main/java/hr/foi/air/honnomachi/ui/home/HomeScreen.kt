@@ -8,6 +8,9 @@ import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.ManageAccounts
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -19,7 +22,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -28,20 +30,24 @@ import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.ui.add.AddPage
 import hr.foi.air.honnomachi.ui.auth.AuthViewModel
 import hr.foi.air.honnomachi.ui.cart.CartPage
+import hr.foi.air.honnomachi.ui.cart.CartUiState
+import hr.foi.air.honnomachi.ui.cart.CartViewModel
 import hr.foi.air.honnomachi.ui.profile.ProfileScreen
 import hr.foi.air.honnomachi.ui.profile.ProfileUiState
 import hr.foi.air.honnomachi.ui.profile.ProfileViewModel
 import hr.foi.air.honnomachi.ui.shelf.ShelfPage
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    modifier: Modifier = Modifier,
     navController: NavController,
     authViewModel: AuthViewModel,
     homeViewModel: HomeViewModel,
     profileViewModel: ProfileViewModel = hiltViewModel(),
+    cartViewModel: CartViewModel = hiltViewModel(),
 ) {
     val profileUiState by profileViewModel.uiState.collectAsState()
+    val cartUiState by cartViewModel.uiState.collectAsState()
 
     val profileIcon =
         if (profileUiState is ProfileUiState.Success && (profileUiState as ProfileUiState.Success).user.admin == true) {
@@ -65,12 +71,34 @@ fun HomeScreen(
         bottomBar = {
             NavigationBar {
                 navItemList.forEachIndexed { index, navItem ->
+                    val badgeCount =
+                        if (index == 3 && cartUiState is CartUiState.Success) {
+                            (cartUiState as CartUiState.Success).items.size
+                        } else {
+                            0
+                        }
+
                     NavigationBarItem(
                         selected = index == selectedIndex,
                         onClick = { selectedIndex = index },
                         label = { Text(text = navItem.label) },
                         icon = {
-                            Icon(imageVector = navItem.icon, contentDescription = navItem.label)
+                            if (badgeCount > 0) {
+                                BadgedBox(
+                                    badge = {
+                                        Badge {
+                                            Text(text = badgeCount.toString())
+                                        }
+                                    },
+                                ) {
+                                    Icon(
+                                        imageVector = navItem.icon,
+                                        contentDescription = navItem.label,
+                                    )
+                                }
+                            } else {
+                                Icon(imageVector = navItem.icon, contentDescription = navItem.label)
+                            }
                         },
                     )
                 }
@@ -84,6 +112,7 @@ fun HomeScreen(
             authViewModel,
             homeViewModel,
             profileViewModel,
+            cartViewModel,
         )
     }
 }
@@ -96,6 +125,7 @@ fun ContentScreen(
     authViewModel: AuthViewModel,
     homeViewModel: HomeViewModel,
     profileViewModel: ProfileViewModel,
+    cartViewModel: CartViewModel,
 ) {
     when (selectedIndex) {
         0 -> {
@@ -115,7 +145,10 @@ fun ContentScreen(
         }
 
         3 -> {
-            CartPage(paddingValues = paddingValues)
+            CartPage(
+                paddingValues = paddingValues,
+                viewModel = cartViewModel,
+            )
         }
 
         4 -> {

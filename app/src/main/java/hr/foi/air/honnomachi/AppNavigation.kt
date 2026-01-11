@@ -98,7 +98,7 @@ fun AppNavigation(
         }
 
         composable("home") {
-            HomeScreen(modifier, navController, authViewModel, homeViewModel)
+            HomeScreen(navController, authViewModel, homeViewModel)
         }
 
         composable("changePassword") {

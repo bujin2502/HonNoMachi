@@ -1,5 +1,7 @@
 package hr.foi.air.honnomachi.data
 
+import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import hr.foi.air.honnomachi.CrashlyticsManager
 import hr.foi.air.honnomachi.model.BookModel
@@ -14,11 +16,14 @@ interface BookRepository {
     fun getBooks(): Flow<Result<List<BookModel>>>
 
     suspend fun getBookDetails(bookId: String): Result<BookModel?>
+
+    suspend fun addBook(book: BookModel): Result<String>
 }
 
 class BookRepositoryImpl
     @Inject
     constructor(
+        private val auth: FirebaseAuth,
         private val firestore: FirebaseFirestore,
     ) : BookRepository {
         override fun getBooks(): Flow<Result<List<BookModel>>> =
@@ -58,4 +63,26 @@ class BookRepositoryImpl
                 CrashlyticsManager.instance.logException(e) // Keep Crashlytics logging
                 Result.Error(e)
             }
+
+        override suspend fun addBook(book: BookModel): Result<String> {
+            return try {
+                val currentUser = auth.currentUser
+                if (currentUser == null) {
+                    Result.Error(Exception("Korisnik nije prijavljen."))
+                } else {
+                    val listing =
+                        book.copy(
+                            userID = currentUser.uid,
+                            listingDate = Timestamp.now(),
+                        )
+
+                    val document = firestore.collection("books").document()
+                    document.set(listing).await()
+                    Result.Success(document.id)
+                }
+            } catch (e: Exception) {
+                CrashlyticsManager.instance.logException(e) // Keep Crashlytics logging
+                Result.Error(e)
+            }
+        }
     }

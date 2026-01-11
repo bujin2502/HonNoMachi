@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.compile.JavaCompile
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -75,6 +77,7 @@ dependencies {
     implementation(libs.ads.mobile.sdk)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.compose.foundation.layout)
+    implementation(libs.androidx.compose.foundation)
     testImplementation(libs.junit)
     testImplementation(platform(libs.androidx.compose.bom))
     testImplementation(libs.androidx.compose.ui.test.junit4)
@@ -103,4 +106,10 @@ dependencies {
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
     ksp(libs.hilt.compiler)
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    if (name.startsWith("hiltJavaCompile")) {
+        options.compilerArgs.addAll(listOf("-Xlint:none", "-nowarn"))
+    }
 }

@@ -82,6 +82,8 @@ class HomePageTest {
                 override fun getBooks(): Flow<Result<List<BookModel>>> = flowOf(Result.Success(emptyList()))
 
                 override suspend fun getBookDetails(bookId: String): Result<BookModel?> = Result.Success(null)
+
+                override suspend fun addBook(book: BookModel): Result<String> = Result.Success("test-id")
             }
         val fakeVM = FakeHomeViewModel(fakeBookRepository)
         composeTestRule.setContent {

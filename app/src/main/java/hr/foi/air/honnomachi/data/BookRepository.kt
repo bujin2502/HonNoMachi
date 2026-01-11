@@ -64,8 +64,8 @@ class BookRepositoryImpl
                 Result.Error(e)
             }
 
-        override suspend fun addBook(book: BookModel): Result<String> {
-            return try {
+        override suspend fun addBook(book: BookModel): Result<String> =
+            try {
                 val currentUser = auth.currentUser
                 if (currentUser == null) {
                     Result.Error(Exception("Korisnik nije prijavljen."))
@@ -84,5 +84,4 @@ class BookRepositoryImpl
                 CrashlyticsManager.instance.logException(e) // Keep Crashlytics logging
                 Result.Error(e)
             }
-        }
     }

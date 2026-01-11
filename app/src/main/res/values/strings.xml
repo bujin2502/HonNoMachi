@@ -39,7 +39,7 @@
     <string name="hint_authors">Separate multiple authors with commas</string>
     <string name="hint_image_urls">Optional, separate multiple URLs with commas</string>
     <string name="button_publish_offer">Publish Offer</string>
-    <string name="adding_offer">Publishing...</string>
+    <string name="adding_offer">Publishing…</string>
     <string name="message_offer_created">Offer published.</string>
     <string name="error_title_required">Title is required</string>
     <string name="error_author_required">At least one author is required</string>

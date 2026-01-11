@@ -37,7 +37,11 @@ class BookDetailScreenTest {
             )
 
         composeTestRule.setContent {
-            BookDetailContent(book = book)
+            BookDetailContent(
+                book = book,
+                isItemInCart = false,
+                onAddToCart = {},
+            )
         }
 
         composeTestRule.onNodeWithText("Test Book").assertExists()

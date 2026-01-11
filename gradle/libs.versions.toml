@@ -27,6 +27,7 @@ mockk = "1.14.7"
 firebaseCrashlytics = "3.0.6"
 ksp = "2.2.21-2.0.4"
 hilt = "2.57.2"
+foundation = "1.10.0"
 
 [libraries]
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
@@ -69,6 +70,7 @@ firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashly
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "hilt" }
 hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version = "1.2.0" }
+androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

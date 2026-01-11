@@ -22,7 +22,7 @@ import org.junit.Test
 class FakeBookRepository : BookRepository {
     private val books = mutableMapOf<String, BookModel>()
 
-    fun addBook(book: BookModel) {
+    fun seedBook(book: BookModel) {
         book.bookId?.let { books[it] = book }
     }
 
@@ -30,6 +30,8 @@ class FakeBookRepository : BookRepository {
 
     override suspend fun getBookDetails(bookId: String): Result<BookModel?> =
         books[bookId]?.let { Result.Success(it) } ?: Result.Success(null)
+
+    override suspend fun addBook(book: BookModel): Result<String> = Result.Success("test-id")
 }
 
 @ExperimentalCoroutinesApi
@@ -54,7 +56,7 @@ class BookDetailViewModelTest {
     fun `loadBookDetails with valid ID returns Success state`() =
         runTest {
             val book = BookModel(bookId = "123", title = "Test Title")
-            fakeRepository.addBook(book)
+            fakeRepository.seedBook(book)
 
             viewModel.loadBookDetails("123")
             testDispatcher.scheduler.advanceUntilIdle()

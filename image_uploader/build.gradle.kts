@@ -44,7 +44,7 @@ dependencies {
 
     // Firebase
     implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.storage.ktx)
+    implementation(libs.firebase.storage)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)

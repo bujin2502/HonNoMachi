@@ -45,18 +45,18 @@ HonNoMachi (本の街 - "Grad knjiga") je mobilna platforma koja spaja kupce i p
 
 ## 🔧 Tech Stack
 
-| Kategorija | Tehnologija |
-|------------|-------------|
-| **Jezik** | Kotlin |
-| **UI Framework** | Jetpack Compose + Material Design 3 |
-| **Arhitektura** | MVVM (Model-View-ViewModel) |
-| **Backend** | Firebase (Authentication, Firestore, Cloud Functions) |
-| **Plaćanje** | Stripe Android SDK (simulacija) |
-| **Async Operations** | Kotlin Coroutines + Flow |
-| **Dependency Injection** | Manual / Hilt (planirano) |
-| **Version Control** | Git / GitHub (Git Flow workflow) |
-| **CI/CD** | GitHub Actions (planirano) |
-| **Project Management** | Jira + Confluence |
+| Kategorija               | Tehnologija                                           |
+|--------------------------|-------------------------------------------------------|
+| **Jezik**                | Kotlin                                                |
+| **UI Framework**         | Jetpack Compose + Material Design 3                   |
+| **Arhitektura**          | MVVM (Model-View-ViewModel)                           |
+| **Backend**              | Firebase (Authentication, Firestore, Cloud Functions) |
+| **Plaćanje**             | Stripe Android SDK (simulacija)                       |
+| **Async Operations**     | Kotlin Coroutines + Flow                              |
+| **Dependency Injection** | Manual / Hilt (planirano)                             |
+| **Version Control**      | Git / GitHub (Git Flow workflow)                      |
+| **CI/CD**                | GitHub Actions (planirano)                            |
+| **Project Management**   | Jira + Confluence                                     |
 
 ---
 
@@ -114,14 +114,14 @@ Za detaljnije upute o postavljanju projekta, pogledajte:
 ### ✅ Implementirano (Sprint 01)
 
 #### 🔐 Autentifikacija korisnika
-| Funkcionalnost | Status | Opis |
-|----------------|--------|------|
-| Registracija (Email/Lozinka) | ✅ | Kreiranje računa s validacijom podataka |
-| Email verifikacija | ✅ | Firebase Authentication verifikacijski tok |
-| Prijava/Odjava | ✅ | Sigurna autentifikacija postojećih korisnika |
-| Validacija forme | ✅ | Real-time provjera email formata i politike lozinke |
-| Ponovno slanje verifikacije | ✅ | Opcija za slanje novog verifikacijskog emaila |
-| Pohrana korisnika (Firestore) | ✅ | Spremanje korisničkih podataka u bazu |
+| Funkcionalnost                | Status | Opis                                                |
+|-------------------------------|--------|-----------------------------------------------------|
+| Registracija (Email/Lozinka)  | ✅      | Kreiranje računa s validacijom podataka             |
+| Email verifikacija            | ✅      | Firebase Authentication verifikacijski tok          |
+| Prijava/Odjava                | ✅      | Sigurna autentifikacija postojećih korisnika        |
+| Validacija forme              | ✅      | Real-time provjera email formata i politike lozinke |
+| Ponovno slanje verifikacije   | ✅      | Opcija za slanje novog verifikacijskog emaila       |
+| Pohrana korisnika (Firestore) | ✅      | Spremanje korisničkih podataka u bazu               |
 
 ### 🚧 Planirano (Sprint 02+)
 
@@ -177,14 +177,14 @@ Kompletan **Project Wiki** dostupan je na Confluence:
 
 ### Ključne stranice
 
-| Dokument | Opis |
-|----------|------|
-| [Project Overview](https://25-26-izvanredni-tim.atlassian.net/wiki/x/AQCb) | Pregled projekta i ciljevi |
-| [System Architecture](https://25-26-izvanredni-tim.atlassian.net/wiki/x/DYDN) | Dijagram arhitekture sustava |
-| [Development Setup](https://25-26-izvanredni-tim.atlassian.net/wiki/x/DIDE) | Upute za postavljanje projekta |
-| [Product Backlog](https://25-26-izvanredni-tim.atlassian.net/wiki/x/BQCh) | Lista svih User Storyja |
+| Dokument                                                                             | Opis                           |
+|--------------------------------------------------------------------------------------|--------------------------------|
+| [Project Overview](https://25-26-izvanredni-tim.atlassian.net/wiki/x/AQCb)           | Pregled projekta i ciljevi     |
+| [System Architecture](https://25-26-izvanredni-tim.atlassian.net/wiki/x/DYDN)        | Dijagram arhitekture sustava   |
+| [Development Setup](https://25-26-izvanredni-tim.atlassian.net/wiki/x/DIDE)          | Upute za postavljanje projekta |
+| [Product Backlog](https://25-26-izvanredni-tim.atlassian.net/wiki/x/BQCh)            | Lista svih User Storyja        |
 | [Korisnička dokumentacija](https://25-26-izvanredni-tim.atlassian.net/wiki/x/AYD6AQ) | Upute za korištenje aplikacije |
-| [UX Design](https://25-26-izvanredni-tim.atlassian.net/wiki/x/F4DJ) | Wireframovi i dizajn smjernice |
+| [UX Design](https://25-26-izvanredni-tim.atlassian.net/wiki/x/F4DJ)                  | Wireframovi i dizajn smjernice |
 
 ### Sprint dokumentacija
 - [Sprint 01 Folder](https://25-26-izvanredni-tim.atlassian.net/wiki/spaces/HNMT/folder/10158102)
@@ -195,12 +195,12 @@ Kompletan **Project Wiki** dostupan je na Confluence:
 
 Projekt razvija tim studenata **Fakulteta organizacije i informatike (FOI)**, Varaždin.
 
-| Član | Email | Uloga |
-|------|-------|-------|
-| **Ivan Giljević** | igiljevic@student.foi.hr | Developer |
+| Član                | Email                      | Uloga     |
+|---------------------|----------------------------|-----------|
+| **Ivan Giljević**   | igiljevic@student.foi.hr   | Developer |
 | **Denis Kuzminski** | dkuzminsk22@student.foi.hr | Developer |
-| **Zlatko Pračić** | zpracic@student.foi.hr | Developer |
-| **Mislav Žnidarec** | mznidarec@student.foi.hr | Developer |
+| **Zlatko Pračić**   | zpracic@student.foi.hr     | Developer |
+| **Mislav Žnidarec** | mznidarec@student.foi.hr   | Developer |
 
 📧 **Kontakt tima:** [Confluence - Informacije o timu](https://25-26-izvanredni-tim.atlassian.net/wiki/x/BACg)
 

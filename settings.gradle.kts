@@ -24,3 +24,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "HonNoMachi"
 include(":app")
+include(":image_uploader")

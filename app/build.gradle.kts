@@ -107,6 +107,7 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
     ksp(libs.hilt.compiler)
     implementation(project(":image_uploader"))
+    implementation(libs.accompanist.permissions)
 }
 
 tasks.withType<JavaCompile>().configureEach {

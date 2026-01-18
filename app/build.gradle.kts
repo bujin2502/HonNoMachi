@@ -23,6 +23,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        manifestPlaceholders["imageUploaderAuthority"] = "hr.foi.air.honnomachi.provider"
     }
 
     buildTypes {

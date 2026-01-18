@@ -2,7 +2,6 @@ package hr.foi.air.honnomachi.ui.add
 
 import android.app.Application
 import android.net.Uri
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
@@ -17,7 +16,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import hr.foi.air.image_uploader.model.Result as ImageUploadResult
 
 @HiltViewModel
 class AddBookViewModel
@@ -25,42 +23,22 @@ class AddBookViewModel
     constructor(
         private val application: Application,
         private val bookRepository: BookRepository,
-        private val imageUploader: ImageUploader,
         private val auth: FirebaseAuth,
+        private val imageUploader: ImageUploader,
     ) : AndroidViewModel(application) {
         private val _uiState = MutableStateFlow<AddBookUiState>(AddBookUiState.Idle)
         val uiState: StateFlow<AddBookUiState> = _uiState.asStateFlow()
 
-        private fun createListing(book: BookModel) {
-            viewModelScope.launch {
-                when (val result = bookRepository.addBook(book)) {
-                    is Result.Success -> {
-                        _uiState.value = AddBookUiState.Success
-                    }
-                    is Result.Error -> {
-                        _uiState.value =
-                            AddBookUiState.Error(result.exception.message ?: application.getString(R.string.error_offer_save_failed))
-                    }
-                }
-            }
-        }
-
-        fun uploadImagesAndCreateListing(
-            imageUris: List<Uri>,
+        fun createListing(
             book: BookModel,
+            imageUris: List<Uri>,
         ) {
             if (_uiState.value == AddBookUiState.Submitting) {
                 return
             }
 
-            // Check if user is authenticated
             val currentUser = auth.currentUser
-            Log.d("AddBookViewModel", "Current user: ${currentUser?.uid}")
-            Log.d("AddBookViewModel", "Email verified: ${currentUser?.isEmailVerified}")
-            Log.d("AddBookViewModel", "Number of images: ${imageUris.size}")
-
             if (currentUser == null) {
-                Log.e("AddBookViewModel", "User not authenticated")
                 _uiState.value = AddBookUiState.Error(application.getString(R.string.error_user_not_authenticated))
                 return
             }
@@ -68,33 +46,35 @@ class AddBookViewModel
             _uiState.value = AddBookUiState.Submitting
 
             viewModelScope.launch {
-                val imageUrls = mutableListOf<String>()
-                var uploadFailed = false
-
-                if (imageUris.isNotEmpty()) {
-                    for (uri in imageUris) {
-                        when (val result = imageUploader.uploadImage(uri)) {
-                            is ImageUploadResult.Success -> imageUrls.add(result.data)
-                            is ImageUploadResult.Error -> {
-                                // Rollback: delete all previously uploaded images
-                                for (uploadedUrl in imageUrls) {
-                                    imageUploader.deleteImage(uploadedUrl)
-                                }
+                // First, upload images if there are any
+                val imageUrls =
+                    if (imageUris.isNotEmpty()) {
+                        when (val uploadResult = imageUploader.uploadImages(imageUris, "images/books")) {
+                            is hr.foi.air.image_uploader.model.Result.Success -> {
+                                uploadResult.data
+                            }
+                            is hr.foi.air.image_uploader.model.Result.Error -> {
                                 _uiState.value =
                                     AddBookUiState.Error(
-                                        result.exception.message
-                                            ?: application.getString(R.string.error_image_upload_failed),
+                                        uploadResult.exception.message ?: application.getString(R.string.error_offer_save_failed),
                                     )
-                                uploadFailed = true
-                                break
+                                return@launch
                             }
                         }
+                    } else {
+                        emptyList()
                     }
-                }
 
-                if (!uploadFailed) {
-                    val updatedBook = book.copy(imageUrls = imageUrls)
-                    createListing(updatedBook)
+                // Then create the book with uploaded image URLs
+                val updatedBook = book.copy(imageUrls = imageUrls)
+                when (val result = bookRepository.addBook(updatedBook)) {
+                    is Result.Success -> {
+                        _uiState.value = AddBookUiState.Success
+                    }
+                    is Result.Error -> {
+                        _uiState.value =
+                            AddBookUiState.Error(result.exception.message ?: application.getString(R.string.error_offer_save_failed))
+                    }
                 }
             }
         }

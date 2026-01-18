@@ -11,11 +11,11 @@ import javax.inject.Inject
 class FirebaseImageUploader @Inject constructor(
     private val storage: FirebaseStorage
 ) : ImageUploader {
-    override suspend fun uploadImage(imageUri: Uri): Result<String> {
+    override suspend fun uploadImage(imageUri: Uri, uploadPath: String): Result<String> {
         return try {
             val imageId = UUID.randomUUID().toString()
-            val storageRef = storage.reference.child("images/books/$imageId")
-            Log.d("FirebaseImageUploader", "Uploading image to: images/books/$imageId")
+            val storageRef = storage.reference.child("$uploadPath/$imageId")
+            Log.d("FirebaseImageUploader", "Uploading image to: $uploadPath/$imageId")
             Log.d("FirebaseImageUploader", "Image URI: $imageUri")
             storageRef.putFile(imageUri).await()
             val downloadUrl = storageRef.downloadUrl.await().toString()
@@ -38,6 +38,33 @@ class FirebaseImageUploader @Inject constructor(
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Error(e)
+        }
+    }
+
+    override suspend fun uploadImages(imageUris: List<Uri>, uploadPath: String): Result<List<String>> {
+        val uploadedImageUrls = mutableListOf<String>()
+        try {
+            for (uri in imageUris) {
+                when (val result = uploadImage(uri, uploadPath)) {
+                    is Result.Success -> {
+                        uploadedImageUrls.add(result.data)
+                    }
+                    is Result.Error -> {
+                        // If one image fails, delete all previously uploaded images
+                        for (url in uploadedImageUrls) {
+                            deleteImage(url)
+                        }
+                        return Result.Error(result.exception)
+                    }
+                }
+            }
+            return Result.Success(uploadedImageUrls)
+        } catch (e: Exception) {
+            // In case of any other exception, also perform a rollback
+            for (url in uploadedImageUrls) {
+                deleteImage(url)
+            }
+            return Result.Error(e)
         }
     }
 }

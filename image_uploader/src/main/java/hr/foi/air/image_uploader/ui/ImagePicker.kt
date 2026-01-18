@@ -1,4 +1,4 @@
-package hr.foi.air.honnomachi.ui.add
+package hr.foi.air.image_uploader.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,27 +18,18 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-data class ImageSource(
-    val id: String,
-    val name: String,
-    val icon: ImageVector,
-)
-
-val imageSources =
-    listOf(
-        ImageSource("camera", "Camera", Icons.Default.CameraAlt),
-        ImageSource("gallery", "Gallery", Icons.Default.PhotoLibrary),
-    )
+import hr.foi.air.image_uploader.R
+import hr.foi.air.image_uploader.model.ImageSource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImagePicker(
     onDismiss: () -> Unit,
     onSourceSelected: (ImageSource) -> Unit,
+    imageSources: List<ImageSource>
 ) {
     val sheetState = rememberModalBottomSheetState()
 
@@ -48,12 +39,12 @@ fun ImagePicker(
     ) {
         Column(
             modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
+            Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text("Choose Image Source", fontSize = 20.sp, modifier = Modifier.padding(bottom = 16.dp))
+            Text(stringResource(R.string.choose_image_source), fontSize = 20.sp, modifier = Modifier.padding(bottom = 16.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
@@ -65,10 +56,10 @@ fun ImagePicker(
                     ) {
                         Icon(
                             imageVector = source.icon,
-                            contentDescription = source.name,
+                            contentDescription = stringResource(id = source.nameResId),
                             modifier = Modifier.size(48.dp),
                         )
-                        Text(text = source.name)
+                        Text(text = stringResource(id = source.nameResId))
                     }
                 }
             }

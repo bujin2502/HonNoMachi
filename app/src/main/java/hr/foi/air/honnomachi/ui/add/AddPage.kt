@@ -1,10 +1,6 @@
 package hr.foi.air.honnomachi.ui.add
 
-import android.Manifest
-import android.content.Context
 import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -14,10 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -28,7 +21,6 @@ import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -47,12 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.AsyncImage
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberPermissionState
 import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.model.BookCondition
@@ -60,9 +47,9 @@ import hr.foi.air.honnomachi.model.BookGenre
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.model.Currency
 import hr.foi.air.honnomachi.model.Language
-import java.io.File
+import hr.foi.air.image_uploader.ui.ImageUploaderView
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddPage(
     paddingValues: PaddingValues,
@@ -78,8 +65,6 @@ fun AddPage(
     var publicationYear by rememberSaveable { mutableStateOf("") }
     var isbn by rememberSaveable { mutableStateOf("") }
     var description by rememberSaveable { mutableStateOf("") }
-    // Note: imageUris uses remember() instead of rememberSaveable() because Uri objects
-    // are not easily serializable. Images are temporary until form submission.
     var imageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
 
     var selectedGenre by rememberSaveable { mutableStateOf(BookGenre.OTHER) }
@@ -91,44 +76,6 @@ fun AddPage(
     var authorsError by remember { mutableStateOf<Int?>(null) }
     var priceError by remember { mutableStateOf<Int?>(null) }
     var yearError by remember { mutableStateOf<Int?>(null) }
-
-    var showImagePicker by remember { mutableStateOf(false) }
-
-    val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
-
-    var tempImageUri by remember { mutableStateOf<Uri?>(null) }
-
-    val galleryLauncher =
-        rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.GetMultipleContents(),
-            onResult = { uris ->
-                imageUris = imageUris + uris
-            },
-        )
-
-    val cameraLauncher =
-        rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.TakePicture(),
-            onResult = { success ->
-                if (success) {
-                    val uri = tempImageUri
-                    if (uri != null) {
-                        imageUris = imageUris + uri
-                        tempImageUri = null
-                    }
-                }
-            },
-        )
-
-    fun getTmpFileUri(context: Context): Uri {
-        val tmpFile =
-            File.createTempFile("tmp_image_file", ".png", context.cacheDir).apply {
-                createNewFile()
-                deleteOnExit()
-            }
-
-        return FileProvider.getUriForFile(context, "hr.foi.air.honnomachi.provider", tmpFile)
-    }
 
     fun resetForm() {
         title = ""
@@ -161,27 +108,6 @@ fun AddPage(
             }
             else -> Unit
         }
-    }
-
-    if (showImagePicker) {
-        ImagePicker(
-            onDismiss = { showImagePicker = false },
-            onSourceSelected = { source ->
-                showImagePicker = false
-                when (source.id) {
-                    "gallery" -> galleryLauncher.launch("image/*")
-                    "camera" -> {
-                        if (cameraPermissionState.status.isGranted) {
-                            val uri = getTmpFileUri(context)
-                            tempImageUri = uri
-                            cameraLauncher.launch(uri)
-                        } else {
-                            cameraPermissionState.launchPermissionRequest()
-                        }
-                    }
-                }
-            },
-        )
     }
 
     Column(
@@ -343,6 +269,11 @@ fun AddPage(
             label = { Text(stringResource(R.string.field_isbn)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
+            keyboardOptions =
+                KeyboardOptions(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Next,
+                ),
         )
 
         OutlinedTextField(
@@ -357,27 +288,9 @@ fun AddPage(
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        OutlinedButton(
-            onClick = { showImagePicker = true },
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(text = stringResource(R.string.add_images))
-        }
-
-        if (imageUris.isNotEmpty()) {
-            LazyRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                items(imageUris) { uri ->
-                    AsyncImage(
-                        model = uri,
-                        contentDescription = null,
-                        modifier = Modifier.size(100.dp),
-                    )
-                }
-            }
-        }
+        ImageUploaderView(onImagesSelected = { uris ->
+            imageUris = uris
+        })
 
         Spacer(modifier = Modifier.height(4.dp))
         Button(
@@ -429,9 +342,9 @@ fun AddPage(
                         genre = selectedGenre,
                         condition = selectedCondition,
                         language = selectedLanguage,
-                        imageUrls = emptyList(),
+                        imageUrls = emptyList(), // This will be replaced in the ViewModel
                     )
-                viewModel.uploadImagesAndCreateListing(imageUris, newBook)
+                viewModel.createListing(newBook, imageUris)
             },
             enabled = uiState != AddBookUiState.Submitting,
             modifier = Modifier.fillMaxWidth(),

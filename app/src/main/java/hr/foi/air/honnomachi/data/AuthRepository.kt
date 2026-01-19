@@ -1,5 +1,6 @@
 package hr.foi.air.honnomachi.data
 
+import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.crashlytics.FirebaseCrashlytics
@@ -40,6 +41,8 @@ interface AuthRepository {
         email: String,
         password: String,
     ): Result<Unit>
+
+    suspend fun syncVerificationStatus(): Result<UserModel>
 }
 
 class AuthRepositoryImpl
@@ -67,19 +70,44 @@ class AuthRepositoryImpl
         ): Result<UserModel> =
             try {
                 val authResult = auth.signInWithEmailAndPassword(email, password).await()
-                val user =
-                    authResult.user?.uid?.let {
+                val firebaseUser = authResult.user
+
+                if (firebaseUser != null) {
+                    // Reload to get fresh verification status
+                    firebaseUser.reload().await()
+                    val freshUser = auth.currentUser
+
+                    val user =
                         firestore
                             .collection("users")
-                            .document(it)
+                            .document(firebaseUser.uid)
                             .get()
                             .await()
                             .toObject<UserModel>()
+
+                    if (user != null) {
+                        // Use Firebase Auth isEmailVerified as source of truth
+                        val isVerified = freshUser?.isEmailVerified ?: false
+
+                        Log.d("AuthRepository", "Login - Firebase Auth isEmailVerified: $isVerified")
+                        Log.d("AuthRepository", "Login - Firestore isVerified: ${user.isVerified}")
+
+                        // Sync Firestore if needed
+                        if (isVerified && !user.isVerified) {
+                            Log.d("AuthRepository", "Syncing Firestore isVerified to true")
+                            firestore
+                                .collection("users")
+                                .document(firebaseUser.uid)
+                                .update("isVerified", true)
+                                .await()
+                        }
+
+                        Result.Success(user.copy(isVerified = isVerified))
+                    } else {
+                        Result.Error(Exception("User data not found in Firestore."))
                     }
-                if (user != null) {
-                    Result.Success(user)
                 } else {
-                    Result.Error(Exception("User data not found in Firestore."))
+                    Result.Error(Exception("Authentication failed"))
                 }
             } catch (e: Exception) {
                 crashlytics.recordException(e)
@@ -268,6 +296,8 @@ class AuthRepositoryImpl
 
                 if (user != null) {
                     if (user.isEmailVerified) {
+                        // Sync Firestore with Authentication status
+                        syncVerificationStatus()
                         Result.Error(Exception("Email is already verified"))
                     } else {
                         user.sendEmailVerification().await()
@@ -279,6 +309,49 @@ class AuthRepositoryImpl
             } catch (e: Exception) {
                 crashlytics.recordException(e)
                 crashlytics.log("Resend verification email failed for: $email")
+                Result.Error(e)
+            }
+
+        override suspend fun syncVerificationStatus(): Result<UserModel> =
+            try {
+                val user = auth.currentUser
+                if (user == null) {
+                    Result.Error(Exception("No user is currently logged in"))
+                } else {
+                    // Reload to get fresh verification status from server
+                    user.reload().await()
+                    val freshUser = auth.currentUser
+
+                    if (freshUser != null && freshUser.isEmailVerified) {
+                        // Update Firestore document with verified status
+                        firestore
+                            .collection("users")
+                            .document(freshUser.uid)
+                            .update("isVerified", true)
+                            .await()
+
+                        // Fetch and return updated user document
+                        val userDoc =
+                            firestore
+                                .collection("users")
+                                .document(freshUser.uid)
+                                .get()
+                                .await()
+                        val userModel = userDoc.toObject<UserModel>()
+                        if (userModel != null) {
+                            Result.Success(userModel.copy(isVerified = true))
+                        } else {
+                            Result.Error(Exception("User data not found in Firestore"))
+                        }
+                    } else if (freshUser != null) {
+                        Result.Error(Exception("Email is not yet verified"))
+                    } else {
+                        Result.Error(Exception("User session expired"))
+                    }
+                }
+            } catch (e: Exception) {
+                crashlytics.recordException(e)
+                crashlytics.log("Sync verification status failed for uid: ${auth.currentUser?.uid}")
                 Result.Error(e)
             }
     }

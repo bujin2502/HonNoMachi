@@ -80,7 +80,27 @@ fun EmailVerificationScreen(
             )
             Spacer(modifier = Modifier.height(32.dp))
 
-            Button(onClick = onNavigateToLogin) {
+            Button(
+                onClick = {
+                    authViewModel.checkVerificationStatus { success, msg ->
+                        message = msg
+                        isError = !success
+                        if (success) {
+                            onNavigateToLogin()
+                        }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(id = R.string.check_verification))
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Button(
+                onClick = onNavigateToLogin,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
                 Text(stringResource(id = R.string.go_to_login))
             }
 

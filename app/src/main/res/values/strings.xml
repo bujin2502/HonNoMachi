@@ -81,6 +81,7 @@
     <string name="verify_your_email">Verify Your Email</string>
     <string name="verification_link_sent">We\'ve sent a verification link to your email address. Please check your inbox and click the link to continue.</string>
     <string name="go_to_login">Go to Login</string>
+    <string name="check_verification">I verified my email - Check status</string>
     <string name="didnt_receive_email">Didn\'t receive the email? Enter your credentials to resend.</string>
     <string name="email">Email</string>
     <string name="resend_verification_email">Resend Verification Email</string>
@@ -177,4 +178,8 @@
     <string name="content_user_id">If you are logged in, your unique user ID is attached to the error report to help us resolve the issue more easily. We do not collect your email, name, or other personal data for this purpose.</string>
     <string name="title_data_management">Data Management</string>
     <string name="content_data_management">You can withdraw your consent for the collection of this data at any time in your profile settings.</string>
+    <string name="add_images">Add images</string>
+    <string name="error_offer_save_failed">Failed to save offer. Please try again.</string>
+    <string name="error_image_upload_failed">Image upload failed. Please try again.</string>
+    <string name="error_user_not_authenticated">You must be logged in to add a book.</string>
 </resources>

@@ -23,6 +23,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        manifestPlaceholders["imageUploaderAuthority"] = "hr.foi.air.honnomachi.provider"
     }
 
     buildTypes {
@@ -106,6 +107,8 @@ dependencies {
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
     ksp(libs.hilt.compiler)
+    implementation(project(":image_uploader"))
+    implementation(libs.accompanist.permissions)
 }
 
 tasks.withType<JavaCompile>().configureEach {

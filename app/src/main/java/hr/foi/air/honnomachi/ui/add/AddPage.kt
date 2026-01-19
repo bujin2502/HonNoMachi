@@ -1,5 +1,6 @@
 package hr.foi.air.honnomachi.ui.add
 
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -46,6 +47,7 @@ import hr.foi.air.honnomachi.model.BookGenre
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.model.Currency
 import hr.foi.air.honnomachi.model.Language
+import hr.foi.air.image_uploader.ui.ImageUploaderView
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,7 +65,7 @@ fun AddPage(
     var publicationYear by rememberSaveable { mutableStateOf("") }
     var isbn by rememberSaveable { mutableStateOf("") }
     var description by rememberSaveable { mutableStateOf("") }
-    var imageUrls by rememberSaveable { mutableStateOf("") }
+    var imageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
 
     var selectedGenre by rememberSaveable { mutableStateOf(BookGenre.OTHER) }
     var selectedCondition by rememberSaveable { mutableStateOf(BookCondition.USED) }
@@ -83,7 +85,7 @@ fun AddPage(
         publicationYear = ""
         isbn = ""
         description = ""
-        imageUrls = ""
+        imageUris = emptyList()
         selectedGenre = BookGenre.OTHER
         selectedCondition = BookCondition.USED
         selectedLanguage = Language.HR
@@ -267,15 +269,11 @@ fun AddPage(
             label = { Text(stringResource(R.string.field_isbn)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-        )
-
-        OutlinedTextField(
-            value = imageUrls,
-            onValueChange = { imageUrls = it },
-            label = { Text(stringResource(R.string.field_image_urls)) },
-            modifier = Modifier.fillMaxWidth(),
-            supportingText = { Text(text = stringResource(R.string.hint_image_urls)) },
-            singleLine = true,
+            keyboardOptions =
+                KeyboardOptions(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Next,
+                ),
         )
 
         OutlinedTextField(
@@ -287,6 +285,12 @@ fun AddPage(
                     .fillMaxWidth()
                     .height(120.dp),
         )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        ImageUploaderView(onImagesSelected = { uris ->
+            imageUris = uris
+        })
 
         Spacer(modifier = Modifier.height(4.dp))
         Button(
@@ -325,12 +329,6 @@ fun AddPage(
                     return@Button
                 }
 
-                val images =
-                    imageUrls
-                        .split(",")
-                        .map { it.trim() }
-                        .filter { it.isNotEmpty() }
-
                 val newBook =
                     BookModel(
                         title = cleanedTitle,
@@ -344,10 +342,9 @@ fun AddPage(
                         genre = selectedGenre,
                         condition = selectedCondition,
                         language = selectedLanguage,
-                        imageUrls = images.ifEmpty { null },
+                        imageUrls = emptyList(), // This will be replaced in the ViewModel
                     )
-
-                viewModel.createListing(newBook)
+                viewModel.createListing(newBook, imageUris)
             },
             enabled = uiState != AddBookUiState.Submitting,
             modifier = Modifier.fillMaxWidth(),

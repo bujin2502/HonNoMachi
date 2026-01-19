@@ -81,6 +81,7 @@
     <string name="verify_your_email">Potvrdite Vašu Email adresu</string>
     <string name="verification_link_sent">Poslali smo verifikacijski link na Vašu email adresu. Molimo Vas da provjerite svoj sandučić i kliknete na link za nastavak.</string>
     <string name="go_to_login">Idi na Prijavu</string>
+    <string name="check_verification">Verificirao sam email - Provjeri status</string>
     <string name="didnt_receive_email">Niste primili email? Unesite Vaše podatke za ponovno slanje.</string>
     <string name="email">Email</string>
     <string name="resend_verification_email">Ponovno pošalji verifikacijski Email</string>
@@ -177,4 +178,8 @@
     <string name="content_user_id">Ako ste prijavljeni, Vaš jedinstveni korisnički ID prilaže se izvješću o pogrešci kako bismo lakše riješili problem. U tu svrhu ne prikupljamo Vašu e-poštu, ime ili druge osobne podatke.</string>
     <string name="title_data_management">Upravljanje podacima</string>
     <string name="content_data_management">Svoj pristanak za prikupljanje ovih podataka možete povući u bilo kojem trenutku u postavkama Vašeg profila.</string>
+    <string name="add_images">Dodaj slike</string>
+    <string name="error_offer_save_failed">Greška prilikom spremanja ponude. Molimo pokušajte ponovno.</string>
+    <string name="error_image_upload_failed">Upload slika nije uspio. Molimo pokušajte ponovno.</string>
+    <string name="error_user_not_authenticated">Morate biti prijavljeni da biste dodali knjigu.</string>
 </resources>

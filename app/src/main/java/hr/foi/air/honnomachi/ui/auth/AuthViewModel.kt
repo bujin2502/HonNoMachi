@@ -254,4 +254,37 @@ open class AuthViewModel
                 }
             }
         }
+
+        fun checkVerificationStatus(onComplete: (success: Boolean, message: String) -> Unit) {
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+                val result = authRepository.syncVerificationStatus()
+                when (result) {
+                    is Result.Success -> {
+                        // Sign out to force re-login and get fresh token with email_verified = true
+                        authRepository.signOut()
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                user = null,
+                                isUserLoggedIn = false,
+                                needsVerification = false,
+                                errorMessage = null,
+                            )
+                        }
+                        onComplete(true, "Email verified! Please log in again to continue.")
+                    }
+
+                    is Result.Error -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                errorMessage = result.exception.message,
+                            )
+                        }
+                        onComplete(false, result.exception.message ?: "Email not yet verified")
+                    }
+                }
+            }
+        }
     }

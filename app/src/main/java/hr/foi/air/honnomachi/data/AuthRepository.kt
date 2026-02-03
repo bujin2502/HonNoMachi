@@ -4,8 +4,6 @@ import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.crashlytics.FirebaseCrashlytics
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.toObject
 import hr.foi.air.honnomachi.model.UserModel
 import hr.foi.air.honnomachi.util.Result
 import kotlinx.coroutines.tasks.await
@@ -49,14 +47,12 @@ class AuthRepositoryImpl
     @Inject
     constructor(
         private val auth: FirebaseAuth,
-        private val firestore: FirebaseFirestore,
+        private val userDataSource: FirestoreUserDataSource,
         private val crashlytics: FirebaseCrashlytics,
     ) : AuthRepository {
         override val currentUser: UserModel?
             get() =
                 auth.currentUser?.let { firebaseUser ->
-                    // This is a simplified version. For a complete user profile,
-                    // you would fetch the user document from Firestore here as well.
                     UserModel(
                         uid = firebaseUser.uid,
                         email = firebaseUser.email ?: "",
@@ -73,33 +69,20 @@ class AuthRepositoryImpl
                 val firebaseUser = authResult.user
 
                 if (firebaseUser != null) {
-                    // Reload to get fresh verification status
                     firebaseUser.reload().await()
                     val freshUser = auth.currentUser
 
-                    val user =
-                        firestore
-                            .collection("users")
-                            .document(firebaseUser.uid)
-                            .get()
-                            .await()
-                            .toObject<UserModel>()
+                    val user = userDataSource.getUser(firebaseUser.uid)
 
                     if (user != null) {
-                        // Use Firebase Auth isEmailVerified as source of truth
                         val isVerified = freshUser?.isEmailVerified ?: false
 
                         Log.d("AuthRepository", "Login - Firebase Auth isEmailVerified: $isVerified")
                         Log.d("AuthRepository", "Login - Firestore isVerified: ${user.isVerified}")
 
-                        // Sync Firestore if needed
                         if (isVerified && !user.isVerified) {
                             Log.d("AuthRepository", "Syncing Firestore isVerified to true")
-                            firestore
-                                .collection("users")
-                                .document(firebaseUser.uid)
-                                .update("isVerified", true)
-                                .await()
+                            userDataSource.updateVerificationStatus(firebaseUser.uid, true)
                         }
 
                         Result.Success(user.copy(isVerified = isVerified))
@@ -131,11 +114,7 @@ class AuthRepositoryImpl
                             email = email,
                             uid = uid,
                         )
-                    firestore
-                        .collection("users")
-                        .document(uid)
-                        .set(newUser)
-                        .await()
+                    userDataSource.createUser(newUser)
                     Result.Success(newUser)
                 } else {
                     Result.Error(Exception("User is null after registration"))
@@ -182,18 +161,10 @@ class AuthRepositoryImpl
                 if (firebaseUser == null) {
                     Result.Error(Exception("No user is currently logged in"))
                 } else {
-                    // Reload user to get fresh data from server
                     firebaseUser.reload().await()
                     val freshUser = auth.currentUser
                     if (freshUser != null && freshUser.isEmailVerified) {
-                        // Fetch full user data from Firestore
-                        val userDoc =
-                            firestore
-                                .collection("users")
-                                .document(freshUser.uid)
-                                .get()
-                                .await()
-                        val user = userDoc.toObject<UserModel>()
+                        val user = userDataSource.getUser(freshUser.uid)
                         if (user != null) {
                             Result.Success(user.copy(isVerified = true))
                         } else {
@@ -215,13 +186,7 @@ class AuthRepositoryImpl
                 if (user == null) {
                     Result.Error(Exception("No authenticated user"))
                 } else {
-                    // Test reading from a protected Firestore collection
-                    val testDoc =
-                        firestore
-                            .collection("users")
-                            .document(user.uid)
-                            .get()
-                            .await()
+                    val testDoc = userDataSource.getUserDocument(user.uid)
                     if (testDoc.exists()) {
                         Result.Success("Secure read successful - token is valid")
                     } else {
@@ -242,20 +207,12 @@ class AuthRepositoryImpl
 
                 if (firebaseUser != null) {
                     val uid = firebaseUser.uid
-                    // Check if user document exists in Firestore
-                    val userDoc =
-                        firestore
-                            .collection("users")
-                            .document(uid)
-                            .get()
-                            .await()
+                    val userDoc = userDataSource.getUserDocument(uid)
 
                     val user =
                         if (userDoc.exists()) {
-                            // User exists, fetch their data
-                            userDoc.toObject<UserModel>()
+                            userDataSource.getUser(uid)
                         } else {
-                            // New user, create a document in Firestore
                             val newUser =
                                 UserModel(
                                     uid = uid,
@@ -263,11 +220,7 @@ class AuthRepositoryImpl
                                     name = firebaseUser.displayName ?: "",
                                     isVerified = firebaseUser.isEmailVerified,
                                 )
-                            firestore
-                                .collection("users")
-                                .document(uid)
-                                .set(newUser)
-                                .await()
+                            userDataSource.createUser(newUser)
                             newUser
                         }
 
@@ -290,13 +243,11 @@ class AuthRepositoryImpl
             password: String,
         ): Result<Unit> =
             try {
-                // Re-authenticate user to get fresh credentials
                 val authResult = auth.signInWithEmailAndPassword(email, password).await()
                 val user = authResult.user
 
                 if (user != null) {
                     if (user.isEmailVerified) {
-                        // Sync Firestore with Authentication status
                         syncVerificationStatus()
                         Result.Error(Exception("Email is already verified"))
                     } else {
@@ -318,26 +269,13 @@ class AuthRepositoryImpl
                 if (user == null) {
                     Result.Error(Exception("No user is currently logged in"))
                 } else {
-                    // Reload to get fresh verification status from server
                     user.reload().await()
                     val freshUser = auth.currentUser
 
                     if (freshUser != null && freshUser.isEmailVerified) {
-                        // Update Firestore document with verified status
-                        firestore
-                            .collection("users")
-                            .document(freshUser.uid)
-                            .update("isVerified", true)
-                            .await()
+                        userDataSource.updateVerificationStatus(freshUser.uid, true)
 
-                        // Fetch and return updated user document
-                        val userDoc =
-                            firestore
-                                .collection("users")
-                                .document(freshUser.uid)
-                                .get()
-                                .await()
-                        val userModel = userDoc.toObject<UserModel>()
+                        val userModel = userDataSource.getUser(freshUser.uid)
                         if (userModel != null) {
                             Result.Success(userModel.copy(isVerified = true))
                         } else {

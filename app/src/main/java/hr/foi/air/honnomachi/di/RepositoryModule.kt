@@ -10,12 +10,17 @@ import hr.foi.air.honnomachi.data.BookRepository
 import hr.foi.air.honnomachi.data.BookRepositoryImpl
 import hr.foi.air.honnomachi.data.CartRepository
 import hr.foi.air.honnomachi.data.CartRepositoryImpl
+import hr.foi.air.honnomachi.data.FirestoreUserDataSource
+import hr.foi.air.honnomachi.data.FirestoreUserDataSourceImpl
 import hr.foi.air.honnomachi.data.ProfileRepository
 import hr.foi.air.honnomachi.data.ProfileRepositoryImpl
 
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
+    @Binds
+    abstract fun bindFirestoreUserDataSource(impl: FirestoreUserDataSourceImpl): FirestoreUserDataSource
+
     @Binds
     abstract fun bindAuthRepository(authRepositoryImpl: AuthRepositoryImpl): AuthRepository
 

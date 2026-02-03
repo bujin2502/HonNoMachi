@@ -3,6 +3,7 @@ package hr.foi.air.honnomachi.ui.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import hr.foi.air.honnomachi.data.AuthRepository
 import hr.foi.air.honnomachi.util.Result
@@ -10,6 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
@@ -23,32 +25,35 @@ open class AuthViewModel
         open val uiState = _uiState.asStateFlow()
 
         init {
-            // Sluša promjene stanja prijave (login, logout, istek tokena)
             firebaseAuth.addAuthStateListener { auth ->
                 viewModelScope.launch {
-                    val user = auth.currentUser
-                    if (user == null) {
-                        _uiState.update { it.copy(isUserLoggedIn = false, needsVerification = false) }
-                    } else {
-                        // Firebase može imati zastarjele podatke, pozovi reload() za svježe stanje
-                        user.reload().addOnCompleteListener { task ->
-                            val freshUser = firebaseAuth.currentUser
-                            if (task.isSuccessful && freshUser != null) {
-                                val isVerified = freshUser.isEmailVerified
-                                _uiState.update {
-                                    it.copy(
-                                        isUserLoggedIn = isVerified,
-                                        needsVerification = !isVerified,
-                                    )
-                                }
-                            } else {
-                                // Ako reload ne uspije (npr. nema interneta, token istekao),
-                                // smatraj korisnika odjavljenim za svaki slučaj.
-                                _uiState.update { it.copy(isUserLoggedIn = false, needsVerification = false) }
-                            }
-                        }
-                    }
+                    handleAuthStateChange(auth.currentUser)
                 }
+            }
+        }
+
+        private suspend fun handleAuthStateChange(user: FirebaseUser?) {
+            if (user == null) {
+                _uiState.update { it.copy(isUserLoggedIn = false, needsVerification = false) }
+                return
+            }
+
+            try {
+                user.reload().await()
+                val freshUser = firebaseAuth.currentUser
+                if (freshUser != null) {
+                    val isVerified = freshUser.isEmailVerified
+                    _uiState.update {
+                        it.copy(
+                            isUserLoggedIn = isVerified,
+                            needsVerification = !isVerified,
+                        )
+                    }
+                } else {
+                    _uiState.update { it.copy(isUserLoggedIn = false, needsVerification = false) }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isUserLoggedIn = false, needsVerification = false) }
             }
         }
 
@@ -100,7 +105,7 @@ open class AuthViewModel
                                 user = result.data,
                                 isUserLoggedIn = isVerified,
                                 needsVerification = !isVerified,
-                                errorMessage = if (isVerified) null else "Please verify your email.",
+                                errorMessage = if (isVerified) null else ErrorMessages.VERIFY_EMAIL,
                             )
                         }
                     }
@@ -120,7 +125,7 @@ open class AuthViewModel
         open fun signOut() {
             viewModelScope.launch {
                 authRepository.signOut()
-                _uiState.update { AuthUiState() } // Reset state
+                _uiState.update { AuthUiState() }
             }
         }
 
@@ -180,23 +185,30 @@ open class AuthViewModel
             }
         }
 
-        fun testSecureRead(
-            onSuccess: (String) -> Unit,
-            onError: (String) -> Unit,
-        ) {
+        fun testSecureRead() {
             viewModelScope.launch {
                 val result = authRepository.testSecureRead()
                 when (result) {
-                    is Result.Success -> onSuccess(result.data)
-                    is Result.Error -> onError(result.exception.message ?: "Unknown error")
+                    is Result.Success -> {
+                        _uiState.update { it.copy(secureReadResult = result.data) }
+                    }
+                    is Result.Error -> {
+                        _uiState.update {
+                            it.copy(
+                                secureReadResult = null,
+                                errorMessage = result.exception.message ?: ErrorMessages.UNKNOWN_ERROR,
+                            )
+                        }
+                    }
                 }
             }
         }
 
-        fun loginWithGoogle(
-            idToken: String,
-            onComplete: (success: Boolean, errorMessage: String?) -> Unit,
-        ) {
+        fun consumeSecureReadResult() {
+            _uiState.update { it.copy(secureReadResult = null) }
+        }
+
+        fun loginWithGoogle(idToken: String) {
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoading = true, errorMessage = null) }
                 val result = authRepository.loginWithGoogle(idToken)
@@ -210,58 +222,72 @@ open class AuthViewModel
                                 isUserLoggedIn = true,
                                 needsVerification = !isVerified,
                                 errorMessage = null,
+                                googleLoginResult = OperationResult(true, SuccessMessages.GOOGLE_LOGIN_SUCCESS),
                             )
                         }
-                        onComplete(true, null)
                     }
 
                     is Result.Error -> {
+                        val errorMsg = result.exception.message ?: ErrorMessages.UNKNOWN_ERROR
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
                                 errorMessage = result.exception.message,
+                                googleLoginResult = OperationResult(false, errorMsg),
                             )
                         }
-                        onComplete(false, result.exception.message)
                     }
                 }
             }
         }
 
+        fun consumeGoogleLoginResult() {
+            _uiState.update { it.copy(googleLoginResult = null) }
+        }
+
         open fun resendVerificationEmail(
             email: String,
             password: String,
-            onComplete: (success: Boolean, message: String) -> Unit,
         ) {
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoading = true, errorMessage = null) }
                 val result = authRepository.resendVerificationEmail(email, password)
                 when (result) {
                     is Result.Success -> {
-                        _uiState.update { it.copy(isLoading = false, errorMessage = null) }
-                        onComplete(true, "Verification email sent successfully")
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                errorMessage = null,
+                                verificationEmailResult =
+                                    OperationResult(true, SuccessMessages.VERIFICATION_EMAIL_SENT),
+                            )
+                        }
                     }
 
                     is Result.Error -> {
+                        val errorMsg = result.exception.message ?: ErrorMessages.VERIFICATION_EMAIL_FAILED
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
                                 errorMessage = result.exception.message,
+                                verificationEmailResult = OperationResult(false, errorMsg),
                             )
                         }
-                        onComplete(false, result.exception.message ?: "Failed to send verification email")
                     }
                 }
             }
         }
 
-        fun checkVerificationStatus(onComplete: (success: Boolean, message: String) -> Unit) {
+        fun consumeVerificationEmailResult() {
+            _uiState.update { it.copy(verificationEmailResult = null) }
+        }
+
+        fun checkVerificationStatus() {
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoading = true, errorMessage = null) }
                 val result = authRepository.syncVerificationStatus()
                 when (result) {
                     is Result.Success -> {
-                        // Sign out to force re-login and get fresh token with email_verified = true
                         authRepository.signOut()
                         _uiState.update {
                             it.copy(
@@ -270,21 +296,40 @@ open class AuthViewModel
                                 isUserLoggedIn = false,
                                 needsVerification = false,
                                 errorMessage = null,
+                                verificationStatusResult =
+                                    OperationResult(true, SuccessMessages.EMAIL_VERIFIED),
                             )
                         }
-                        onComplete(true, "Email verified! Please log in again to continue.")
                     }
 
                     is Result.Error -> {
+                        val errorMsg = result.exception.message ?: ErrorMessages.EMAIL_NOT_VERIFIED
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
                                 errorMessage = result.exception.message,
+                                verificationStatusResult = OperationResult(false, errorMsg),
                             )
                         }
-                        onComplete(false, result.exception.message ?: "Email not yet verified")
                     }
                 }
             }
+        }
+
+        fun consumeVerificationStatusResult() {
+            _uiState.update { it.copy(verificationStatusResult = null) }
+        }
+
+        object ErrorMessages {
+            const val VERIFY_EMAIL = "Please verify your email."
+            const val UNKNOWN_ERROR = "Unknown error"
+            const val VERIFICATION_EMAIL_FAILED = "Failed to send verification email"
+            const val EMAIL_NOT_VERIFIED = "Email not yet verified"
+        }
+
+        object SuccessMessages {
+            const val VERIFICATION_EMAIL_SENT = "Verification email sent successfully"
+            const val EMAIL_VERIFIED = "Email verified! Please log in again to continue."
+            const val GOOGLE_LOGIN_SUCCESS = "Google login successful"
         }
     }

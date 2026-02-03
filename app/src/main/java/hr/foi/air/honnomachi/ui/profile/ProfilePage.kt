@@ -8,6 +8,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -29,6 +32,18 @@ fun ProfilePage(
     authViewModel: AuthViewModel = viewModel(),
 ) {
     val message = remember { mutableStateOf("") }
+    val uiState by authViewModel.uiState.collectAsState()
+
+    LaunchedEffect(uiState.secureReadResult, uiState.errorMessage) {
+        uiState.secureReadResult?.let { result ->
+            message.value = result
+            authViewModel.consumeSecureReadResult()
+        }
+        if (uiState.secureReadResult == null && uiState.errorMessage != null) {
+            message.value = "Error: ${uiState.errorMessage}"
+            authViewModel.consumeErrorMessage()
+        }
+    }
 
     Column(
         modifier =
@@ -53,12 +68,7 @@ fun ProfilePage(
         }
         if (SHOW_QA_BUTTON) {
             Button(
-                onClick = {
-                    authViewModel.testSecureRead(
-                        onSuccess = { msg -> message.value = msg },
-                        onError = { error -> message.value = "Error: $error" },
-                    )
-                },
+                onClick = { authViewModel.testSecureRead() },
             ) {
                 Text(stringResource(id = R.string.test_token_qa))
             }

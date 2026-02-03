@@ -182,4 +182,6 @@
     <string name="error_offer_save_failed">Greška prilikom spremanja ponude. Molimo pokušajte ponovno.</string>
     <string name="error_image_upload_failed">Upload slika nije uspio. Molimo pokušajte ponovno.</string>
     <string name="error_user_not_authenticated">Morate biti prijavljeni da biste dodali knjigu.</string>
+    <string name="profile_update_success">Profil uspješno ažuriran!</string>
+    <string name="profile_update_error">Greška: %1$s</string>
 </resources>

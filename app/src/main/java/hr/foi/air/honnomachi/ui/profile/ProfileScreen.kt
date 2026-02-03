@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
@@ -35,20 +34,18 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.R
-import hr.foi.air.honnomachi.ui.components.ProfileItem
-import hr.foi.air.honnomachi.ui.components.errorMessageFor
+import hr.foi.air.honnomachi.ui.theme.LabelGray
+import hr.foi.air.honnomachi.ui.theme.LogoutButtonBackground
+import hr.foi.air.honnomachi.ui.theme.StatusActive
+import hr.foi.air.honnomachi.ui.theme.StatusSuspended
 
 @Composable
 fun ProfileScreen(
@@ -96,13 +93,13 @@ fun ProfileScreen(
                 val user = (uiState as ProfileUiState.Success).user
                 val isSuspended = user.suspended == true
                 val statusText = if (isSuspended) stringResource(R.string.value_suspended) else stringResource(R.string.value_active)
-                val statusColor = if (isSuspended) Color.Red else Color(0xFF4CAF50) // Green
+                val statusColor = if (isSuspended) StatusSuspended else StatusActive
 
                 Column {
                     Text(
                         text = stringResource(R.string.label_status),
                         style = MaterialTheme.typography.labelSmall,
-                        color = Color.Gray,
+                        color = LabelGray,
                     )
                     Text(
                         text = statusText,
@@ -118,7 +115,7 @@ fun ProfileScreen(
             // Logout Button
             Button(
                 onClick = onLogout,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFCFE2F3)),
+                colors = ButtonDefaults.buttonColors(containerColor = LogoutButtonBackground),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 shape = RoundedCornerShape(12.dp),
             ) {
@@ -126,12 +123,12 @@ fun ProfileScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ExitToApp,
                         contentDescription = stringResource(R.string.label_logout),
-                        tint = Color.Black,
+                        tint = MaterialTheme.colorScheme.onSurface,
                     )
                     Spacer(modifier = Modifier.size(4.dp))
                     Text(
                         text = stringResource(R.string.label_logout),
-                        color = Color.Black,
+                        color = MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     )
                 }
@@ -175,82 +172,19 @@ fun ProfileScreen(
                 is ProfileUiState.Success -> {
                     val user = state.user
 
-                    // Editable Fields
-                    ProfileItem(
-                        label = stringResource(R.string.label_name),
-                        value = formState.name,
-                        onValueChange = profileViewModel::onNameChange,
-                        isEditable = true,
-                        keyboardOptions =
-                            KeyboardOptions(
-                                capitalization = KeyboardCapitalization.Words,
-                                imeAction = ImeAction.Next,
-                            ),
-                        errorText = formState.nameError?.let { stringResource(errorMessageFor(it)) },
-                        onFocusLost = profileViewModel::validateName,
-                    )
-
-                    // Read-only Email
-                    ProfileItem(
-                        label = stringResource(R.string.label_email),
-                        value = user.email,
-                        isEditable = false,
-                    )
-
-                    // Editable Phone
-                    ProfileItem(
-                        label = stringResource(R.string.label_phone),
-                        value = formState.phone,
-                        onValueChange = profileViewModel::onPhoneChange,
-                        isEditable = true,
-                        keyboardOptions =
-                            KeyboardOptions(
-                                keyboardType = KeyboardType.Phone,
-                                imeAction = ImeAction.Next,
-                            ),
-                        errorText = formState.phoneError?.let { stringResource(errorMessageFor(it)) },
-                        onFocusLost = profileViewModel::validatePhone,
-                    )
-
-                    // Editable Address Fields
-                    ProfileItem(
-                        label = stringResource(R.string.label_street),
-                        value = formState.street,
-                        onValueChange = profileViewModel::onStreetChange,
-                        isEditable = true,
-                        keyboardOptions =
-                            KeyboardOptions(
-                                capitalization = KeyboardCapitalization.Sentences,
-                                imeAction = ImeAction.Next,
-                            ),
-                        errorText = formState.streetError?.let { stringResource(errorMessageFor(it)) },
-                        onFocusLost = profileViewModel::validateStreet,
-                    )
-                    ProfileItem(
-                        label = stringResource(R.string.label_zip),
-                        value = formState.zip,
-                        onValueChange = profileViewModel::onZipChange,
-                        isEditable = true,
-                        keyboardOptions =
-                            KeyboardOptions(
-                                keyboardType = KeyboardType.Number,
-                                imeAction = ImeAction.Next,
-                            ),
-                        errorText = formState.zipError?.let { stringResource(errorMessageFor(it)) },
-                        onFocusLost = profileViewModel::validateZip,
-                    )
-                    ProfileItem(
-                        label = stringResource(R.string.label_city),
-                        value = formState.city,
-                        onValueChange = profileViewModel::onCityChange,
-                        isEditable = true,
-                        keyboardOptions =
-                            KeyboardOptions(
-                                capitalization = KeyboardCapitalization.Words,
-                                imeAction = ImeAction.Done,
-                            ),
-                        errorText = formState.cityError?.let { stringResource(errorMessageFor(it)) },
-                        onFocusLost = profileViewModel::validateCity,
+                    ProfileEditForm(
+                        formState = formState,
+                        userEmail = user.email,
+                        onNameChange = profileViewModel::onNameChange,
+                        onPhoneChange = profileViewModel::onPhoneChange,
+                        onStreetChange = profileViewModel::onStreetChange,
+                        onZipChange = profileViewModel::onZipChange,
+                        onCityChange = profileViewModel::onCityChange,
+                        onValidateName = profileViewModel::validateName,
+                        onValidatePhone = profileViewModel::validatePhone,
+                        onValidateStreet = profileViewModel::validateStreet,
+                        onValidateZip = profileViewModel::validateZip,
+                        onValidateCity = profileViewModel::validateCity,
                     )
                 }
 
@@ -285,7 +219,7 @@ fun ProfileScreen(
                     Text(
                         text = stringResource(R.string.desc_analytics_consent),
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray,
+                        color = LabelGray,
                     )
                 }
                 Switch(
@@ -317,14 +251,16 @@ fun ProfileScreen(
                     Text(text = stringResource(R.string.button_reset_password))
                 }
 
+                val successMessage = stringResource(R.string.profile_update_success)
+                val errorMessageFormat = stringResource(R.string.profile_update_error)
                 Button(
                     enabled = hasChanges && !formState.isSaving,
                     onClick = {
                         profileViewModel.saveProfile { success, message ->
                             if (success) {
-                                AppUtil.showToast(context, "Profil uspješno ažuriran!")
+                                AppUtil.showToast(context, successMessage)
                             } else {
-                                AppUtil.showToast(context, "Greška: $message")
+                                AppUtil.showToast(context, String.format(errorMessageFormat, message))
                             }
                         }
                     },
@@ -332,7 +268,7 @@ fun ProfileScreen(
                     modifier = Modifier.weight(1f).padding(start = 8.dp),
                 ) {
                     if (formState.isSaving) {
-                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
                     } else {
                         Text(text = stringResource(R.string.button_save))
                     }

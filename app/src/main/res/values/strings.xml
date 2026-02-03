@@ -182,4 +182,6 @@
     <string name="error_offer_save_failed">Failed to save offer. Please try again.</string>
     <string name="error_image_upload_failed">Image upload failed. Please try again.</string>
     <string name="error_user_not_authenticated">You must be logged in to add a book.</string>
+    <string name="profile_update_success">Profil uspješno ažuriran!</string>
+    <string name="profile_update_error">Greška: %1$s</string>
 </resources>

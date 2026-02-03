@@ -40,6 +40,7 @@ class ProfileRepositoryImpl
         companion object {
             private const val ERROR_NO_USER = "No user logged in."
         }
+
         override suspend fun getUserProfile(): Result<UserModel> =
             try {
                 val currentUser = auth.currentUser

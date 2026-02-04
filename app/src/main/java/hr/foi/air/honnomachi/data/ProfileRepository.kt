@@ -37,6 +37,10 @@ class ProfileRepositoryImpl
         private val auth: FirebaseAuth,
         private val firestore: FirebaseFirestore,
     ) : ProfileRepository {
+        companion object {
+            private const val ERROR_NO_USER = "No user logged in."
+        }
+
         override suspend fun getUserProfile(): Result<UserModel> =
             try {
                 val currentUser = auth.currentUser
@@ -59,7 +63,7 @@ class ProfileRepositoryImpl
                         Result.Error(Exception("User document not found."))
                     }
                 } else {
-                    Result.Error(Exception("No user logged in."))
+                    Result.Error(Exception(ERROR_NO_USER))
                 }
             } catch (e: Exception) {
                 CrashlyticsManager.instance.logException(e)
@@ -106,7 +110,7 @@ class ProfileRepositoryImpl
                         Result.Error(Exception("Failed to fetch updated user."))
                     }
                 } else {
-                    Result.Error(Exception("No user logged in."))
+                    Result.Error(Exception(ERROR_NO_USER))
                 }
             } catch (e: Exception) {
                 CrashlyticsManager.instance.logException(e)
@@ -128,7 +132,7 @@ class ProfileRepositoryImpl
 
                     Result.Success(Unit)
                 } else {
-                    Result.Error(Exception("No user logged in."))
+                    Result.Error(Exception(ERROR_NO_USER))
                 }
             } catch (e: Exception) {
                 CrashlyticsManager.instance.logException(e)
@@ -142,7 +146,7 @@ class ProfileRepositoryImpl
             return try {
                 val user = auth.currentUser
                 if (user == null || user.email == null) {
-                    return Result.Error(Exception("User not logged in."))
+                    return Result.Error(Exception(ERROR_NO_USER))
                 }
 
                 val credential = EmailAuthProvider.getCredential(user.email!!, oldPassword)

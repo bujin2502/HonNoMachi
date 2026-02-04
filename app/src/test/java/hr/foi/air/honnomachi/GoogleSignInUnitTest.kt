@@ -41,20 +41,15 @@ class GoogleSignInUnitTest {
     }
 
     @Test
-    fun `loginWithGoogle success updates uiState and calls callback`() =
+    fun `loginWithGoogle success updates uiState`() =
         runTest {
             // Arrange
             val idToken = "test_id_token"
             val mockUser = UserModel(uid = "123", email = "test@gmail.com", isVerified = true)
             coEvery { mockAuthRepository.loginWithGoogle(idToken) } returns Result.Success(mockUser)
-            var successResult = false
-            var errorMessage: String? = "initial"
 
             // Act
-            authViewModel.loginWithGoogle(idToken) { success, message ->
-                successResult = success
-                errorMessage = message
-            }
+            authViewModel.loginWithGoogle(idToken)
             testDispatcher.scheduler.advanceUntilIdle()
 
             // Assert
@@ -64,26 +59,19 @@ class GoogleSignInUnitTest {
             assertFalse(uiState.needsVerification)
             assertNull(uiState.errorMessage)
             assertFalse(uiState.isLoading)
-
-            assertTrue(successResult)
-            assertNull(errorMessage)
+            assertTrue(uiState.googleLoginResult?.success == true)
         }
 
     @Test
-    fun `loginWithGoogle failure updates uiState and calls callback`() =
+    fun `loginWithGoogle failure updates uiState`() =
         runTest {
             // Arrange
             val idToken = "test_id_token"
             val error = "Google sign-in failed"
             coEvery { mockAuthRepository.loginWithGoogle(idToken) } returns Result.Error(Exception(error))
-            var successResult = true
-            var errorMessage: String? = null
 
             // Act
-            authViewModel.loginWithGoogle(idToken) { success, message ->
-                successResult = success
-                errorMessage = message
-            }
+            authViewModel.loginWithGoogle(idToken)
             testDispatcher.scheduler.advanceUntilIdle()
 
             // Assert
@@ -92,8 +80,7 @@ class GoogleSignInUnitTest {
             assertFalse(uiState.isUserLoggedIn)
             assertEquals(error, uiState.errorMessage)
             assertFalse(uiState.isLoading)
-
-            assertFalse(successResult)
-            assertEquals(error, errorMessage)
+            assertTrue(uiState.googleLoginResult?.success == false)
+            assertEquals(error, uiState.googleLoginResult?.message)
         }
 }

@@ -22,6 +22,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,6 +54,26 @@ fun EmailVerificationScreen(
     var isError by remember { mutableStateOf(false) }
     val passwordFocusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
+    val uiState by authViewModel.uiState.collectAsState()
+
+    LaunchedEffect(uiState.verificationStatusResult) {
+        uiState.verificationStatusResult?.let { result ->
+            message = result.message
+            isError = !result.success
+            if (result.success) {
+                onNavigateToLogin()
+            }
+            authViewModel.consumeVerificationStatusResult()
+        }
+    }
+
+    LaunchedEffect(uiState.verificationEmailResult) {
+        uiState.verificationEmailResult?.let { result ->
+            message = result.message
+            isError = !result.success
+            authViewModel.consumeVerificationEmailResult()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -81,15 +103,7 @@ fun EmailVerificationScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
-                onClick = {
-                    authViewModel.checkVerificationStatus { success, msg ->
-                        message = msg
-                        isError = !success
-                        if (success) {
-                            onNavigateToLogin()
-                        }
-                    }
-                },
+                onClick = { authViewModel.checkVerificationStatus() },
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(stringResource(id = R.string.check_verification))
@@ -149,12 +163,7 @@ fun EmailVerificationScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = {
-                    authViewModel.resendVerificationEmail(email, password) { success, msg ->
-                        message = msg
-                        isError = !success
-                    }
-                },
+                onClick = { authViewModel.resendVerificationEmail(email, password) },
                 modifier = Modifier.testTag("resend_verification_button"),
             ) {
                 Text(stringResource(id = R.string.resend_verification_email))

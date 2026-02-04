@@ -17,6 +17,7 @@ import hr.foi.air.honnomachi.ui.auth.AuthUiState
 import hr.foi.air.honnomachi.ui.auth.AuthViewModel
 import hr.foi.air.honnomachi.ui.auth.EmailVerificationScreen
 import hr.foi.air.honnomachi.ui.auth.LoginScreen
+import hr.foi.air.honnomachi.ui.auth.OperationResult
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -179,12 +180,15 @@ private class FakeLoginViewModel(
     override fun resendVerificationEmail(
         email: String,
         password: String,
-        onComplete: (Boolean, String) -> Unit,
     ) {
         resendCalled = true
         resendCapturedEmail = email
         resendCapturedPassword = password
 
-        onComplete(true, "Verification email sent.")
+        _uiState.update {
+            it.copy(
+                verificationEmailResult = OperationResult(true, "Verification email sent."),
+            )
+        }
     }
 }

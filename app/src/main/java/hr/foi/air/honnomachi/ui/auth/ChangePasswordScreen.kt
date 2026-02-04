@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -23,31 +22,28 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import hr.foi.air.honnomachi.AppUtil
-import hr.foi.air.honnomachi.FormValidator
 import hr.foi.air.honnomachi.R
-import hr.foi.air.honnomachi.ValidationErrorType
-import hr.foi.air.honnomachi.ui.components.errorMessageFor
+import hr.foi.air.honnomachi.ui.components.PasswordInputField
 import hr.foi.air.honnomachi.ui.profile.ProfileViewModel
 
 @Composable
@@ -55,16 +51,17 @@ fun ChangePasswordScreen(
     navController: NavController,
     profileViewModel: ProfileViewModel = hiltViewModel(),
 ) {
-    var oldPass by remember { mutableStateOf("") }
-    var newPass by remember { mutableStateOf("") }
-    var confirmPass by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
-
-    var oldPassError by remember { mutableStateOf<ValidationErrorType?>(null) }
-    var newPassError by remember { mutableStateOf<ValidationErrorType?>(null) }
-    var confirmPassError by remember { mutableStateOf<ValidationErrorType?>(null) }
-
+    val changePasswordState by profileViewModel.changePasswordState.collectAsState()
+    val newPasswordFocusRequester = remember { FocusRequester() }
+    val confirmPasswordFocusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
     val context = LocalContext.current
+
+    DisposableEffect(Unit) {
+        onDispose {
+            profileViewModel.resetChangePasswordForm()
+        }
+    }
 
     Column(
         modifier =
@@ -75,7 +72,6 @@ fun ChangePasswordScreen(
                 .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Back Button
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Start,
@@ -98,7 +94,6 @@ fun ChangePasswordScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Lock Icon
         Icon(
             imageVector = Icons.Filled.LockReset,
             contentDescription = null,
@@ -115,109 +110,63 @@ fun ChangePasswordScreen(
             modifier = Modifier.padding(bottom = 32.dp),
         )
 
-        // Old Password
-        OutlinedTextField(
-            value = oldPass,
-            onValueChange = {
-                oldPass = it
-                oldPassError = null
-            },
-            label = { Text(stringResource(R.string.label_old_password)) },
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .onFocusChanged { focusState ->
-                        if (!focusState.isFocused && oldPass.isNotEmpty()) {
-                            val result = FormValidator.validateStrictPassword(oldPass)
-                            oldPassError = result.error
-                        }
-                    },
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
-            isError = oldPassError != null,
-            supportingText = { oldPassError?.let { Text(stringResource(errorMessageFor(it)), color = MaterialTheme.colorScheme.error) } },
+        PasswordInputField(
+            value = changePasswordState.oldPassword,
+            onValueChange = { profileViewModel.onOldPasswordChange(it) },
+            modifier = Modifier.fillMaxWidth(),
+            error = changePasswordState.oldPasswordError,
+            label = stringResource(R.string.label_old_password),
+            imeAction = ImeAction.Next,
+            onImeAction = { newPasswordFocusRequester.requestFocus() },
         )
+
         Spacer(modifier = Modifier.height(16.dp))
 
-        // New Password
-        OutlinedTextField(
-            value = newPass,
-            onValueChange = {
-                newPass = it
-                newPassError = null
-            },
-            label = { Text(stringResource(R.string.label_new_password)) },
+        PasswordInputField(
+            value = changePasswordState.newPassword,
+            onValueChange = { profileViewModel.onNewPasswordChange(it) },
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .onFocusChanged { focusState ->
-                        if (!focusState.isFocused && newPass.isNotEmpty()) {
-                            val result = FormValidator.validateStrictPassword(newPass)
-                            newPassError = result.error
-                        }
-                    },
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
-            isError = newPassError != null,
-            supportingText = { newPassError?.let { Text(stringResource(errorMessageFor(it)), color = MaterialTheme.colorScheme.error) } },
+                    .focusRequester(newPasswordFocusRequester),
+            error = changePasswordState.newPasswordError,
+            label = stringResource(R.string.label_new_password),
+            imeAction = ImeAction.Next,
+            onImeAction = { confirmPasswordFocusRequester.requestFocus() },
         )
+
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Confirm Password
-        OutlinedTextField(
-            value = confirmPass,
-            onValueChange = {
-                confirmPass = it
-                confirmPassError = null
-            },
-            label = { Text(stringResource(R.string.label_confirm_password)) },
+        PasswordInputField(
+            value = changePasswordState.confirmPassword,
+            onValueChange = { profileViewModel.onConfirmPasswordChange(it) },
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .onFocusChanged { focusState ->
-                        if (!focusState.isFocused && confirmPass.isNotEmpty()) {
-                            val result = FormValidator.validatePasswordConfirmation(newPass, confirmPass)
-                            confirmPassError = result.error
-                        }
-                    },
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
-            isError = confirmPassError != null,
-            supportingText = {
-                confirmPassError?.let {
-                    Text(
-                        stringResource(errorMessageFor(it)),
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
-            },
+                    .focusRequester(confirmPasswordFocusRequester),
+            error = changePasswordState.confirmPasswordError,
+            label = stringResource(R.string.label_confirm_password),
+            imeAction = ImeAction.Done,
+            onImeAction = { focusManager.clearFocus() },
         )
+
         Spacer(modifier = Modifier.height(32.dp))
 
         Button(
             onClick = {
-                val validation = FormValidator.validateChangePasswordForm(oldPass, newPass, confirmPass)
-                oldPassError = validation.oldPassword.error
-                newPassError = validation.newPassword.error
-                confirmPassError = validation.confirmPassword.error
-
-                if (validation.isValid) {
-                    isLoading = true
-                    profileViewModel.changePassword(oldPass, newPass) { success, message ->
-                        isLoading = false
-                        if (success) {
-                            AppUtil.showToast(context, "Lozinka uspješno promijenjena.")
-                            navController.popBackStack()
-                        } else {
-                            AppUtil.showToast(context, "Greška: ${message ?: "Nepoznata greška"}")
-                        }
+                profileViewModel.changePassword { success, message ->
+                    if (success) {
+                        AppUtil.showToast(context, "Lozinka uspješno promijenjena.")
+                        navController.popBackStack()
+                    } else {
+                        AppUtil.showToast(context, "Greška: ${message ?: "Nepoznata greška"}")
                     }
                 }
             },
             modifier = Modifier.fillMaxWidth().height(50.dp),
-            enabled = !isLoading,
+            enabled = !changePasswordState.isLoading,
         ) {
-            if (isLoading) {
+            if (changePasswordState.isLoading) {
                 CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
             } else {
                 Text(stringResource(R.string.button_save))

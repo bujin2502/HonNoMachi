@@ -30,3 +30,13 @@ data class ProfileFormState(
     val isSaving: Boolean = false,
     val isFormValid: Boolean = true, // aggregated validity
 )
+
+data class ChangePasswordFormState(
+    val oldPassword: String = "",
+    val oldPasswordError: ValidationErrorType? = null,
+    val newPassword: String = "",
+    val newPasswordError: ValidationErrorType? = null,
+    val confirmPassword: String = "",
+    val confirmPasswordError: ValidationErrorType? = null,
+    val isLoading: Boolean = false,
+)

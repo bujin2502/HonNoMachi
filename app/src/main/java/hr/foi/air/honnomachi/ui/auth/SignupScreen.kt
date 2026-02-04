@@ -8,11 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -34,17 +30,15 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.FormValidator
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.ValidationErrorType
-import hr.foi.air.honnomachi.ui.components.errorMessageFor
+import hr.foi.air.honnomachi.ui.components.EmailInputField
+import hr.foi.air.honnomachi.ui.components.NameInputField
+import hr.foi.air.honnomachi.ui.components.PasswordInputField
 
 @Composable
 fun SignupScreen(
@@ -82,7 +76,7 @@ fun SignupScreen(
         modifier =
             modifier
                 .fillMaxSize()
-                .padding(32.dp),
+                .padding(AuthDimensions.ScreenPadding),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -91,24 +85,24 @@ fun SignupScreen(
             modifier = Modifier.fillMaxWidth(),
             style =
                 TextStyle(
-                    fontSize = 30.sp,
+                    fontSize = AuthDimensions.TitleFontSize,
                     fontWeight = FontWeight.Bold,
                     fontFamily = FontFamily.Monospace,
                 ),
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(AuthDimensions.SmallSpacing))
 
         Text(
             stringResource(R.string.create_an_account),
             modifier = Modifier.fillMaxWidth(),
             style =
                 TextStyle(
-                    fontSize = 22.sp,
+                    fontSize = AuthDimensions.SubtitleFontSize,
                 ),
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(AuthDimensions.LargeSpacing))
 
         Image(
             painterResource(id = R.drawable.vecteezy_deconstructing_sign_up_and_log_in_49110285),
@@ -116,115 +110,66 @@ fun SignupScreen(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .height(200.dp),
+                    .height(AuthDimensions.ImageHeight),
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(AuthDimensions.LargeSpacing))
 
-        OutlinedTextField(
+        EmailInputField(
             value = email,
             onValueChange = {
                 email = it
                 if (emailError != null) emailError = null
             },
-            label = { Text(stringResource(R.string.email_address)) },
             modifier =
                 Modifier
                     .fillMaxWidth()
                     .testTag("signup_email"),
-            keyboardOptions =
-                KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next,
-                ),
-            keyboardActions =
-                KeyboardActions(
-                    onNext = { nameFocusRequester.requestFocus() },
-                ),
-            isError = emailError != null,
-            supportingText = {
-                emailError?.let {
-                    Text(
-                        text = stringResource(errorMessageFor(it)),
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.testTag("signup_email_error"),
-                    )
-                }
-            },
+            error = emailError,
+            imeAction = ImeAction.Next,
+            onImeAction = { nameFocusRequester.requestFocus() },
+            errorTestTag = "signup_email_error",
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(AuthDimensions.SmallSpacing))
 
-        OutlinedTextField(
+        NameInputField(
             value = name,
             onValueChange = {
                 name = it
                 if (nameError != null) nameError = null
             },
-            label = { Text(stringResource(R.string.name)) },
             modifier =
                 Modifier
                     .fillMaxWidth()
                     .focusRequester(nameFocusRequester)
                     .testTag("signup_name"),
-            keyboardOptions =
-                KeyboardOptions(
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Next,
-                ),
-            keyboardActions =
-                KeyboardActions(
-                    onNext = { passwordFocusRequester.requestFocus() },
-                ),
-            isError = nameError != null,
-            supportingText = {
-                nameError?.let {
-                    Text(
-                        text = stringResource(errorMessageFor(it)),
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.testTag("signup_name_error"),
-                    )
-                }
-            },
+            error = nameError,
+            imeAction = ImeAction.Next,
+            onImeAction = { passwordFocusRequester.requestFocus() },
+            errorTestTag = "signup_name_error",
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(AuthDimensions.SmallSpacing))
 
-        OutlinedTextField(
+        PasswordInputField(
             value = password,
             onValueChange = {
                 password = it
                 if (passwordError != null) passwordError = null
             },
-            label = { Text(stringResource(R.string.password)) },
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .testTag("signup_password")
-                    .focusRequester(passwordFocusRequester),
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions =
-                KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done,
-                ),
-            keyboardActions =
-                KeyboardActions(
-                    onDone = { focusManager.clearFocus() },
-                ),
-            isError = passwordError != null,
-            supportingText = {
-                passwordError?.let {
-                    Text(
-                        text = stringResource(errorMessageFor(it)),
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.testTag("signup_password_error"),
-                    )
-                }
-            },
+                    .focusRequester(passwordFocusRequester)
+                    .testTag("signup_password"),
+            error = passwordError,
+            imeAction = ImeAction.Done,
+            onImeAction = { focusManager.clearFocus() },
+            errorTestTag = "signup_password_error",
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(AuthDimensions.LargeSpacing))
 
         Button(
             onClick = {
@@ -240,10 +185,18 @@ fun SignupScreen(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .height(60.dp)
+                    .height(AuthDimensions.ButtonHeight)
                     .testTag("signup_button"),
         ) {
-            Text(if (uiState.isLoading) stringResource(R.string.creating_account) else stringResource(R.string.signup), fontSize = 22.sp)
+            Text(
+                text =
+                    if (uiState.isLoading) {
+                        stringResource(R.string.creating_account)
+                    } else {
+                        stringResource(R.string.signup)
+                    },
+                fontSize = AuthDimensions.ButtonFontSize,
+            )
         }
     }
 }

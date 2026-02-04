@@ -25,6 +25,9 @@ open class ProfileViewModel
         private val _formState = MutableStateFlow(ProfileFormState())
         val formState: StateFlow<ProfileFormState> = _formState.asStateFlow()
 
+        private val _changePasswordState = MutableStateFlow(ChangePasswordFormState())
+        val changePasswordState: StateFlow<ChangePasswordFormState> = _changePasswordState.asStateFlow()
+
         init {
             loadUserProfile()
         }
@@ -188,17 +191,54 @@ open class ProfileViewModel
             }
         }
 
-        open fun changePassword(
-            oldPass: String,
-            newPass: String,
-            onResult: (Boolean, String?) -> Unit,
-        ) {
+        // --- Change Password Form Methods ---
+
+        open fun onOldPasswordChange(newValue: String) {
+            _changePasswordState.update { it.copy(oldPassword = newValue, oldPasswordError = null) }
+        }
+
+        open fun onNewPasswordChange(newValue: String) {
+            _changePasswordState.update { it.copy(newPassword = newValue, newPasswordError = null) }
+        }
+
+        open fun onConfirmPasswordChange(newValue: String) {
+            _changePasswordState.update { it.copy(confirmPassword = newValue, confirmPasswordError = null) }
+        }
+
+        open fun resetChangePasswordForm() {
+            _changePasswordState.value = ChangePasswordFormState()
+        }
+
+        open fun changePassword(onResult: (Boolean, String?) -> Unit) {
+            val currentState = _changePasswordState.value
+            val validation =
+                FormValidator.validateChangePasswordForm(
+                    currentState.oldPassword,
+                    currentState.newPassword,
+                    currentState.confirmPassword,
+                )
+
+            if (!validation.isValid) {
+                _changePasswordState.update {
+                    it.copy(
+                        oldPasswordError = validation.oldPassword.error,
+                        newPasswordError = validation.newPassword.error,
+                        confirmPasswordError = validation.confirmPassword.error,
+                    )
+                }
+                return
+            }
+
             viewModelScope.launch {
-                when (val result = profileRepository.changePassword(oldPass, newPass)) {
+                _changePasswordState.update { it.copy(isLoading = true) }
+                when (val result = profileRepository.changePassword(currentState.oldPassword, currentState.newPassword)) {
                     is Result.Success -> {
+                        _changePasswordState.update { it.copy(isLoading = false) }
+                        resetChangePasswordForm()
                         onResult(true, null)
                     }
                     is Result.Error -> {
+                        _changePasswordState.update { it.copy(isLoading = false) }
                         onResult(false, result.exception.message)
                     }
                 }

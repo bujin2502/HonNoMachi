@@ -12,6 +12,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,9 +53,24 @@ fun AuthScreen(
     val coroutineScope = rememberCoroutineScope()
     val credentialManager = remember { CredentialManager.create(context) }
     var isGoogleLoading by remember { mutableStateOf(false) }
+    val uiState by authViewModel.uiState.collectAsState()
 
     // Hoist the string resource out of the coroutine launch block
     val serverClientId = stringResource(id = R.string.default_web_client_id)
+
+    LaunchedEffect(uiState.googleLoginResult) {
+        uiState.googleLoginResult?.let { result ->
+            isGoogleLoading = false
+            if (result.success) {
+                navController.navigate("home") {
+                    popUpTo("auth") { inclusive = true }
+                }
+            } else {
+                AppUtil.showToast(context, result.message)
+            }
+            authViewModel.consumeGoogleLoginResult()
+        }
+    }
 
     Column(
         modifier =
@@ -138,16 +155,7 @@ fun AuthScreen(
                         val googleIdTokenCredential =
                             GoogleIdTokenCredential.createFrom(result.credential.data)
 
-                        authViewModel.loginWithGoogle(googleIdTokenCredential.idToken) { success, errorMessage ->
-                            isGoogleLoading = false
-                            if (success) {
-                                navController.navigate("home") {
-                                    popUpTo("auth") { inclusive = true }
-                                }
-                            } else {
-                                AppUtil.showToast(context, errorMessage ?: "Google sign-in failed.")
-                            }
-                        }
+                        authViewModel.loginWithGoogle(googleIdTokenCredential.idToken)
                     } catch (e: GetCredentialException) {
                         CrashlyticsManager.instance.logException(e)
                         isGoogleLoading = false

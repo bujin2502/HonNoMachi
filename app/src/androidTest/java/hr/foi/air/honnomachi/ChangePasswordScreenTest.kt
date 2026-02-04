@@ -18,7 +18,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-// Fake ViewModel
 class FakeChangePasswordViewModel(
     repository: ProfileRepository,
 ) : ProfileViewModel(repository) {
@@ -27,11 +26,19 @@ class FakeChangePasswordViewModel(
 
     override fun loadUserProfile() {}
 
-    override fun changePassword(
-        oldPass: String,
-        newPass: String,
-        onResult: (Boolean, String?) -> Unit,
-    ) {
+    override fun changePassword(onResult: (Boolean, String?) -> Unit) {
+        val state = changePasswordState.value
+        val validation =
+            FormValidator.validateChangePasswordForm(
+                state.oldPassword,
+                state.newPassword,
+                state.confirmPassword,
+            )
+
+        if (!validation.isValid) {
+            return
+        }
+
         changePasswordCalled = true
         if (shouldSucceed) {
             onResult(true, null)

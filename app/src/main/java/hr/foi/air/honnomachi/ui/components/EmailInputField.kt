@@ -1,0 +1,73 @@
+package hr.foi.air.honnomachi.ui.components
+
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import hr.foi.air.honnomachi.R
+import hr.foi.air.honnomachi.ValidationErrorType
+
+/**
+ * Reusable email input field komponenta za auth ekrane.
+ *
+ * @param value Trenutna vrijednost email polja
+ * @param onValueChange Callback kada se vrijednost promijeni
+ * @param modifier Modifier za komponentu
+ * @param error Opcionalna greška validacije
+ * @param imeAction IME akcija za tipkovnicu (default: Next)
+ * @param onImeAction Callback za IME akciju
+ * @param label Opcionalni custom label (default: Email address)
+ * @param errorTestTag Test tag za error poruku
+ */
+@Composable
+fun EmailInputField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    error: ValidationErrorType? = null,
+    imeAction: ImeAction = ImeAction.Next,
+    onImeAction: () -> Unit = {},
+    label: String = stringResource(R.string.email_address),
+    errorTestTag: String? = null,
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label) },
+        modifier = modifier,
+        keyboardOptions =
+            KeyboardOptions(
+                keyboardType = KeyboardType.Email,
+                imeAction = imeAction,
+            ),
+        keyboardActions =
+            KeyboardActions(
+                onNext = { onImeAction() },
+                onDone = { onImeAction() },
+            ),
+        isError = error != null,
+        supportingText = {
+            error?.let {
+                val errorModifier =
+                    if (errorTestTag != null) {
+                        Modifier.testTag(errorTestTag)
+                    } else {
+                        Modifier
+                    }
+                Text(
+                    text = stringResource(errorMessageFor(it)),
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = errorModifier,
+                )
+            }
+        },
+        singleLine = true,
+    )
+}

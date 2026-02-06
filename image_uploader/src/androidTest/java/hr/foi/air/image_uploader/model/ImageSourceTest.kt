@@ -5,8 +5,11 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import hr.foi.air.image_uploader.R
+import hr.foi.air.image_uploader.sources.CameraImageSource
+import hr.foi.air.image_uploader.sources.GalleryImageSource
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -14,122 +17,91 @@ import org.junit.runner.RunWith
 class ImageSourceTest {
 
     @Test
-    fun imageSource_createsWithCorrectValues() {
-        val source = ImageSource(
-            id = "camera",
-            nameResId = R.string.camera,
-            icon = Icons.Default.CameraAlt
-        )
-
+    fun cameraImageSource_hasCorrectId() {
+        val source = CameraImageSource()
         assertEquals("camera", source.id)
+    }
+
+    @Test
+    fun cameraImageSource_hasCorrectNameResId() {
+        val source = CameraImageSource()
         assertEquals(R.string.camera, source.nameResId)
+    }
+
+    @Test
+    fun cameraImageSource_hasCorrectIcon() {
+        val source = CameraImageSource()
         assertEquals(Icons.Default.CameraAlt, source.icon)
     }
 
     @Test
-    fun imageSource_equalityWorks() {
-        val source1 = ImageSource(
-            id = "gallery",
-            nameResId = R.string.gallery,
-            icon = Icons.Default.PhotoLibrary
-        )
-        val source2 = ImageSource(
-            id = "gallery",
-            nameResId = R.string.gallery,
-            icon = Icons.Default.PhotoLibrary
-        )
-
-        assertEquals(source1, source2)
+    fun galleryImageSource_hasCorrectId() {
+        val source = GalleryImageSource()
+        assertEquals("gallery", source.id)
     }
 
     @Test
-    fun imageSource_differentIds_notEqual() {
-        val source1 = ImageSource(
-            id = "camera",
-            nameResId = R.string.camera,
-            icon = Icons.Default.CameraAlt
-        )
-        val source2 = ImageSource(
-            id = "gallery",
-            nameResId = R.string.camera,
-            icon = Icons.Default.CameraAlt
-        )
-
-        assertNotEquals(source1, source2)
+    fun galleryImageSource_hasCorrectNameResId() {
+        val source = GalleryImageSource()
+        assertEquals(R.string.gallery, source.nameResId)
     }
 
     @Test
-    fun imageSource_copyWorks() {
-        val original = ImageSource(
-            id = "camera",
-            nameResId = R.string.camera,
-            icon = Icons.Default.CameraAlt
-        )
-        val copied = original.copy(id = "camera_new")
-
-        assertEquals("camera_new", copied.id)
-        assertEquals(original.nameResId, copied.nameResId)
-        assertEquals(original.icon, copied.icon)
+    fun galleryImageSource_hasCorrectIcon() {
+        val source = GalleryImageSource()
+        assertEquals(Icons.Default.PhotoLibrary, source.icon)
     }
 
     @Test
-    fun imageSource_hashCodeConsistent() {
-        val source1 = ImageSource(
-            id = "camera",
-            nameResId = R.string.camera,
-            icon = Icons.Default.CameraAlt
-        )
-        val source2 = ImageSource(
-            id = "camera",
-            nameResId = R.string.camera,
-            icon = Icons.Default.CameraAlt
-        )
-
-        assertEquals(source1.hashCode(), source2.hashCode())
+    fun cameraImageSource_implementsImageSource() {
+        val source = CameraImageSource()
+        assertTrue(source is ImageSource)
     }
 
     @Test
-    fun imageSource_destructuringWorks() {
-        val source = ImageSource(
-            id = "gallery",
-            nameResId = R.string.gallery,
-            icon = Icons.Default.PhotoLibrary
-        )
-
-        val (id, nameResId, icon) = source
-
-        assertEquals("gallery", id)
-        assertEquals(R.string.gallery, nameResId)
-        assertEquals(Icons.Default.PhotoLibrary, icon)
+    fun galleryImageSource_implementsImageSource() {
+        val source = GalleryImageSource()
+        assertTrue(source is ImageSource)
     }
 
     @Test
-    fun imageSource_toStringContainsValues() {
-        val source = ImageSource(
-            id = "camera",
-            nameResId = R.string.camera,
-            icon = Icons.Default.CameraAlt
-        )
-
-        val stringRepresentation = source.toString()
-
-        assert(stringRepresentation.contains("camera"))
-        assert(stringRepresentation.contains("ImageSource"))
+    fun differentSources_haveDifferentIds() {
+        val cameraSource = CameraImageSource()
+        val gallerySource = GalleryImageSource()
+        assertNotEquals(cameraSource.id, gallerySource.id)
     }
 
     @Test
-    fun imageSource_withDifferentIcons() {
-        val cameraSource = ImageSource(
-            id = "camera",
-            nameResId = R.string.camera,
-            icon = Icons.Default.CameraAlt
-        )
-        val gallerySource = ImageSource(
-            id = "gallery",
-            nameResId = R.string.gallery,
-            icon = Icons.Default.PhotoLibrary
-        )
-
+    fun differentSources_haveDifferentIcons() {
+        val cameraSource = CameraImageSource()
+        val gallerySource = GalleryImageSource()
         assertNotEquals(cameraSource.icon, gallerySource.icon)
+    }
+
+    @Test
+    fun differentSources_haveDifferentNameResIds() {
+        val cameraSource = CameraImageSource()
+        val gallerySource = GalleryImageSource()
+        assertNotEquals(cameraSource.nameResId, gallerySource.nameResId)
+    }
+
+    @Test
+    fun cameraImageSource_multipleInstances_haveSameProperties() {
+        val source1 = CameraImageSource()
+        val source2 = CameraImageSource()
+
+        assertEquals(source1.id, source2.id)
+        assertEquals(source1.nameResId, source2.nameResId)
+        assertEquals(source1.icon, source2.icon)
+    }
+
+    @Test
+    fun galleryImageSource_multipleInstances_haveSameProperties() {
+        val source1 = GalleryImageSource()
+        val source2 = GalleryImageSource()
+
+        assertEquals(source1.id, source2.id)
+        assertEquals(source1.nameResId, source2.nameResId)
+        assertEquals(source1.icon, source2.icon)
     }
 }

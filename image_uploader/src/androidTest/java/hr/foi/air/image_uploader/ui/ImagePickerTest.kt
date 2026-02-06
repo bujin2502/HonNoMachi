@@ -1,18 +1,15 @@
 package hr.foi.air.image_uploader.ui
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import hr.foi.air.image_uploader.R
 import hr.foi.air.image_uploader.model.ImageSource
+import hr.foi.air.image_uploader.sources.CameraImageSource
+import hr.foi.air.image_uploader.sources.GalleryImageSource
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,9 +20,9 @@ class ImagePickerTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private val testImageSources = listOf(
-        ImageSource("camera", R.string.camera, Icons.Default.CameraAlt),
-        ImageSource("gallery", R.string.gallery, Icons.Default.PhotoLibrary)
+    private val testImageSources: List<ImageSource> = listOf(
+        CameraImageSource(),
+        GalleryImageSource()
     )
 
     @Test
@@ -121,9 +118,9 @@ class ImagePickerTest {
 
     @Test
     fun imagePicker_displaysAllProvidedSources() {
-        val customSources = listOf(
-            ImageSource("source1", R.string.camera, Icons.Default.CameraAlt),
-            ImageSource("source2", R.string.gallery, Icons.Default.PhotoLibrary)
+        val customSources: List<ImageSource> = listOf(
+            CameraImageSource(),
+            GalleryImageSource()
         )
 
         composeTestRule.setContent {
@@ -145,8 +142,8 @@ class ImagePickerTest {
 
     @Test
     fun imagePicker_withSingleSource_displaysCorrectly() {
-        val singleSource = listOf(
-            ImageSource("camera", R.string.camera, Icons.Default.CameraAlt)
+        val singleSource: List<ImageSource> = listOf(
+            CameraImageSource()
         )
 
         composeTestRule.setContent {

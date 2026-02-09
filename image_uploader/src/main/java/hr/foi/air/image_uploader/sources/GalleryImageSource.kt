@@ -10,9 +10,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import hr.foi.air.image_uploader.R
 import hr.foi.air.image_uploader.model.ImageSource
 
-/**
- * Izvor slika iz galerije uređaja.
- */
 class GalleryImageSource : ImageSource {
     override val id: String = "gallery"
     override val nameResId: Int = R.string.gallery

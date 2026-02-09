@@ -21,9 +21,6 @@ import hr.foi.air.image_uploader.R
 import hr.foi.air.image_uploader.model.ImageSource
 import java.io.File
 
-/**
- * Izvor slika iz kamere uređaja.
- */
 class CameraImageSource : ImageSource {
     override val id: String = "camera"
     override val nameResId: Int = R.string.camera

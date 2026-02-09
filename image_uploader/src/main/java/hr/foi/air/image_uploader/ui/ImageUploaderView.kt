@@ -36,7 +36,6 @@ import hr.foi.air.image_uploader.model.ImageSourceRegistry
 fun ImageUploaderView(
     onImagesSelected: (List<Uri>) -> Unit
 ) {
-    // Osiguraj da su izvori inicijalizirani
     LaunchedEffect(Unit) {
         ImageSourceInitializer.initialize()
     }
@@ -50,17 +49,14 @@ fun ImageUploaderView(
     var showImagePicker by rememberSaveable { mutableStateOf(false) }
     var selectedSourceId by rememberSaveable { mutableStateOf<String?>(null) }
 
-    // Sync restored images to parent when activity is recreated
     LaunchedEffect(Unit) {
         if (imageUris.isNotEmpty()) {
             onImagesSelected(imageUris)
         }
     }
 
-    // Dohvati sve registrirane izvore
     val imageSources = ImageSourceRegistry.getAllSources()
 
-    // Kreiraj launchere za sve izvore
     val launchers = imageSources.associate { source ->
         source.id to source.rememberLauncher { uris ->
             val updatedUris = imageUris + uris
@@ -69,7 +65,6 @@ fun ImageUploaderView(
         }
     }
 
-    // Pokreni launcher kada je izvor odabran
     LaunchedEffect(selectedSourceId) {
         selectedSourceId?.let { id ->
             launchers[id]?.invoke()

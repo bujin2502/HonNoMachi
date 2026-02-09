@@ -13,6 +13,7 @@ import hr.foi.air.honnomachi.ui.auth.ChangePasswordScreen
 import hr.foi.air.honnomachi.ui.profile.ProfileViewModel
 import hr.foi.air.honnomachi.util.Result
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import org.junit.Rule
 import org.junit.Test
@@ -21,31 +22,7 @@ import org.junit.runner.RunWith
 class FakeChangePasswordViewModel(
     repository: ProfileRepository,
 ) : ProfileViewModel(repository) {
-    var changePasswordCalled = false
-    var shouldSucceed = true
-
     override fun loadUserProfile() {}
-
-    override fun changePassword(onResult: (Boolean, String?) -> Unit) {
-        val state = changePasswordState.value
-        val validation =
-            FormValidator.validateChangePasswordForm(
-                state.oldPassword,
-                state.newPassword,
-                state.confirmPassword,
-            )
-
-        if (!validation.isValid) {
-            return
-        }
-
-        changePasswordCalled = true
-        if (shouldSucceed) {
-            onResult(true, null)
-        } else {
-            onResult(false, "Error")
-        }
-    }
 }
 
 @RunWith(AndroidJUnit4::class)
@@ -66,6 +43,7 @@ class ChangePasswordScreenTest {
                     email = "test@example.com",
                 ),
             )
+        coEvery { mockRepository.changePassword(any(), any()) } returns Result.Success(Unit)
         fakeViewModel = FakeChangePasswordViewModel(mockRepository)
         composeTestRule.setContent {
             ChangePasswordScreen(
@@ -94,8 +72,9 @@ class ChangePasswordScreenTest {
         composeTestRule.onNodeWithText(labelConfirmPass).performTextInput("NewPass1!")
 
         composeTestRule.onNodeWithText(btnSave).performClick()
+        composeTestRule.waitForIdle()
 
-        assert(fakeViewModel.changePasswordCalled)
+        coVerify { mockRepository.changePassword("OldPass1!", "NewPass1!") }
     }
 
     @Test
@@ -121,6 +100,6 @@ class ChangePasswordScreenTest {
 
         composeTestRule.onNodeWithText(errorMsg).assertIsDisplayed()
 
-        assert(!fakeViewModel.changePasswordCalled)
+        coVerify(exactly = 0) { mockRepository.changePassword(any(), any()) }
     }
 }

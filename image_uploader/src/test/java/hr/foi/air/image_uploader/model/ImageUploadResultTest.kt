@@ -25,24 +25,22 @@ class ImageUploadResultTest {
     @Test
     fun `Success should contain data`() {
         val urls = listOf("url1", "url2")
-        val result: ImageUploadResult<List<String>> = ImageUploadResult.Success(urls)
+        val result = ImageUploadResult.Success(urls)
 
-        assertTrue(result is ImageUploadResult.Success)
-        assertEquals(urls, (result as ImageUploadResult.Success).data)
+        assertEquals(urls, result.data)
     }
 
     @Test
     fun `Error should contain message`() {
         val errorMessage = "Upload failed"
-        val result: ImageUploadResult<String> = ImageUploadResult.Error(errorMessage)
+        val result = ImageUploadResult.Error(errorMessage)
 
-        assertTrue(result is ImageUploadResult.Error)
-        assertEquals(errorMessage, (result as ImageUploadResult.Error).message)
+        assertEquals(errorMessage, result.message)
     }
 
     @Test
     fun `when expression should match all states`() {
-        val states = listOf(
+        val states: List<ImageUploadResult<String>> = listOf(
             ImageUploadResult.Idle,
             ImageUploadResult.Loading,
             ImageUploadResult.Success("data"),
@@ -63,38 +61,36 @@ class ImageUploadResultTest {
 
     @Test
     fun `Success with empty list should work`() {
-        val result: ImageUploadResult<List<String>> = ImageUploadResult.Success(emptyList())
+        val result = ImageUploadResult.Success(emptyList<String>())
 
-        assertTrue(result is ImageUploadResult.Success)
-        assertTrue((result as ImageUploadResult.Success).data.isEmpty())
+        assertTrue(result.data.isEmpty())
     }
 
     @Test
     fun `state transitions should be valid`() {
         var state: ImageUploadResult<String> = ImageUploadResult.Idle
-        assertTrue(state is ImageUploadResult.Idle)
+        assertEquals(ImageUploadResult.Idle, state)
 
         state = ImageUploadResult.Loading
-        assertTrue(state is ImageUploadResult.Loading)
+        assertEquals(ImageUploadResult.Loading, state)
 
         state = ImageUploadResult.Success("uploaded")
-        assertTrue(state is ImageUploadResult.Success)
+        assertEquals("uploaded", (state as ImageUploadResult.Success).data)
 
         state = ImageUploadResult.Idle
-        assertTrue(state is ImageUploadResult.Idle)
+        assertEquals(ImageUploadResult.Idle, state)
 
         state = ImageUploadResult.Loading
-        assertTrue(state is ImageUploadResult.Loading)
+        assertEquals(ImageUploadResult.Loading, state)
 
         state = ImageUploadResult.Error("failed")
-        assertTrue(state is ImageUploadResult.Error)
+        assertEquals("failed", (state as ImageUploadResult.Error).message)
     }
 
     @Test
     fun `Error with empty message should work`() {
-        val result: ImageUploadResult<String> = ImageUploadResult.Error("")
+        val result = ImageUploadResult.Error("")
 
-        assertTrue(result is ImageUploadResult.Error)
-        assertEquals("", (result as ImageUploadResult.Error).message)
+        assertEquals("", result.message)
     }
 }

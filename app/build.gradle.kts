@@ -25,6 +25,8 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         manifestPlaceholders["imageUploaderAuthority"] = "hr.foi.air.honnomachi.provider"
+
+        multiDexEnabled = true
     }
 
     buildTypes {
@@ -36,6 +38,7 @@ android {
             )
         }
         debug {
+            isMinifyEnabled = false
             enableUnitTestCoverage = true
             enableAndroidTestCoverage = true
         }
@@ -114,6 +117,7 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(project(":image_uploader"))
     implementation(libs.accompanist.permissions)
+    implementation("androidx.multidex:multidex:2.0.1")
 }
 
 tasks.withType<JavaCompile>().configureEach {

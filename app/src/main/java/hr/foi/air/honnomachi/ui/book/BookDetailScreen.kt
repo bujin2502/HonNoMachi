@@ -64,7 +64,6 @@ fun BookDetailScreen(
     val actionMessage by cartViewModel.actionMessage.collectAsState()
     val context = LocalContext.current
 
-    // Provjera je li knjiga već u košarici
     val isItemInCart =
         if (cartState is CartUiState.Success && bookId != null) {
             (cartState as CartUiState.Success).items.any { it.bookId == bookId }
@@ -170,13 +169,11 @@ fun BookDetailContent(
                 .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.Start,
     ) {
-        // odnosi se na slike
         val images = book.imageUrls.orEmpty()
         val imageRatio = 180f / 260f
 
         @OptIn(ExperimentalFoundationApi::class)
         if (images.isNotEmpty()) {
-            // Stanje pagera prati koja je slika trenutno aktivna
             val pagerState = rememberPagerState(pageCount = { images.size })
 
             HorizontalPager(
@@ -197,7 +194,6 @@ fun BookDetailContent(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Indikator trenutne slike
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
@@ -224,16 +220,13 @@ fun BookDetailContent(
             )
             Spacer(modifier = Modifier.height(24.dp))
         }
-        // kraj slike
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Redak koji sadrzi dva stupca
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            // lijevi stupac
             Column(
                 modifier = Modifier.weight(0.5f),
             ) {
@@ -247,7 +240,6 @@ fun BookDetailContent(
                 Text(text = book.publicationYear.toString(), style = MaterialTheme.typography.bodyLarge)
             }
 
-            // desni stupac
             Column(
                 modifier = Modifier.weight(0.5f),
                 horizontalAlignment = Alignment.End,
@@ -265,7 +257,7 @@ fun BookDetailContent(
 
         Button(
             onClick = onAddToCart,
-            enabled = !isItemInCart, // Onemogući gumb ako je u košarici
+            enabled = !isItemInCart,
             modifier =
                 Modifier
                     .fillMaxWidth(0.6f)

@@ -59,7 +59,6 @@ fun ProfileScreen(
     val uiState by profileViewModel.uiState.collectAsState()
     val formState by profileViewModel.formState.collectAsState()
 
-    // Determine if form has changes
     val hasChanges =
         if (uiState is ProfileUiState.Success) {
             val user = (uiState as ProfileUiState.Success).user
@@ -79,7 +78,6 @@ fun ProfileScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState()),
     ) {
-        // Header with Status (Left) and Logout (Right)
         Row(
             modifier =
                 Modifier
@@ -88,7 +86,6 @@ fun ProfileScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Status Section
             if (uiState is ProfileUiState.Success) {
                 val user = (uiState as ProfileUiState.Success).user
                 val isSuspended = user.suspended == true
@@ -109,10 +106,9 @@ fun ProfileScreen(
                     )
                 }
             } else {
-                Spacer(modifier = Modifier.width(1.dp)) // Placeholder to keep Logout to the right
+                Spacer(modifier = Modifier.width(1.dp))
             }
 
-            // Logout Button
             Button(
                 onClick = onLogout,
                 colors = ButtonDefaults.buttonColors(containerColor = LogoutButtonBackground),
@@ -142,7 +138,6 @@ fun ProfileScreen(
                     .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            // User Icon (based on Admin role)
             val icon =
                 if (uiState is ProfileUiState.Success && (uiState as ProfileUiState.Success).user.admin == true) {
                     Icons.Default.ManageAccounts
@@ -197,7 +192,6 @@ fun ProfileScreen(
                 }
             }
 
-            // Postavke privatnosti
             Spacer(modifier = Modifier.height(24.dp))
             Text(
                 text = stringResource(R.string.label_privacy_settings),
@@ -238,7 +232,6 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,

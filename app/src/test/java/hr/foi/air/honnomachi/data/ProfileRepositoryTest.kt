@@ -59,8 +59,6 @@ class ProfileRepositoryTest {
         unmockkObject(CrashlyticsManager.Companion)
     }
 
-    // --- getUserProfile ---
-
     @Test
     fun `getUserProfile no user returns error`() =
         runTest {
@@ -117,8 +115,6 @@ class ProfileRepositoryTest {
             )
         }
 
-    // --- updateUserProfile ---
-
     @Test
     fun `updateUserProfile no user returns error`() =
         runTest {
@@ -154,8 +150,6 @@ class ProfileRepositoryTest {
             assertTrue(result is Result.Success)
             assertEquals("Updated", (result as Result.Success).data.name)
         }
-
-    // --- changePassword ---
 
     @Test
     fun `changePassword no user returns error`() =

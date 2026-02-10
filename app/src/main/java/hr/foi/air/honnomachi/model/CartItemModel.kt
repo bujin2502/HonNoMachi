@@ -5,7 +5,7 @@ import com.google.firebase.firestore.DocumentId
 
 data class CartItemModel(
     @DocumentId
-    val id: String = "", // Firestore document ID, typically matches bookId
+    val id: String = "",
     val bookId: String = "",
     val title: String = "",
     val author: String = "",

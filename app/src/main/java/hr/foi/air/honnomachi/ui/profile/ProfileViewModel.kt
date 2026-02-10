@@ -39,7 +39,6 @@ open class ProfileViewModel
                     is Result.Success -> {
                         val user = result.data
                         _uiState.value = ProfileUiState.Success(user)
-                        // Initialize form state
                         _formState.update {
                             it.copy(
                                 name = user.name,
@@ -63,7 +62,6 @@ open class ProfileViewModel
             }
         }
 
-        // --- Form Update Methods ---
 
         open fun onNameChange(newValue: String) {
             _formState.update { it.copy(name = newValue, nameError = null) }
@@ -89,7 +87,6 @@ open class ProfileViewModel
             }
         }
 
-        // Postavke privatnosti switch button
         open fun onAnalyticsToggled(isEnabled: Boolean) {
             _formState.update { it.copy(analyticsEnabled = isEnabled) }
 
@@ -109,7 +106,6 @@ open class ProfileViewModel
             }
         }
 
-        // --- Validation Methods (e.g. on focus lost) ---
 
         open fun validateName() {
             val result = FormValidator.validateName(_formState.value.name)
@@ -136,7 +132,6 @@ open class ProfileViewModel
             _formState.update { it.copy(zipError = result.error) }
         }
 
-        // --- Save Logic ---
 
         open fun saveProfile(onResult: (Boolean, String?) -> Unit) {
             val currentState = _formState.value
@@ -159,7 +154,7 @@ open class ProfileViewModel
                         zipError = validation.zip.error,
                     )
                 }
-                onResult(false, "Molimo ispravno popunite sva polja.") // Or return specific error
+                onResult(false, "Molimo ispravno popunite sva polja.")
                 return
             }
 
@@ -191,7 +186,6 @@ open class ProfileViewModel
             }
         }
 
-        // --- Change Password Form Methods ---
 
         open fun onOldPasswordChange(newValue: String) {
             _changePasswordState.update { it.copy(oldPassword = newValue, oldPasswordError = null) }

@@ -45,8 +45,6 @@ class AuthRepositoryTest {
         unmockkStatic("kotlinx.coroutines.tasks.TasksKt")
     }
 
-    // --- currentUser ---
-
     @Test
     fun `currentUser returns null when not logged in`() {
         every { auth.currentUser } returns null
@@ -71,8 +69,6 @@ class AuthRepositoryTest {
         assertTrue(result?.isVerified == true)
     }
 
-    // --- signOut ---
-
     @Test
     fun `signOut returns success`() =
         runTest {
@@ -93,8 +89,6 @@ class AuthRepositoryTest {
             assertTrue(result is Result.Error)
             assertEquals("Sign out failed", (result as Result.Error).exception.message)
         }
-
-    // --- sendPasswordResetEmail ---
 
     @Test
     fun `sendPasswordResetEmail success`() =
@@ -120,8 +114,6 @@ class AuthRepositoryTest {
             assertTrue(result is Result.Error)
             assertEquals("User not found", (result as Result.Error).exception.message)
         }
-
-    // --- reloadUser ---
 
     @Test
     fun `reloadUser success`() =
@@ -153,8 +145,6 @@ class AuthRepositoryTest {
             assertEquals("Network error", (result as Result.Error).exception.message)
         }
 
-    // --- checkSession ---
-
     @Test
     fun `checkSession no user returns error`() =
         runTest {
@@ -168,8 +158,6 @@ class AuthRepositoryTest {
                 (result as Result.Error).exception.message,
             )
         }
-
-    // --- testSecureRead ---
 
     @Test
     fun `testSecureRead no user returns error`() =

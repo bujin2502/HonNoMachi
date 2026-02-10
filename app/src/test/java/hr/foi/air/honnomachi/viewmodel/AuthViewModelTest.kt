@@ -45,8 +45,6 @@ class AuthViewModelTest {
         Dispatchers.resetMain()
     }
 
-    // --- signup ---
-
     @Test
     fun `signup success updates uiState with user and needsVerification`() =
         runTest {
@@ -78,8 +76,6 @@ class AuthViewModelTest {
             assertFalse(uiState.isLoading)
         }
 
-    // --- login with unverified user ---
-
     @Test
     fun `login with unverified user sets needsVerification`() =
         runTest {
@@ -95,8 +91,6 @@ class AuthViewModelTest {
             assertTrue(uiState.needsVerification)
             assertEquals(AuthViewModel.ErrorMessages.VERIFY_EMAIL, uiState.errorMessage)
         }
-
-    // --- forgotPassword ---
 
     @Test
     fun `forgotPassword success clears error`() =
@@ -124,8 +118,6 @@ class AuthViewModelTest {
             assertEquals(errorMessage, uiState.errorMessage)
             assertFalse(uiState.isLoading)
         }
-
-    // --- checkSession ---
 
     @Test
     fun `checkSession success sets user logged in`() =
@@ -159,8 +151,6 @@ class AuthViewModelTest {
             assertFalse(uiState.isLoading)
         }
 
-    // --- testSecureRead ---
-
     @Test
     fun `testSecureRead success sets secureReadResult`() =
         runTest {
@@ -186,8 +176,6 @@ class AuthViewModelTest {
             assertNull(uiState.secureReadResult)
             assertEquals(errorMessage, uiState.errorMessage)
         }
-
-    // --- resendVerificationEmail ---
 
     @Test
     fun `resendVerificationEmail success sets result`() =
@@ -218,8 +206,6 @@ class AuthViewModelTest {
             assertEquals(errorMessage, uiState.errorMessage)
             assertFalse(uiState.isLoading)
         }
-
-    // --- checkVerificationStatus ---
 
     @Test
     fun `checkVerificationStatus success signs out and sets result`() =
@@ -254,8 +240,6 @@ class AuthViewModelTest {
             assertFalse(uiState.isLoading)
         }
 
-    // --- signOut resets state ---
-
     @Test
     fun `signOut resets uiState to default`() =
         runTest {
@@ -269,8 +253,6 @@ class AuthViewModelTest {
             assertNull(uiState.errorMessage)
             assertFalse(uiState.isLoading)
         }
-
-    // --- consume methods ---
 
     @Test
     fun `consumeErrorMessage clears error`() =

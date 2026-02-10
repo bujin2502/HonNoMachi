@@ -17,7 +17,6 @@ class CrashlyticsManager(
         crashlytics.setUserId(userId ?: "")
     }
 
-    // Biljezenje trenutnog ekrana na kojem je greska nastala i same greske
     override fun logException(exception: Throwable) {
         crashlytics.setCustomKey("current_screen", currentVisibleScreen)
         crashlytics.recordException(exception)

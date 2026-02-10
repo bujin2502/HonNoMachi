@@ -63,8 +63,6 @@ class CartRepositoryTest {
         unmockkObject(CrashlyticsManager.Companion)
     }
 
-    // --- addToCart ---
-
     @Test
     fun `addToCart no user returns error`() =
         runTest {
@@ -113,8 +111,6 @@ class CartRepositoryTest {
 
             assertTrue(result is Result.Success)
         }
-
-    // --- removeFromCart ---
 
     @Test
     fun `removeFromCart no user returns error`() =

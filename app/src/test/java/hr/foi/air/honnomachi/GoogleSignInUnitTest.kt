@@ -43,16 +43,13 @@ class GoogleSignInUnitTest {
     @Test
     fun `loginWithGoogle success updates uiState`() =
         runTest {
-            // Arrange
             val idToken = "test_id_token"
             val mockUser = UserModel(uid = "123", email = "test@gmail.com", isVerified = true)
             coEvery { mockAuthRepository.loginWithGoogle(idToken) } returns Result.Success(mockUser)
 
-            // Act
             authViewModel.loginWithGoogle(idToken)
             testDispatcher.scheduler.advanceUntilIdle()
 
-            // Assert
             val uiState = authViewModel.uiState.first()
             assertEquals(mockUser, uiState.user)
             assertTrue(uiState.isUserLoggedIn)
@@ -65,16 +62,13 @@ class GoogleSignInUnitTest {
     @Test
     fun `loginWithGoogle failure updates uiState`() =
         runTest {
-            // Arrange
             val idToken = "test_id_token"
             val error = "Google sign-in failed"
             coEvery { mockAuthRepository.loginWithGoogle(idToken) } returns Result.Error(Exception(error))
 
-            // Act
             authViewModel.loginWithGoogle(idToken)
             testDispatcher.scheduler.advanceUntilIdle()
 
-            // Assert
             val uiState = authViewModel.uiState.first()
             assertNull(uiState.user)
             assertFalse(uiState.isUserLoggedIn)

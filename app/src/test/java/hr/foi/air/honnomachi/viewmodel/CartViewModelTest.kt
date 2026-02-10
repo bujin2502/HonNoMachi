@@ -72,8 +72,6 @@ class CartViewModelTest {
             val book = BookModel(bookId = "1", title = "Test Book", price = 10.0)
             fakeRepository.addToCart(book)
 
-            // Re-init viewmodel to trigger load again or just wait if flow emits
-            // Since init block runs on creation, and repository flow emits updates, we just wait.
             advanceUntilIdle()
 
             val state = viewModel.uiState.value

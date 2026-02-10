@@ -55,7 +55,6 @@ fun AuthScreen(
     var isGoogleLoading by remember { mutableStateOf(false) }
     val uiState by authViewModel.uiState.collectAsState()
 
-    // Hoist the string resource out of the coroutine launch block
     val serverClientId = stringResource(id = R.string.default_web_client_id)
 
     LaunchedEffect(uiState.googleLoginResult) {
@@ -136,7 +135,6 @@ fun AuthScreen(
                             GetGoogleIdOption
                                 .Builder()
                                 .setFilterByAuthorizedAccounts(false)
-                                // Use the variable here instead of the composable function
                                 .setServerClientId(serverClientId)
                                 .setAutoSelectEnabled(true)
                                 .build()

@@ -58,8 +58,6 @@ class BookRepositoryTest {
         unmockkObject(CrashlyticsManager.Companion)
     }
 
-    // --- getBookDetails ---
-
     @Test
     fun `getBookDetails returns book successfully`() =
         runTest {
@@ -90,8 +88,6 @@ class BookRepositoryTest {
             assertTrue(result is Result.Error)
             assertEquals("Firestore error", (result as Result.Error).exception.message)
         }
-
-    // --- addBook ---
 
     @Test
     fun `addBook returns error when no user`() =

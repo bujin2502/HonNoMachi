@@ -43,7 +43,7 @@ class FormValidatorTest {
 
     @Test
     fun `invalid name format fails`() {
-        val result = FormValidator.validateName("User123") // Numbers not allowed
+        val result = FormValidator.validateName("User123")
         assertFalse(result.isValid)
         assertEquals(ValidationErrorType.INVALID_NAME_FORMAT, result.error)
     }
@@ -70,7 +70,6 @@ class FormValidatorTest {
 
     @Test
     fun `weak password fails strict validation`() {
-        // Needs Uppercase, Number, Special char
         val result = FormValidator.validateStrictPassword("password123")
         assertFalse(result.isValid)
         assertEquals(ValidationErrorType.WEAK_PASSWORD, result.error)
@@ -131,7 +130,7 @@ class FormValidatorTest {
 
     @Test
     fun `invalid street format fails`() {
-        val result = FormValidator.validateStreet("Main Street") // Missing number
+        val result = FormValidator.validateStreet("Main Street")
         assertFalse(result.isValid)
         assertEquals(ValidationErrorType.INVALID_STREET_FORMAT, result.error)
     }

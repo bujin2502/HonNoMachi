@@ -37,7 +37,6 @@ class LoginFlowTest {
     private lateinit var navController: TestNavHostController
     private lateinit var fakeLoginViewModel: FakeLoginViewModel
 
-    // Test podaci
     private val testEmail = "test@example.com"
     private val testPassword = "password123"
 
@@ -132,7 +131,6 @@ class LoginFlowTest {
     }
 }
 
-// Fake koji oponasa stvarni AuthViewModel-a
 private class FakeLoginViewModel(
     authRepository: AuthRepository,
     firebaseAuth: com.google.firebase.auth.FirebaseAuth,

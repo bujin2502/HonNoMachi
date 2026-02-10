@@ -27,7 +27,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-// Fake model
 class FakeHomeViewModel(
     bookRepository: BookRepository,
 ) : HomeViewModel(bookRepository) {
@@ -67,7 +66,7 @@ class FakeHomeViewModel(
         _uiState.update { it.copy(searchQuery = newQuery) }
     }
 
-    override fun getBooks() {} // Override to prevent actual data fetching
+    override fun getBooks() {}
 }
 
 @RunWith(AndroidJUnit4::class)
@@ -75,7 +74,6 @@ class HomePageTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    // Pomocna funkcija za pokretanje ekrana
     private fun launchHomePage(): FakeHomeViewModel {
         val fakeBookRepository =
             object : BookRepository {

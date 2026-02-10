@@ -62,7 +62,6 @@ open class ProfileViewModel
             }
         }
 
-
         open fun onNameChange(newValue: String) {
             _formState.update { it.copy(name = newValue, nameError = null) }
         }
@@ -106,7 +105,6 @@ open class ProfileViewModel
             }
         }
 
-
         open fun validateName() {
             val result = FormValidator.validateName(_formState.value.name)
             _formState.update { it.copy(nameError = result.error) }
@@ -131,7 +129,6 @@ open class ProfileViewModel
             val result = FormValidator.validateZip(_formState.value.zip)
             _formState.update { it.copy(zipError = result.error) }
         }
-
 
         open fun saveProfile(onResult: (Boolean, String?) -> Unit) {
             val currentState = _formState.value
@@ -185,7 +182,6 @@ open class ProfileViewModel
                 }
             }
         }
-
 
         open fun onOldPasswordChange(newValue: String) {
             _changePasswordState.update { it.copy(oldPassword = newValue, oldPasswordError = null) }

@@ -172,7 +172,8 @@ class ProfileRepositoryTest {
             mockkStatic("com.google.firebase.auth.EmailAuthProvider")
             val mockCredential = mockk<AuthCredential>()
             every {
-                com.google.firebase.auth.EmailAuthProvider.getCredential("test@example.com", "oldPass")
+                com.google.firebase.auth.EmailAuthProvider
+                    .getCredential("test@example.com", "oldPass")
             } returns mockCredential
 
             val mockReauthTask = mockk<Task<Void>>()
@@ -200,7 +201,8 @@ class ProfileRepositoryTest {
             mockkStatic("com.google.firebase.auth.EmailAuthProvider")
             val mockCredential = mockk<AuthCredential>()
             every {
-                com.google.firebase.auth.EmailAuthProvider.getCredential("test@example.com", "oldPass")
+                com.google.firebase.auth.EmailAuthProvider
+                    .getCredential("test@example.com", "oldPass")
             } returns mockCredential
 
             val mockReauthTask = mockk<Task<Void>>()

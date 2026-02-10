@@ -36,11 +36,9 @@ class LogoutUnitTest {
     @Test
     fun `signOut calls repository signOut`() =
         runTest {
-            // When
             authViewModel.signOut()
             testDispatcher.scheduler.advanceUntilIdle()
 
-            // Then
             coVerify { mockAuthRepository.signOut() }
         }
 }

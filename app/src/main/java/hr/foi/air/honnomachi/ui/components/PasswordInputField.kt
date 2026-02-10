@@ -15,18 +15,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.ValidationErrorType
 
-/**
- * Reusable password input field komponenta za auth ekrane.
- *
- * @param value Trenutna vrijednost password polja
- * @param onValueChange Callback kada se vrijednost promijeni
- * @param modifier Modifier za komponentu
- * @param error Opcionalna greška validacije
- * @param imeAction IME akcija za tipkovnicu (default: Done)
- * @param onImeAction Callback za IME akciju
- * @param label Opcionalni custom label (default: Password)
- * @param errorTestTag Test tag za error poruku
- */
 @Composable
 fun PasswordInputField(
     value: String,

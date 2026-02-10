@@ -14,18 +14,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.ValidationErrorType
 
-/**
- * Reusable email input field komponenta za auth ekrane.
- *
- * @param value Trenutna vrijednost email polja
- * @param onValueChange Callback kada se vrijednost promijeni
- * @param modifier Modifier za komponentu
- * @param error Opcionalna greška validacije
- * @param imeAction IME akcija za tipkovnicu (default: Next)
- * @param onImeAction Callback za IME akciju
- * @param label Opcionalni custom label (default: Email address)
- * @param errorTestTag Test tag za error poruku
- */
 @Composable
 fun EmailInputField(
     value: String,

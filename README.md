@@ -16,7 +16,7 @@
 
 ---
 
-## 📋 Sadržaj
+## Sadržaj
 
 - [O projektu](#-o-projektu)
 - [Tech Stack](#-tech-stack)
@@ -29,17 +29,17 @@
 
 ---
 
-## 🎯 O projektu
+## O projektu
 
 HonNoMachi (本の街 - "Grad knjiga") je mobilna platforma koja spaja kupce i prodavače rabljenih knjiga. Aplikacija pruža intuitivno korisničko iskustvo s fokusom na sigurnost transakcija i jednostavnost korištenja.
 
 **Ključne značajke:**
-- 🔐 Sigurna autentifikacija korisnika (Email/Lozinka, Google OAuth)
-- 📚 Pretraživanje i filtriranje knjiga po nazivu, žanru i autoru
-- 🛒 Košarica s integriranim plaćanjem
-- 💰 Simulacija plaćanja putem Stripe integracije
-- 👤 Upravljanje korisničkim profilom
-- 🛡️ Administratorski panel za moderaciju
+- Sigurna autentifikacija korisnika (Email/Lozinka, Google OAuth)
+- Pretraživanje i filtriranje knjiga po nazivu, žanru i autoru
+- Košarica s integriranim plaćanjem
+- Simulacija plaćanja putem Stripe integracije
+- Upravljanje korisničkim profilom
+- Administratorski panel za moderaciju
 
 ---
 
@@ -53,14 +53,14 @@ HonNoMachi (本の街 - "Grad knjiga") je mobilna platforma koja spaja kupce i p
 | **Backend**              | Firebase (Authentication, Firestore, Cloud Functions) |
 | **Plaćanje**             | Stripe Android SDK (simulacija)                       |
 | **Async Operations**     | Kotlin Coroutines + Flow                              |
-| **Dependency Injection** | Manual / Hilt (planirano)                             |
+| **Dependency Injection** | Hilt                                                  |
 | **Version Control**      | Git / GitHub (Git Flow workflow)                      |
-| **CI/CD**                | GitHub Actions (planirano)                            |
+| **CI/CD**                | GitHub Actions                                        |
 | **Project Management**   | Jira + Confluence                                     |
 
 ---
 
-## ⚙️ Preduvjeti
+## Preduvjeti
 
 Prije nego započnete s instalacijom, provjerite imate li sljedeće:
 
@@ -73,7 +73,7 @@ Prije nego započnete s instalacijom, provjerite imate li sljedeće:
 
 ---
 
-## 📥 Instalacija
+## Instalacija
 
 ### 1. Kloniranje repozitorija
 
@@ -84,7 +84,7 @@ cd HonNoMachi
 
 ### 2. Firebase konfiguracija
 
-> ⚠️ **Važno:** Datoteka `google-services.json` nije uključena u repozitorij zbog sigurnosnih razloga.
+> **Važno:** Datoteka `google-services.json` nije uključena u repozitorij zbog sigurnosnih razloga.
 
 **Opcija A:** Zatražite datoteku od člana tima putem sigurnog kanala.
 
@@ -102,18 +102,18 @@ cd HonNoMachi
 3. Povežite Android uređaj ili pokrenite emulator
 4. Kliknite **Run 'app'** ili koristite `Shift + F10`
 
-### 📖 Detaljne upute
+### Detaljne upute
 
 Za detaljnije upute o postavljanju projekta, pogledajte:
-👉 **[Development Setup - Confluence](https://25-26-izvanredni-tim.atlassian.net/wiki/x/DIDE)**
+**[Development Setup - Confluence](https://25-26-izvanredni-tim.atlassian.net/wiki/x/DIDE)**
 
 ---
 
-## 📱 Funkcionalnosti
+## Funkcionalnosti
 
-### ✅ Implementirano (Sprint 01)
+### Sprint 01
 
-#### 🔐 Autentifikacija korisnika
+#### Autentifikacija korisnika
 | Funkcionalnost                | Status | Opis                                                |
 |-------------------------------|--------|-----------------------------------------------------|
 | Registracija (Email/Lozinka)  | ✅      | Kreiranje računa s validacijom podataka             |
@@ -123,38 +123,48 @@ Za detaljnije upute o postavljanju projekta, pogledajte:
 | Ponovno slanje verifikacije   | ✅      | Opcija za slanje novog verifikacijskog emaila       |
 | Pohrana korisnika (Firestore) | ✅      | Spremanje korisničkih podataka u bazu               |
 
-### 🚧 Planirano (Sprint 02+)
+### Sprint 02
 
-#### 🔐 Autentifikacija
+#### Autentifikacija
 - [ ] Google OAuth prijava (Gmail račun)
 - [ ] Reset lozinke (zaboravljena lozinka)
 
-#### 📚 Upravljanje knjigama
+#### Upravljanje knjigama
 - [ ] Pregled svih dostupnih knjiga (HomePage)
 - [ ] Pretraga i filtriranje (naziv, žanr, autor)
 - [ ] Detaljni pregled pojedine knjige
 - [ ] Kreiranje nove ponude knjige za prodaju
 - [ ] Upravljanje vlastitim ponudama (aktivne/neaktivne)
 
-#### 🛒 Kupovina
+#### Kupovina
 - [ ] Dodavanje knjiga u košaricu
 - [ ] Pregled košarice s izračunom ukupnog iznosa
 - [ ] Stripe integracija za simulaciju plaćanja
 - [ ] Potvrda narudžbe i sažetak plaćanja
 - [ ] Portfelj kupljenih knjiga (Moja knjižnica)
 
-#### 👤 Korisnički profil
+#### Korisnički profil
 - [ ] Ažuriranje podataka (ime, kontakt, adresa)
 - [ ] Promjena lozinke
 
-#### 🛡️ Administrator panel
+#### Administrator panel
 - [ ] Pregled i upravljanje korisnicima
 - [ ] Suspenzija/reaktivacija korisničkih računa
 - [ ] Pregled i upravljanje svim knjigama u ponudi
 
+### Sprint 03
+
+### Sprint 04
+
+### Sprint 05
+
+### Sprint 06
+
+### Sprint 07
+
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Projekt koristi **Git Flow** workflow sa sljedećom strukturom grana:
 
@@ -169,11 +179,11 @@ Projekt koristi **Git Flow** workflow sa sljedećom strukturom grana:
 
 ---
 
-## 📚 Dokumentacija
+## Dokumentacija
 
 Kompletan **Project Wiki** dostupan je na Confluence:
 
-👉 **[HonNoMachi Confluence Space](https://25-26-izvanredni-tim.atlassian.net/wiki/spaces/HNMT/overview)**
+**[HonNoMachi Confluence Space](https://25-26-izvanredni-tim.atlassian.net/wiki/spaces/HNMT/overview)**
 
 ### Ključne stranice
 
@@ -191,7 +201,7 @@ Kompletan **Project Wiki** dostupan je na Confluence:
 
 ---
 
-## 👥 Tim
+## Tim
 
 Projekt razvija tim studenata **Fakulteta organizacije i informatike (FOI)**, Varaždin.
 
@@ -202,7 +212,7 @@ Projekt razvija tim studenata **Fakulteta organizacije i informatike (FOI)**, Va
 | **Zlatko Pračić**   | zpracic@student.foi.hr     | Developer |
 | **Mislav Žnidarec** | mznidarec@student.foi.hr   | Developer |
 
-📧 **Kontakt tima:** [Confluence - Informacije o timu](https://25-26-izvanredni-tim.atlassian.net/wiki/x/BACg)
+**Kontakt tima:** [Confluence - Informacije o timu](https://25-26-izvanredni-tim.atlassian.net/wiki/x/BACg)
 
 ---
 
@@ -215,6 +225,6 @@ Projekt razvija tim studenata **Fakulteta organizacije i informatike (FOI)**, Va
 ---
 
 **Status projekta:** 🟢 Sprint 02 - Završava se | Sprint 03 - U planiranju
-**Zadnje ažuriranje:** 17.12.2025
+**Zadnje ažuriranje:** 04.02.2026
 
 </div>

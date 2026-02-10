@@ -28,7 +28,7 @@ data class ProfileFormState(
     val zipError: ValidationErrorType? = null,
     val analyticsEnabled: Boolean = true,
     val isSaving: Boolean = false,
-    val isFormValid: Boolean = true, // aggregated validity
+    val isFormValid: Boolean = true,
 )
 
 data class ChangePasswordFormState(

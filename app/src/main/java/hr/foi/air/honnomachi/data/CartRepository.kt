@@ -40,7 +40,6 @@ class CartRepositoryImpl
                             imageUrl = book.imageUrls?.firstOrNull(),
                         )
 
-                    // Koristimo bookId kao document ID da spriječimo duplikate
                     firestore
                         .collection("users")
                         .document(currentUser.uid)

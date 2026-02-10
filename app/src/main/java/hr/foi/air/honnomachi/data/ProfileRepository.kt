@@ -95,7 +95,6 @@ class ProfileRepositoryImpl
                         .update(updates)
                         .await()
 
-                    // Fetch updated user
                     val document =
                         firestore
                             .collection("users")
@@ -151,10 +150,8 @@ class ProfileRepositoryImpl
 
                 val credential = EmailAuthProvider.getCredential(user.email!!, oldPassword)
 
-                // Re-authenticate first
                 user.reauthenticate(credential).await()
 
-                // Then update password
                 user.updatePassword(newPassword).await()
 
                 Result.Success(Unit)

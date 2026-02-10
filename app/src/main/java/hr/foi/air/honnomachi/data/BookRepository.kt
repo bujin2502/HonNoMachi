@@ -33,7 +33,7 @@ class BookRepositoryImpl
                         .collection("books")
                         .addSnapshotListener { snapshot, error ->
                             if (error != null) {
-                                CrashlyticsManager.instance.logException(error) // Keep Crashlytics logging
+                                CrashlyticsManager.instance.logException(error)
                                 trySend(Result.Error(error))
                                 return@addSnapshotListener
                             }
@@ -60,7 +60,7 @@ class BookRepositoryImpl
                         .toObject(BookModel::class.java)
                 Result.Success(book)
             } catch (e: Exception) {
-                CrashlyticsManager.instance.logException(e) // Keep Crashlytics logging
+                CrashlyticsManager.instance.logException(e)
                 Result.Error(e)
             }
 
@@ -81,7 +81,7 @@ class BookRepositoryImpl
                     Result.Success(document.id)
                 }
             } catch (e: Exception) {
-                CrashlyticsManager.instance.logException(e) // Keep Crashlytics logging
+                CrashlyticsManager.instance.logException(e)
                 Result.Error(e)
             }
     }

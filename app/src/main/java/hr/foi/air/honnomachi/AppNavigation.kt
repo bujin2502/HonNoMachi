@@ -54,9 +54,7 @@ fun AppNavigation(
         }
 
         navController.navigate(route) {
-            // Briše sve prethodne ekrane sa stacka
             popUpTo(navController.graph.startDestinationId) { inclusive = true }
-            // Osigurava da se ne stvori nova instanca ako smo već na cilju
             launchSingleTop = true
         }
     }
@@ -69,7 +67,6 @@ fun AppNavigation(
     }
 
     NavHost(navController = navController, startDestination = "auth") {
-        // Svi vaši `composable` pozivi ostaju potpuno isti
         composable("auth") {
             AuthScreen(modifier, navController, authViewModel)
         }

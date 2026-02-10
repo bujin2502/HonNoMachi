@@ -40,4 +40,25 @@ class ImageSourceInitializerTest {
         assertNotNull(gallerySource)
         assertEquals("gallery", gallerySource?.id)
     }
+
+    @Test
+    fun `initialize is idempotent - calling twice does not duplicate sources`() {
+        ImageSourceInitializer.initialize()
+        ImageSourceInitializer.initialize()
+
+        val sources = ImageSourceRegistry.getAllSources()
+        assertEquals(2, sources.size)
+    }
+
+    @Test
+    fun `reset clears sources and allows re-initialization`() {
+        ImageSourceInitializer.initialize()
+        assertEquals(2, ImageSourceRegistry.getAllSources().size)
+
+        ImageSourceInitializer.reset()
+        assertEquals(0, ImageSourceRegistry.getAllSources().size)
+
+        ImageSourceInitializer.initialize()
+        assertEquals(2, ImageSourceRegistry.getAllSources().size)
+    }
 }

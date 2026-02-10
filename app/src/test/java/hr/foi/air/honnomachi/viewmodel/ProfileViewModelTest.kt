@@ -54,16 +54,13 @@ class ProfileViewModelTest {
                 hr.foi.air.honnomachi.util.Result
                     .Success(userModel)
 
-            // Init ViewModel (triggers loadUserProfile)
             val viewModel = ProfileViewModel(profileRepository)
             advanceUntilIdle()
 
-            // Verify Success State
             val state = viewModel.uiState.value
             assertTrue(state is ProfileUiState.Success)
             assertEquals(userModel, (state as ProfileUiState.Success).user)
 
-            // Verify Form State Initialized
             val formState = viewModel.formState.value
             assertEquals("Test User", formState.name)
             assertEquals("1234567890", formState.phone)
@@ -75,7 +72,6 @@ class ProfileViewModelTest {
     @Test
     fun `saveProfile success updates uiState`() =
         runTest(testDispatcher) {
-            // --- Setup Load ---
             val initialUser =
                 UserModel(
                     name = "Old Name",
@@ -89,14 +85,12 @@ class ProfileViewModelTest {
             val viewModel = ProfileViewModel(profileRepository)
             advanceUntilIdle()
 
-            // --- Perform Change ---
             viewModel.onNameChange("New Name")
             viewModel.onPhoneChange("0912345678")
             viewModel.onStreetChange("New Street 1")
             viewModel.onCityChange("New City")
             viewModel.onZipChange("54321")
 
-            // --- Mock Save ---
             val updatedUser =
                 initialUser.copy(
                     name = "New Name",
@@ -109,12 +103,10 @@ class ProfileViewModelTest {
                 hr.foi.air.honnomachi.util.Result
                     .Success(updatedUser)
 
-            // Execute Save
             var successCalled = false
             viewModel.saveProfile { success, _ -> successCalled = success }
             advanceUntilIdle()
 
-            // Verify
             assertTrue(successCalled)
             val state = viewModel.uiState.value
             assertTrue(state is ProfileUiState.Success)
@@ -127,7 +119,6 @@ class ProfileViewModelTest {
     @Test
     fun `saveProfile fails with validation error`() =
         runTest(testDispatcher) {
-            // --- Setup Load ---
             val initialUser = UserModel(uid = "test-uid")
             coEvery { profileRepository.getUserProfile() } returns
                 hr.foi.air.honnomachi.util.Result
@@ -136,8 +127,7 @@ class ProfileViewModelTest {
             val viewModel = ProfileViewModel(profileRepository)
             advanceUntilIdle()
 
-            // --- Invalid Data ---
-            viewModel.onNameChange("") // Empty Name
+            viewModel.onNameChange("")
 
             var successCalled = true
             var errorMessage: String? = null
@@ -148,11 +138,9 @@ class ProfileViewModelTest {
             }
             advanceUntilIdle()
 
-            // Verify failure
             assertEquals(false, successCalled)
             assertEquals("Molimo ispravno popunite sva polja.", errorMessage)
 
-            // Verify Form State has error
             val form = viewModel.formState.value
             assertEquals(hr.foi.air.honnomachi.ValidationErrorType.EMPTY_NAME, form.nameError)
         }

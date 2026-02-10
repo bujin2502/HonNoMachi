@@ -6,7 +6,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class FormValidatorTest {
-    // --- Email Tests ---
     @Test
     fun `empty email fails with required error`() {
         val result = FormValidator.validateEmail("")
@@ -28,7 +27,6 @@ class FormValidatorTest {
         assertEquals(null, result.error)
     }
 
-    // --- Name Tests ---
     @Test
     fun `short name fails validation`() {
         val result = FormValidator.validateName("A")
@@ -45,7 +43,7 @@ class FormValidatorTest {
 
     @Test
     fun `invalid name format fails`() {
-        val result = FormValidator.validateName("User123") // Numbers not allowed
+        val result = FormValidator.validateName("User123")
         assertFalse(result.isValid)
         assertEquals(ValidationErrorType.INVALID_NAME_FORMAT, result.error)
     }
@@ -56,7 +54,6 @@ class FormValidatorTest {
         assertTrue(result.isValid)
     }
 
-    // --- Basic Password Tests ---
     @Test
     fun `blank password fails validation`() {
         val result = FormValidator.validatePassword("")
@@ -71,10 +68,8 @@ class FormValidatorTest {
         assertEquals(ValidationErrorType.SHORT_PASSWORD, result.error)
     }
 
-    // --- Strict Password Tests ---
     @Test
     fun `weak password fails strict validation`() {
-        // Needs Uppercase, Number, Special char
         val result = FormValidator.validateStrictPassword("password123")
         assertFalse(result.isValid)
         assertEquals(ValidationErrorType.WEAK_PASSWORD, result.error)
@@ -86,7 +81,6 @@ class FormValidatorTest {
         assertTrue(result.isValid)
     }
 
-    // --- Password Confirmation Tests ---
     @Test
     fun `password confirmation mismatch fails`() {
         val result = FormValidator.validatePasswordConfirmation("Password123!", "Password123")
@@ -107,7 +101,6 @@ class FormValidatorTest {
         assertEquals(ValidationErrorType.EMPTY_PASSWORD, result.error)
     }
 
-    // --- Phone Tests ---
     @Test
     fun `empty phone fails`() {
         val result = FormValidator.validatePhone("")
@@ -128,7 +121,6 @@ class FormValidatorTest {
         assertTrue(result.isValid)
     }
 
-    // --- Address Tests ---
     @Test
     fun `empty street fails`() {
         val result = FormValidator.validateStreet("")
@@ -138,7 +130,7 @@ class FormValidatorTest {
 
     @Test
     fun `invalid street format fails`() {
-        val result = FormValidator.validateStreet("Main Street") // Missing number
+        val result = FormValidator.validateStreet("Main Street")
         assertFalse(result.isValid)
         assertEquals(ValidationErrorType.INVALID_STREET_FORMAT, result.error)
     }
@@ -181,8 +173,6 @@ class FormValidatorTest {
         val result = FormValidator.validateZip("10000")
         assertTrue(result.isValid)
     }
-
-    // --- Aggregate Forms Tests ---
 
     @Test
     fun `valid signup form passes aggregate validation`() {

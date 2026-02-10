@@ -46,15 +46,12 @@ class LoginUnitTest {
     @Test
     fun `login success updates uiState with user`() =
         runTest {
-            // Arrange
             val mockUser = UserModel(uid = "123", email = testEmail, isVerified = true)
             coEvery { mockAuthRepository.login(testEmail, testPassword) } returns Result.Success(mockUser)
 
-            // Act
             authViewModel.login(testEmail, testPassword)
             testDispatcher.scheduler.advanceUntilIdle()
 
-            // Assert
             val uiState = authViewModel.uiState.first()
             assertEquals(mockUser, uiState.user)
             assertTrue(uiState.isUserLoggedIn)
@@ -66,15 +63,12 @@ class LoginUnitTest {
     @Test
     fun `login failure updates uiState with error`() =
         runTest {
-            // Arrange
             val errorMessage = "Invalid credentials"
             coEvery { mockAuthRepository.login(testEmail, testPassword) } returns Result.Error(Exception(errorMessage))
 
-            // Act
             authViewModel.login(testEmail, testPassword)
             testDispatcher.scheduler.advanceUntilIdle()
 
-            // Assert
             val uiState = authViewModel.uiState.first()
             assertNull(uiState.user)
             assertFalse(uiState.isUserLoggedIn)

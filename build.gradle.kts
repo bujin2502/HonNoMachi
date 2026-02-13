@@ -14,8 +14,8 @@ plugins {
 
 sonar {
     properties {
-        property("sonar.projectKey", "25-26-izvanredni-tim_HonNoMachi")
-        property("sonar.organization", "25-26-izvanredni-tim")
+        property("sonar.projectKey", "bujin2502_HonNoMachi")
+        property("sonar.organization", "bujin2502")
         property("sonar.host.url", "https://sonarcloud.io")
         property(
             "sonar.coverage.jacoco.xmlReportPaths",

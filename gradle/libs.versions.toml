@@ -23,6 +23,7 @@ playServicesAuth = "21.5.0"
 foundationLayout = "1.10.0"
 kotlinxCoroutinesTest = "1.10.2"
 ktlint = "14.0.1"
+sonarqube = "6.0.1.5171"
 mockk = "1.14.7"
 firebaseCrashlytics = "3.0.6"
 ksp = "2.2.21-2.0.4"
@@ -95,3 +96,4 @@ firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 android-library = { id = "com.android.library", version.ref = "agp" }
+sonarqube = { id = "org.sonarqube", version.ref = "sonarqube" }

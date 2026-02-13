@@ -28,29 +28,29 @@ class CameraImageSource : ImageSource {
 
     @OptIn(ExperimentalPermissionsApi::class)
     @Composable
-    override fun rememberLauncher(
-        onImageSelected: (List<Uri>) -> Unit
-    ): () -> Unit {
+    override fun rememberLauncher(onImageSelected: (List<Uri>) -> Unit): () -> Unit {
         val context = LocalContext.current
         val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
 
         var tempImageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
 
-        val cameraLauncher = rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.TakePicture(),
-            onResult = { success ->
-                if (success && tempImageUri != null) {
-                    onImageSelected(listOf(tempImageUri!!))
-                    tempImageUri = null
-                }
-            }
-        )
+        val cameraLauncher =
+            rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.TakePicture(),
+                onResult = { success ->
+                    if (success && tempImageUri != null) {
+                        onImageSelected(listOf(tempImageUri!!))
+                        tempImageUri = null
+                    }
+                },
+            )
 
         return {
             if (cameraPermissionState.status.isGranted) {
-                val tmpFile = File.createTempFile("tmp_image_file", ".png", context.cacheDir).apply {
-                    createNewFile()
-                }
+                val tmpFile =
+                    File.createTempFile("tmp_image_file", ".png", context.cacheDir).apply {
+                        createNewFile()
+                    }
                 val uri = FileProvider.getUriForFile(context, "hr.foi.air.image_uploader.provider", tmpFile)
                 tempImageUri = uri
                 cameraLauncher.launch(uri)

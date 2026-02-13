@@ -5,7 +5,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ImageUploadResultTest {
-
     @Test
     fun `Idle should be singleton`() {
         val idle1 = ImageUploadResult.Idle
@@ -40,21 +39,23 @@ class ImageUploadResultTest {
 
     @Test
     fun `when expression should match all states`() {
-        val states: List<ImageUploadResult<String>> = listOf(
-            ImageUploadResult.Idle,
-            ImageUploadResult.Loading,
-            ImageUploadResult.Success("data"),
-            ImageUploadResult.Error("error")
-        )
+        val states: List<ImageUploadResult<String>> =
+            listOf(
+                ImageUploadResult.Idle,
+                ImageUploadResult.Loading,
+                ImageUploadResult.Success("data"),
+                ImageUploadResult.Error("error"),
+            )
 
-        val results = states.map { state ->
-            when (state) {
-                is ImageUploadResult.Idle -> "idle"
-                is ImageUploadResult.Loading -> "loading"
-                is ImageUploadResult.Success -> "success: ${state.data}"
-                is ImageUploadResult.Error -> "error: ${state.message}"
+        val results =
+            states.map { state ->
+                when (state) {
+                    is ImageUploadResult.Idle -> "idle"
+                    is ImageUploadResult.Loading -> "loading"
+                    is ImageUploadResult.Success -> "success: ${state.data}"
+                    is ImageUploadResult.Error -> "error: ${state.message}"
+                }
             }
-        }
 
         assertEquals(listOf("idle", "loading", "success: data", "error: error"), results)
     }

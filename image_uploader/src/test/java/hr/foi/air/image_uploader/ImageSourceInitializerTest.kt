@@ -7,7 +7,6 @@ import org.junit.Before
 import org.junit.Test
 
 class ImageSourceInitializerTest {
-
     @Before
     fun setup() {
         ImageSourceInitializer.reset()

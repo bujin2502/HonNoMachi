@@ -16,17 +16,16 @@ class GalleryImageSource : ImageSource {
     override val icon: ImageVector = Icons.Default.PhotoLibrary
 
     @Composable
-    override fun rememberLauncher(
-        onImageSelected: (List<Uri>) -> Unit
-    ): () -> Unit {
-        val launcher = rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.GetMultipleContents(),
-            onResult = { uris ->
-                if (uris.isNotEmpty()) {
-                    onImageSelected(uris)
-                }
-            }
-        )
+    override fun rememberLauncher(onImageSelected: (List<Uri>) -> Unit): () -> Unit {
+        val launcher =
+            rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.GetMultipleContents(),
+                onResult = { uris ->
+                    if (uris.isNotEmpty()) {
+                        onImageSelected(uris)
+                    }
+                },
+            )
 
         return { launcher.launch("image/*") }
     }

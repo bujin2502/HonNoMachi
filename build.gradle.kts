@@ -17,13 +17,12 @@ sonar {
         property("sonar.projectKey", "bujin2502_HonNoMachi")
         property("sonar.organization", "bujin2502")
         property("sonar.host.url", "https://sonarcloud.io")
-        property("sonar.token", System.getenv("SONAR_TOKEN"))
         property(
             "sonar.coverage.jacoco.xmlReportPaths",
             listOf(
                 "${project(":app").layout.buildDirectory.get()}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml",
-                "${project(":image_uploader").layout.buildDirectory.get()}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml"
-            ).joinToString(",")
+                "${project(":image_uploader").layout.buildDirectory.get()}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml",
+            ).joinToString(","),
         )
     }
 }

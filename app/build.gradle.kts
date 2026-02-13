@@ -12,6 +12,13 @@ plugins {
     jacoco
 }
 
+ktlint {
+    reporters {
+        reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.HTML)
+        reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.PLAIN)
+    }
+}
+
 android {
     namespace = "hr.foi.air.honnomachi"
     compileSdk = 36

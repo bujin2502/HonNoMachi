@@ -24,6 +24,7 @@
 - [Instalacija](#-instalacija)
 - [Funkcionalnosti](#-funkcionalnosti)
 - [Contributing](#-contributing)
+- [DevOps](#%EF%B8%8F-devops)
 - [Dokumentacija](#-dokumentacija)
 - [Tim](#-tim)
 
@@ -43,7 +44,7 @@ HonNoMachi (本の街 - "Grad knjiga") je mobilna platforma koja spaja kupce i p
 
 ---
 
-## 🔧 Tech Stack
+## Tech Stack
 
 | Kategorija               | Tehnologija                                           |
 |--------------------------|-------------------------------------------------------|
@@ -53,9 +54,9 @@ HonNoMachi (本の街 - "Grad knjiga") je mobilna platforma koja spaja kupce i p
 | **Backend**              | Firebase (Authentication, Firestore, Cloud Functions) |
 | **Plaćanje**             | Stripe Android SDK (simulacija)                       |
 | **Async Operations**     | Kotlin Coroutines + Flow                              |
-| **Dependency Injection** | Hilt                                                  |
+| **Dependency Injection** | Manual / Hilt (planirano)                             |
 | **Version Control**      | Git / GitHub (Git Flow workflow)                      |
-| **CI/CD**                | GitHub Actions                                        |
+| **CI/CD**                | GitHub Actions ([dokumentacija](docs/CICD_DEVOPS.md)) |
 | **Project Management**   | Jira + Confluence                                     |
 
 ---
@@ -109,21 +110,21 @@ Za detaljnije upute o postavljanju projekta, pogledajte:
 
 ---
 
-## Funkcionalnosti
+## 📱 Funkcionalnosti
 
-### Sprint 01
+### Implementirano (Sprint 01)
 
 #### Autentifikacija korisnika
-| Funkcionalnost                | Status | Opis                                                |
-|-------------------------------|--------|-----------------------------------------------------|
-| Registracija (Email/Lozinka)  | ✅      | Kreiranje računa s validacijom podataka             |
-| Email verifikacija            | ✅      | Firebase Authentication verifikacijski tok          |
-| Prijava/Odjava                | ✅      | Sigurna autentifikacija postojećih korisnika        |
-| Validacija forme              | ✅      | Real-time provjera email formata i politike lozinke |
-| Ponovno slanje verifikacije   | ✅      | Opcija za slanje novog verifikacijskog emaila       |
-| Pohrana korisnika (Firestore) | ✅      | Spremanje korisničkih podataka u bazu               |
+| Funkcionalnost                |  Opis                                                |
+|-------------------------------|-----------------------------------------------------|
+| Registracija (Email/Lozinka)  | Kreiranje računa s validacijom podataka             |
+| Email verifikacija            | Firebase Authentication verifikacijski tok          |
+| Prijava/Odjava                | Sigurna autentifikacija postojećih korisnika        |
+| Validacija forme              | Real-time provjera email formata i politike lozinke |
+| Ponovno slanje verifikacije   | Opcija za slanje novog verifikacijskog emaila       |
+| Pohrana korisnika (Firestore) | Spremanje korisničkih podataka u bazu               |
 
-### Sprint 02
+### Planirano (Sprint 02+)
 
 #### Autentifikacija
 - [ ] Google OAuth prijava (Gmail račun)
@@ -179,6 +180,88 @@ Projekt koristi **Git Flow** workflow sa sljedećom strukturom grana:
 
 ---
 
+## DevOps
+
+Projekt koristi DevOps prakse za automatizaciju procesa razvoja, testiranja i isporuke. Detaljnija dokumentacija dostupna je u [CI/CD i DevOps](docs/CICD_DEVOPS.md).
+
+### 1. Verzioniranje programskog koda
+
+- [x] **Git** kao sustav za kontrolu verzija s **Git Flow** workflow strategijom
+- [x] **GitHub** kao udaljeni repozitorij i platforma za suradnju
+- [x] Struktura grana: `master` (produkcija), `develop` (razvoj), `feature/*`, `bugfix/*`, `release/*`
+- [x] Obvezni **Pull Requesti** s code reviewom prije merga u `develop`
+
+### 2. Izgradnja
+
+- [x] **Gradle (Kotlin DSL)** kao sustav za izgradnju projekta
+- [x] Automatska izgradnja **Debug APK-a** unutar CI pipeline-a na svakom push-u i PR-u
+- [x] Automatska izgradnja **Release APK-a** pri push-u na `master` granu
+- [x] Konfiguracija: `compileSdk = 36`, `minSdk = 26`, `targetSdk = 36`, `JDK 17`
+
+### 3. Kontinuirana integracija (CI)
+
+CI pipeline pokreće se automatski na svakom `push` i `pull request` prema `master` i `develop` granama putem **GitHub Actions**. Pipeline uključuje:
+
+| Korak | Opis |
+|-------|------|
+| **Lint provjera** | KTlint i Android Lint analiza koda |
+| **Unit testovi** | Pokretanje unit testova s generiranjem JaCoCo izvještaja o pokrivenosti koda |
+| **Build Debug APK** | Kompilacija debug verzije aplikacije (nakon uspješnog lint-a i testova) |
+| **Build Release APK** | Kompilacija release verzije (samo pri push-u na `master`) |
+
+### 4. Automatsko testiranje
+
+- [x] **JUnit** za unit testove
+- [x] **MockK** za mockiranje ovisnosti u testovima
+- [x] **Jetpack Compose Testing** (`ui-test-junit4`) za testiranje UI komponenti
+- [x] **Espresso** za instrumentacijske (androidTest) testove
+- [x] **Coroutines Test** (`kotlinx-coroutines-test`) za testiranje asinkronog koda
+- [x] **Navigation Testing** za testiranje navigacijskih tokova
+- [x] Automatsko pokretanje testova u CI pipeline-u na svakom push-u i PR-u
+
+### 5. Kontinuirana isporuka (CD)
+
+> **U planiranju** — CD pipeline još nije implementiran.
+
+Planirane aktivnosti za kontinuiranu isporuku:
+- [ ] Automatsko potpisivanje release APK-a (keystore putem GitHub Secrets)
+- [ ] Distribucija putem Firebase App Distribution za interni QA
+- [ ] Automatski deployment na Google Play (Internal Testing track)
+- [ ] Verzioniranje buildova na temelju Git tagova
+
+### 6. Analiza kvalitete programskog koda
+
+- [x] **KTlint** — statička analiza i provjera stila Kotlin koda prema službenim konvencijama
+- [x] **Android Lint** — detekcija potencijalnih bugova, sigurnosnih propusta i performansnih problema
+- [x] **JaCoCo** — generiranje izvještaja o pokrivenosti koda testovima (XML + HTML)
+- [x] **SonarCloud** — kontinuirana inspekcija kvalitete koda (statička analiza, code smells, bugovi, sigurnosni propusti) s integracijom JaCoCo izvještaja za prikaz pokrivenosti koda
+- [x] Upload lint i JaCoCo izvještaja kao CI artefakata za pregled nakon svakog builda
+
+### 7. Upravljanje konfiguracijom
+
+- [x] **GitHub Secrets** za sigurno pohranjivanje osjetljivih podataka (`GOOGLE_SERVICES_JSON`)
+- [x] **Gradle Kotlin DSL** (`build.gradle.kts`) za deklarativnu konfiguraciju projekta i ovisnosti
+- [x] **Version Catalog** (`libs.versions.toml`) za centralizirano upravljanje verzijama biblioteka
+- [x] `.gitignore` za isključivanje osjetljivih i generiranih datoteka iz repozitorija
+
+### 8. Nadgledanje (Operate & Monitor)
+
+#### Notifikacije i komunikacija
+
+- [x] **GitHub-Slack integracija** — automatske obavijesti u Slack kanalu o push eventima, pull requestovima, code reviewovima i statusu CI pipeline-a
+
+#### Praćenje performansi
+
+Implementirani alati:
+- [x] **Firebase Analytics** — praćenje korisničkih događaja i ponašanja unutar aplikacije
+- [x] **Firebase Crashlytics** — automatsko prikupljanje i analiza crash izvještaja
+
+Planirano:
+- [ ] Integracija Firebase Performance Monitoring za praćenje vremena pokretanja aplikacije, mrežnih zahtjeva i sporog renderiranja
+- [ ] Postavljanje alertova za kritične performansne metrike (ANR rate, crash rate)
+
+---
+
 ## Dokumentacija
 
 Kompletan **Project Wiki** dostupan je na Confluence:
@@ -195,6 +278,7 @@ Kompletan **Project Wiki** dostupan je na Confluence:
 | [Product Backlog](https://25-26-izvanredni-tim.atlassian.net/wiki/x/BQCh)            | Lista svih User Storyja        |
 | [Korisnička dokumentacija](https://25-26-izvanredni-tim.atlassian.net/wiki/x/AYD6AQ) | Upute za korištenje aplikacije |
 | [UX Design](https://25-26-izvanredni-tim.atlassian.net/wiki/x/F4DJ)                  | Wireframovi i dizajn smjernice |
+| [CI/CD i DevOps](docs/CICD_DEVOPS.md)                                                | Pipeline, testiranje, deployment |
 
 ### Sprint dokumentacija
 - [Sprint 01 Folder](https://25-26-izvanredni-tim.atlassian.net/wiki/spaces/HNMT/folder/10158102)
@@ -224,7 +308,7 @@ Projekt razvija tim studenata **Fakulteta organizacije i informatike (FOI)**, Va
 
 ---
 
-**Status projekta:** 🟢 Sprint 02 - Završava se | Sprint 03 - U planiranju
-**Zadnje ažuriranje:** 04.02.2026
+**Status projekta:** Sprint 02 - Završava se | Sprint 03 - U planiranju
+**Zadnje ažuriranje:** 13.02.2026.
 
 </div>

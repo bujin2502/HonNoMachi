@@ -26,7 +26,7 @@ import hr.foi.air.image_uploader.model.ImageSource
 fun ImagePicker(
     onDismiss: () -> Unit,
     onSourceSelected: (ImageSource) -> Unit,
-    imageSources: List<ImageSource>
+    imageSources: List<ImageSource>,
 ) {
     val sheetState = rememberModalBottomSheetState()
 
@@ -36,9 +36,9 @@ fun ImagePicker(
     ) {
         Column(
             modifier =
-            Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(stringResource(R.string.choose_image_source), fontSize = 20.sp, modifier = Modifier.padding(bottom = 16.dp))

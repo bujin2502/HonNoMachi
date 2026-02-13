@@ -13,34 +13,35 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class ImageUploaderViewModel @Inject constructor(
-    private val imageUploader: ImageUploader
-) : ViewModel() {
+class ImageUploaderViewModel
+    @Inject
+    constructor(
+        private val imageUploader: ImageUploader,
+    ) : ViewModel() {
+        private val _uploadState = MutableStateFlow<ImageUploadResult<List<String>>>(ImageUploadResult.Idle)
+        val uploadState: StateFlow<ImageUploadResult<List<String>>> = _uploadState.asStateFlow()
 
-    private val _uploadState = MutableStateFlow<ImageUploadResult<List<String>>>(ImageUploadResult.Idle)
-    val uploadState: StateFlow<ImageUploadResult<List<String>>> = _uploadState.asStateFlow()
+        fun uploadImages(imageUris: List<Uri>) {
+            if (imageUris.isEmpty()) {
+                _uploadState.value = ImageUploadResult.Success(emptyList())
+                return
+            }
 
-    fun uploadImages(imageUris: List<Uri>) {
-        if (imageUris.isEmpty()) {
-            _uploadState.value = ImageUploadResult.Success(emptyList())
-            return
-        }
+            _uploadState.value = ImageUploadResult.Loading
 
-        _uploadState.value = ImageUploadResult.Loading
-
-        viewModelScope.launch {
-            when (val result = imageUploader.uploadImages(imageUris)) {
-                is hr.foi.air.image_uploader.model.Result.Success -> {
-                    _uploadState.value = ImageUploadResult.Success(result.data)
-                }
-                is hr.foi.air.image_uploader.model.Result.Error -> {
-                    _uploadState.value = ImageUploadResult.Error(result.exception.message ?: "Unknown upload error")
+            viewModelScope.launch {
+                when (val result = imageUploader.uploadImages(imageUris)) {
+                    is hr.foi.air.image_uploader.model.Result.Success -> {
+                        _uploadState.value = ImageUploadResult.Success(result.data)
+                    }
+                    is hr.foi.air.image_uploader.model.Result.Error -> {
+                        _uploadState.value = ImageUploadResult.Error(result.exception.message ?: "Unknown upload error")
+                    }
                 }
             }
         }
-    }
 
-    fun resetState() {
-        _uploadState.value = ImageUploadResult.Idle
+        fun resetState() {
+            _uploadState.value = ImageUploadResult.Idle
+        }
     }
-}

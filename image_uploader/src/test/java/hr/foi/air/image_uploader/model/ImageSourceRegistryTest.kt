@@ -3,7 +3,6 @@ package hr.foi.air.image_uploader.model
 import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
-import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -11,24 +10,20 @@ import org.junit.Before
 import org.junit.Test
 
 class ImageSourceRegistryTest {
-
     @Before
     fun setup() {
         ImageSourceRegistry.clear()
     }
 
-    private fun createMockImageSource(id: String): ImageSource {
-        return object : ImageSource {
+    private fun createMockImageSource(id: String): ImageSource =
+        object : ImageSource {
             override val id: String = id
             override val nameResId: Int = 0
             override val icon: ImageVector = mockk()
 
             @Composable
-            override fun rememberLauncher(onImageSelected: (List<Uri>) -> Unit): () -> Unit {
-                return {}
-            }
+            override fun rememberLauncher(onImageSelected: (List<Uri>) -> Unit): () -> Unit = {}
         }
-    }
 
     @Test
     fun `register adds source to registry`() {

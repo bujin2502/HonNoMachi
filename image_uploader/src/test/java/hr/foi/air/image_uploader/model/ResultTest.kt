@@ -1,12 +1,10 @@
 package hr.foi.air.image_uploader.model
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ResultTest {
-
     @Test
     fun `Success should contain data`() {
         val data = "test data"
@@ -39,10 +37,11 @@ class ResultTest {
     fun `when expression should match Success`() {
         val result: Result<String> = Result.Success("data")
 
-        val output = when (result) {
-            is Result.Success -> "success: ${result.data}"
-            is Result.Error -> "error: ${result.exception.message}"
-        }
+        val output =
+            when (result) {
+                is Result.Success -> "success: ${result.data}"
+                is Result.Error -> "error: ${result.exception.message}"
+            }
 
         assertEquals("success: data", output)
     }
@@ -51,10 +50,11 @@ class ResultTest {
     fun `when expression should match Error`() {
         val result: Result<String> = Result.Error(IllegalArgumentException("invalid"))
 
-        val output = when (result) {
-            is Result.Success -> "success: ${result.data}"
-            is Result.Error -> "error: ${result.exception.message}"
-        }
+        val output =
+            when (result) {
+                is Result.Success -> "success: ${result.data}"
+                is Result.Error -> "error: ${result.exception.message}"
+            }
 
         assertEquals("error: invalid", output)
     }

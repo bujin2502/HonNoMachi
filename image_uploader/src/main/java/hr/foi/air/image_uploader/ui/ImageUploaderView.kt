@@ -33,17 +33,16 @@ import hr.foi.air.image_uploader.ImageSourceInitializer
 import hr.foi.air.image_uploader.model.ImageSourceRegistry
 
 @Composable
-fun ImageUploaderView(
-    onImagesSelected: (List<Uri>) -> Unit
-) {
+fun ImageUploaderView(onImagesSelected: (List<Uri>) -> Unit) {
     LaunchedEffect(Unit) {
         ImageSourceInitializer.initialize()
     }
 
-    val uriListSaver = listSaver<List<Uri>, String>(
-        save = { uris -> uris.map { it.toString() } },
-        restore = { strings -> strings.map { Uri.parse(it) } }
-    )
+    val uriListSaver =
+        listSaver<List<Uri>, String>(
+            save = { uris -> uris.map { it.toString() } },
+            restore = { strings -> strings.map { Uri.parse(it) } },
+        )
 
     var imageUris by rememberSaveable(stateSaver = uriListSaver) { mutableStateOf(emptyList()) }
     var showImagePicker by rememberSaveable { mutableStateOf(false) }
@@ -57,13 +56,15 @@ fun ImageUploaderView(
 
     val imageSources = ImageSourceRegistry.getAllSources()
 
-    val launchers = imageSources.associate { source ->
-        source.id to source.rememberLauncher { uris ->
-            val updatedUris = imageUris + uris
-            imageUris = updatedUris
-            onImagesSelected(updatedUris)
+    val launchers =
+        imageSources.associate { source ->
+            source.id to
+                source.rememberLauncher { uris ->
+                    val updatedUris = imageUris + uris
+                    imageUris = updatedUris
+                    onImagesSelected(updatedUris)
+                }
         }
-    }
 
     LaunchedEffect(selectedSourceId) {
         selectedSourceId?.let { id ->
@@ -79,14 +80,14 @@ fun ImageUploaderView(
                 showImagePicker = false
                 selectedSourceId = source.id
             },
-            imageSources = imageSources
+            imageSources = imageSources,
         )
     }
 
     Column(modifier = Modifier.fillMaxWidth()) {
         OutlinedButton(
             onClick = { showImagePicker = true },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         ) {
             Text(text = "Add Images")
         }
@@ -94,14 +95,14 @@ fun ImageUploaderView(
         if (imageUris.isNotEmpty()) {
             LazyRow(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 items(imageUris.size) { index ->
                     Box(modifier = Modifier.size(100.dp)) {
                         AsyncImage(
                             model = imageUris[index],
                             contentDescription = null,
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.fillMaxSize(),
                         )
                         IconButton(
                             onClick = {
@@ -109,17 +110,19 @@ fun ImageUploaderView(
                                 imageUris = updatedUris
                                 onImagesSelected(updatedUris)
                             },
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .size(24.dp)
+                            modifier =
+                                Modifier
+                                    .align(Alignment.TopEnd)
+                                    .size(24.dp),
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Close,
                                 contentDescription = "Remove image",
                                 tint = Color.White,
-                                modifier = Modifier
-                                    .background(Color.Black.copy(alpha = 0.5f), CircleShape)
-                                    .padding(4.dp)
+                                modifier =
+                                    Modifier
+                                        .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                                        .padding(4.dp),
                             )
                         }
                     }

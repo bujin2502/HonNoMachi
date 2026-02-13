@@ -10,7 +10,5 @@ interface ImageSource {
     val icon: ImageVector
 
     @Composable
-    fun rememberLauncher(
-        onImageSelected: (List<Uri>) -> Unit
-    ): () -> Unit
+    fun rememberLauncher(onImageSelected: (List<Uri>) -> Unit): () -> Unit
 }

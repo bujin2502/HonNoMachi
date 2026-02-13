@@ -1,20 +1,17 @@
 package hr.foi.air.image_uploader.ui
 
-import android.net.Uri
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class ImageUploaderViewTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -22,7 +19,7 @@ class ImageUploaderViewTest {
     fun imageUploaderView_displaysAddImagesButton() {
         composeTestRule.setContent {
             ImageUploaderView(
-                onImagesSelected = {}
+                onImagesSelected = {},
             )
         }
 
@@ -35,7 +32,7 @@ class ImageUploaderViewTest {
     fun imageUploaderView_addImagesButtonClick_opensImagePicker() {
         composeTestRule.setContent {
             ImageUploaderView(
-                onImagesSelected = {}
+                onImagesSelected = {},
             )
         }
 
@@ -52,7 +49,7 @@ class ImageUploaderViewTest {
     fun imageUploaderView_imagePicker_displaysCameraAndGalleryOptions() {
         composeTestRule.setContent {
             ImageUploaderView(
-                onImagesSelected = {}
+                onImagesSelected = {},
             )
         }
 
@@ -73,7 +70,7 @@ class ImageUploaderViewTest {
     fun imageUploaderView_initialState_noImagesDisplayed() {
         composeTestRule.setContent {
             ImageUploaderView(
-                onImagesSelected = {}
+                onImagesSelected = {},
             )
         }
 
@@ -86,7 +83,7 @@ class ImageUploaderViewTest {
     fun imageUploaderView_clickOutsidePicker_dismissesPicker() {
         composeTestRule.setContent {
             ImageUploaderView(
-                onImagesSelected = {}
+                onImagesSelected = {},
             )
         }
 
@@ -105,7 +102,7 @@ class ImageUploaderViewTest {
 
         composeTestRule.setContent {
             ImageUploaderView(
-                onImagesSelected = { clickCount++ }
+                onImagesSelected = { clickCount++ },
             )
         }
 
@@ -126,7 +123,7 @@ class ImageUploaderViewTest {
     fun imageUploaderView_cameraIconIsDisplayedInPicker() {
         composeTestRule.setContent {
             ImageUploaderView(
-                onImagesSelected = {}
+                onImagesSelected = {},
             )
         }
 
@@ -143,7 +140,7 @@ class ImageUploaderViewTest {
     fun imageUploaderView_galleryIconIsDisplayedInPicker() {
         composeTestRule.setContent {
             ImageUploaderView(
-                onImagesSelected = {}
+                onImagesSelected = {},
             )
         }
 

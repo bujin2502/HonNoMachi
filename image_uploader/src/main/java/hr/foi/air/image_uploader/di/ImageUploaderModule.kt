@@ -12,14 +12,11 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object ImageUploaderModule {
-
     @Provides
     @Singleton
     fun provideFirebaseStorage(): FirebaseStorage = FirebaseStorage.getInstance()
 
     @Provides
     @Singleton
-    fun provideImageUploader(storage: FirebaseStorage): ImageUploader {
-        return FirebaseImageUploader(storage)
-    }
+    fun provideImageUploader(storage: FirebaseStorage): ImageUploader = FirebaseImageUploader(storage)
 }

@@ -23,7 +23,7 @@ import androidx.navigation.NavController
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.ui.auth.AuthViewModel
 
-private const val SHOW_QA_BUTTON = false
+private const val SHOW_QA_BUTTON = false    //Ovo bi se kasnije trebalo obrisat (sa selekcijom gdje koristimo konstantu...) Mrtav kod ??!! @Zlatko
 
 @Composable
 fun ProfilePage(
@@ -66,6 +66,8 @@ fun ProfilePage(
         ) {
             Text(stringResource(id = R.string.logout))
         }
+
+        //Ovo bi se kasnije trebalo obrisat (sa definiranom konstantnom varijablom...) Mrtav kod ??!! @Zlatko
         if (SHOW_QA_BUTTON) {
             Button(
                 onClick = { authViewModel.testSecureRead() },
@@ -76,5 +78,6 @@ fun ProfilePage(
                 Text(text = message.value)
             }
         }
+
     }
 }

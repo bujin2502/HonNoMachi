@@ -1,14 +1,15 @@
 package hr.foi.air.honnomachi
 
-private val emailRegex = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")
 
-// Regex patterns
+// Regex patterns - Regularni izrazi za validaciju
+private val emailRegex = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")
 private val nameRegex = Regex("""^[\p{L} .'-]+$""")
 private val phoneRegex = Regex("""^\+?[0-9]{9,15}$""")
 private val streetRegex = Regex("""^[\p{L}\s.-]+ \d+[A-Za-z]?$""")
 private val cityRegex = Regex("""^[\p{L}\s-]+$""")
 private val zipRegex = Regex("""^\d{5}$""")
 private val passwordRegex = Regex("""^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]).{6,}$""")
+
 
 enum class ValidationErrorType {
     EMPTY_EMAIL,
@@ -157,7 +158,7 @@ object FormValidator {
         confirm: String,
     ): ValidationResult {
         if (confirm.isBlank()) {
-            return ValidationResult(isValid = false, error = ValidationErrorType.EMPTY_PASSWORD) // Confirm field is empty
+            return ValidationResult(isValid = false, error = ValidationErrorType.EMPTY_PASSWORD)
         }
         if (password != confirm) {
             return ValidationResult(isValid = false, error = ValidationErrorType.PASSWORDS_DO_NOT_MATCH)

@@ -31,7 +31,7 @@ import androidx.navigation.NavController
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.ui.components.BookItemView
 
-private const val SHOW_DEBUG_BUTTON = false
+private const val SHOW_DEBUG_BUTTON = false     //Ovo bi se kasnije trebalo obrisat (sa selekcijom gdje koristimo konstantu...) Mrtav kod ??!! @Zlatko
 
 @Composable
 fun HomePage(
@@ -71,6 +71,8 @@ fun HomePage(
                     disabledIndicatorColor = Color.Transparent,
                 ),
         )
+
+        //Ovo bi se kasnije trebalo obrisat (sa definiranom konstantnom varijablom...) Mrtav kod ??!! @Zlatko
         if (SHOW_DEBUG_BUTTON) {
             Button(onClick = { throw RuntimeException("Testni crash") }) {
                 Text("CRASH TEST")

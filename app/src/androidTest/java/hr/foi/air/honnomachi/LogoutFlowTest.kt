@@ -68,7 +68,7 @@ class LogoutFlowTest {
     }
 }
 
-// Fake koji oponasa ponasanje stvarnog AuthViewModel-a
+// Fake koji oponaša ponašanje stvarnog AuthViewModel-a
 private class FakeLogoutViewModel(
     authRepository: AuthRepository,
     firebaseAuth: com.google.firebase.auth.FirebaseAuth,

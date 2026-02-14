@@ -62,6 +62,10 @@ fun LoginScreen(
             }
         }
         uiState.errorMessage?.let {
+
+            //@Zlatko ispravnije bi bilo
+            //if (errorType == AuthError.EMAIL_NOT_VERIFIED) { ... }
+            //
             if (it == "Please verify your email before logging in.") {
                 navController.navigate("verification") {
                     popUpTo("auth") { inclusive = true }

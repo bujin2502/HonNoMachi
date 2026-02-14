@@ -53,6 +53,7 @@ fun ProfileScreen(
     onLogout: () -> Unit,
     onNavigateToChangePassword: () -> Unit,
     onNavigateToPrivacyPolicy: () -> Unit,
+    onNavigateToAdmin: () -> Unit,
     profileViewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -229,8 +230,24 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
             HorizontalDivider()
-
             Spacer(modifier = Modifier.height(16.dp))
+
+            if (uiState is ProfileUiState.Success && (uiState as ProfileUiState.Success).user.admin == true) {
+                Button(
+                    onClick = onNavigateToAdmin,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ManageAccounts,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = stringResource(R.string.button_admin_panel))
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),

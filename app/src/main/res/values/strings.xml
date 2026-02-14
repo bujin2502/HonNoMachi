@@ -184,4 +184,9 @@
     <string name="error_user_not_authenticated">You must be logged in to add a book.</string>
     <string name="profile_update_success">Profil uspješno ažuriran!</string>
     <string name="profile_update_error">Greška: %1$s</string>
+    <string name="title_admin_user_list">Korisnici</string>
+    <string name="title_admin_user_detail">Detalji korisnika</string>
+    <string name="button_admin_panel">Admin panel</string>
+    <string name="error_admin_access_denied">Nemate administratorski pristup.</string>
+    <string name="admin_coming_soon">Dolazi uskoro</string>
 </resources>

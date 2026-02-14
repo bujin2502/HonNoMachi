@@ -12,6 +12,8 @@ import hr.foi.air.honnomachi.data.CartRepository
 import hr.foi.air.honnomachi.data.CartRepositoryImpl
 import hr.foi.air.honnomachi.data.FirestoreUserDataSource
 import hr.foi.air.honnomachi.data.FirestoreUserDataSourceImpl
+import hr.foi.air.honnomachi.data.AdminRepository
+import hr.foi.air.honnomachi.data.AdminRepositoryImpl
 import hr.foi.air.honnomachi.data.ProfileRepository
 import hr.foi.air.honnomachi.data.ProfileRepositoryImpl
 
@@ -32,4 +34,7 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindProfileRepository(profileRepositoryImpl: ProfileRepositoryImpl): ProfileRepository
+
+    @Binds
+    abstract fun bindAdminRepository(adminRepositoryImpl: AdminRepositoryImpl): AdminRepository
 }

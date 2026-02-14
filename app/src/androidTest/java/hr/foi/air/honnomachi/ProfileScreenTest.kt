@@ -129,6 +129,7 @@ class ProfileScreenTest {
                 onLogout = {},
                 onNavigateToChangePassword = {},
                 onNavigateToPrivacyPolicy = {},
+                onNavigateToAdmin = {},
                 profileViewModel = fakeViewModel,
             )
         }

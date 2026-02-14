@@ -1,11 +1,16 @@
 package hr.foi.air.honnomachi
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -13,6 +18,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
+import hr.foi.air.honnomachi.ui.admin.AdminUserDetailScreen
+import hr.foi.air.honnomachi.ui.admin.AdminUserListScreen
+import hr.foi.air.honnomachi.ui.admin.AdminViewModel
 import hr.foi.air.honnomachi.ui.auth.AuthScreen
 import hr.foi.air.honnomachi.ui.auth.AuthViewModel
 import hr.foi.air.honnomachi.ui.auth.ChangePasswordScreen
@@ -111,6 +119,82 @@ fun AppNavigation(
             arguments = listOf(navArgument("bookId") { type = NavType.StringType }),
         ) { backStackEntry ->
             BookDetailScreen(bookId = backStackEntry.arguments?.getString("bookId"))
+        }
+
+        // Admin ruta - lista korisnika (HNM-289)
+        // Guard logika: provjerava admin status prije prikaza ekrana
+        composable("admin") {
+            val adminViewModel: AdminViewModel = hiltViewModel()
+            val isAdmin by adminViewModel.isAdminChecked.collectAsState()
+            val context = LocalContext.current
+
+            when (isAdmin) {
+                // Provjera u tijeku - prikaži loading indikator
+                null -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+                // Korisnik nije admin - preusmjeri na početni ekran
+                false -> {
+                    LaunchedEffect(Unit) {
+                        AppUtil.showToast(context, context.getString(R.string.error_admin_access_denied))
+                        navController.navigate("home") {
+                            popUpTo("home") { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                }
+                // Korisnik je admin - prikaži admin ekran
+                true -> {
+                    AdminUserListScreen(
+                        onNavigateBack = { navController.navigateUp() },
+                        onNavigateToUserDetail = { userId ->
+                            navController.navigate("admin/userDetail/$userId")
+                        },
+                    )
+                }
+            }
+        }
+
+        // Admin ruta - detalji korisnika (HNM-289)
+        // Prima userId kao navigacijski argument
+        composable(
+            "admin/userDetail/{userId}",
+            arguments = listOf(navArgument("userId") { type = NavType.StringType }),
+        ) { backStackEntry ->
+            val adminViewModel: AdminViewModel = hiltViewModel()
+            val isAdmin by adminViewModel.isAdminChecked.collectAsState()
+            val context = LocalContext.current
+
+            when (isAdmin) {
+                null -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+                false -> {
+                    LaunchedEffect(Unit) {
+                        AppUtil.showToast(context, context.getString(R.string.error_admin_access_denied))
+                        navController.navigate("home") {
+                            popUpTo("home") { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                }
+                true -> {
+                    AdminUserDetailScreen(
+                        userId = backStackEntry.arguments?.getString("userId"),
+                        onNavigateBack = { navController.navigateUp() },
+                    )
+                }
+            }
         }
     }
 }

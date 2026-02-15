@@ -1,7 +1,9 @@
 package hr.foi.air.honnomachi.data
 
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import hr.foi.air.honnomachi.CrashlyticsManager
 import hr.foi.air.honnomachi.model.UserModel
 import hr.foi.air.honnomachi.util.Result
@@ -9,23 +11,57 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 /**
- * Sučelje repozitorija za administratorske operacije.
+ * Sučelje repozitorija za administratorske operacije nad korisnicima.
  *
- * Definira metode za upravljanje korisnicima koje su dostupne
- * isključivo administratorima. Implementacija koristi Firestore
- * kao izvor podataka.
+ * Definira metode za dohvat, pretragu i filtriranje korisnika
+ * koje su dostupne isključivo administratorima.
  */
 interface AdminRepository {
     /**
      * Provjerava ima li trenutno prijavljeni korisnik administratorske ovlasti.
      *
-     * Dohvaća korisnički dokument iz Firestore-a i provjerava
-     * polje `admin`. Koristi se za zaštitu admin ruta u navigaciji.
-     *
      * @return [Result.Success] s `true` ako je korisnik admin, `false` ako nije,
      *         ili [Result.Error] ako korisnik nije prijavljen ili dođe do greške.
      */
     suspend fun isCurrentUserAdmin(): Result<Boolean>
+
+    /**
+     * Dohvaća stranicu korisnika s "cursor-based" straničenjem.
+     *
+     * Korisnici su sortirani po imenu. Za sljedeću stranicu,
+     * proslijediti [lastDocSnapshot] zadnjeg korisnika s prethodne stranice.
+     *
+     * @param pageSize Broj korisnika po stranici.
+     * @param lastDocSnapshot Zadnji dokument prethodne stranice za nastavak, ili `null` za prvu stranicu.
+     */
+    suspend fun getAllUsers(
+        pageSize: Int = 20,
+        lastDocSnapshot: DocumentSnapshot? = null,
+    ): Result<List<UserModel>>
+
+    /**
+     * Dohvaća podatke o korisniku prema jedinstvenom identifikatoru.
+     *
+     * @param userId Firestore UID korisnika.
+     */
+    suspend fun getUserById(userId: String): Result<UserModel>
+
+    /**
+     * Pretražuje korisnike po imenu ili email adresi (case-insensitive).
+     *
+     * Dohvaća sve korisnike i filtrira lokalno jer Firestore
+     * ne podržava case-insensitive pretragu.
+     *
+     * @param query Tekst za pretragu.
+     */
+    suspend fun searchUsers(query: String): Result<List<UserModel>>
+
+    /**
+     * Filtrira korisnike prema statusu računa.
+     *
+     * @param isSuspended `true` za suspendirane, `false` za aktivne korisnike.
+     */
+    suspend fun getUsersByStatus(isSuspended: Boolean): Result<List<UserModel>>
 }
 
 /**
@@ -48,8 +84,6 @@ class AdminRepositoryImpl
                 if (currentUser == null) {
                     Result.Error(Exception("No user logged in."))
                 } else {
-
-                    // Dohvati dokument trenutnog korisnika iz Firestore-a
                     val document =
                         firestore
                             .collection("users")
@@ -60,6 +94,106 @@ class AdminRepositoryImpl
                     val user = document.toObject(UserModel::class.java)
                     Result.Success(user?.admin == true)
                 }
+            } catch (e: Exception) {
+                CrashlyticsManager.instance.logException(e)
+                Result.Error(e)
+            }
+
+        override suspend fun getAllUsers(
+            pageSize: Int,
+            lastDocSnapshot: DocumentSnapshot?,
+        ): Result<List<UserModel>> =
+            try {
+                var query: Query =
+                    firestore
+                        .collection("users")
+                        .orderBy("name")
+                        .limit(pageSize.toLong())
+
+                if (lastDocSnapshot != null) {
+                    query = query.startAfter(lastDocSnapshot)
+                }
+
+                val snapshot = query.get().await()
+
+                val users =
+                    snapshot.documents.mapNotNull { doc ->
+                        doc.toObject(UserModel::class.java)
+                    }
+                Result.Success(users)
+            } catch (e: Exception) {
+                CrashlyticsManager.instance.logException(e)
+                Result.Error(e)
+            }
+
+        override suspend fun getUserById(userId: String): Result<UserModel> =
+            try {
+                val document =
+                    firestore
+                        .collection("users")
+                        .document(userId)
+                        .get()
+                        .await()
+
+                if (document.exists()) {
+                    val user = document.toObject(UserModel::class.java)
+                    if (user != null) {
+                        Result.Success(user)
+                    } else {
+                        Result.Error(Exception("Failed to parse user data."))
+                    }
+                } else {
+                    Result.Error(Exception("User not found."))
+                }
+            } catch (e: Exception) {
+                CrashlyticsManager.instance.logException(e)
+                Result.Error(e)
+            }
+
+        override suspend fun searchUsers(query: String): Result<List<UserModel>> =
+            try {
+                val snapshot =
+                    firestore
+                        .collection("users")
+                        .get()
+                        .await()
+
+                val allUsers =
+                    snapshot.documents.mapNotNull { doc ->
+                        doc.toObject(UserModel::class.java)
+                    }
+
+                val filtered =
+                    allUsers.filter { user ->
+                        user.name.contains(query, ignoreCase = true) ||
+                            user.email.contains(query, ignoreCase = true)
+                    }
+                Result.Success(filtered)
+            } catch (e: Exception) {
+                CrashlyticsManager.instance.logException(e)
+                Result.Error(e)
+            }
+
+        override suspend fun getUsersByStatus(isSuspended: Boolean): Result<List<UserModel>> =
+            try {
+                val snapshot =
+                    firestore
+                        .collection("users")
+                        .get()
+                        .await()
+
+                val allUsers =
+                    snapshot.documents.mapNotNull { doc ->
+                        doc.toObject(UserModel::class.java)
+                    }
+
+                val filtered =
+                    if (isSuspended) {
+                        allUsers.filter { it.suspended == true }
+                    } else {
+                        allUsers.filter { it.suspended != true }
+                    }
+                Result.Success(filtered)
             } catch (e: Exception) {
                 CrashlyticsManager.instance.logException(e)
                 Result.Error(e)

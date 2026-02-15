@@ -189,4 +189,7 @@
     <string name="button_admin_panel">Admin panel</string>
     <string name="error_admin_access_denied">Nemate administratorski pristup.</string>
     <string name="admin_coming_soon">Dolazi uskoro</string>
+    <string name="admin_no_users">Nema pronađenih korisnika</string>
+    <string name="admin_error_loading_users">Greška prilikom učitavanja korisnika</string>
+    <string name="admin_retry">Pokušaj ponovno</string>
 </resources>

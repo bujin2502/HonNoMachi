@@ -11,6 +11,17 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 /**
+ * Stranica korisnika s referencom na zadnji dokument za straničenje.
+ *
+ * @param users Lista korisnika na stranici.
+ * @param lastDocSnapshot Zadnji dokument stranice, koristi se za dohvat sljedeće stranice.
+ */
+data class UserPage(
+    val users: List<UserModel>,
+    val lastDocSnapshot: DocumentSnapshot?,
+)
+
+/**
  * Sučelje repozitorija za administratorske operacije nad korisnicima.
  *
  * Definira metode za dohvat, pretragu i filtriranje korisnika
@@ -33,11 +44,12 @@ interface AdminRepository {
      *
      * @param pageSize Broj korisnika po stranici.
      * @param lastDocSnapshot Zadnji dokument prethodne stranice za nastavak, ili `null` za prvu stranicu.
+     * @return [UserPage] s listom korisnika i referencom na zadnji dokument.
      */
     suspend fun getAllUsers(
         pageSize: Int = 20,
         lastDocSnapshot: DocumentSnapshot? = null,
-    ): Result<List<UserModel>>
+    ): Result<UserPage>
 
     /**
      * Dohvaća podatke o korisniku prema jedinstvenom identifikatoru.
@@ -102,7 +114,7 @@ class AdminRepositoryImpl
         override suspend fun getAllUsers(
             pageSize: Int,
             lastDocSnapshot: DocumentSnapshot?,
-        ): Result<List<UserModel>> =
+        ): Result<UserPage> =
             try {
                 var query: Query =
                     firestore
@@ -118,9 +130,9 @@ class AdminRepositoryImpl
 
                 val users =
                     snapshot.documents.mapNotNull { doc ->
-                        doc.toObject(UserModel::class.java)
+                        doc.toObject(UserModel::class.java)?.copy(uid = doc.id)
                     }
-                Result.Success(users)
+                Result.Success(UserPage(users, snapshot.documents.lastOrNull()))
             } catch (e: Exception) {
                 CrashlyticsManager.instance.logException(e)
                 Result.Error(e)
@@ -136,7 +148,7 @@ class AdminRepositoryImpl
                         .await()
 
                 if (document.exists()) {
-                    val user = document.toObject(UserModel::class.java)
+                    val user = document.toObject(UserModel::class.java)?.copy(uid = document.id)
                     if (user != null) {
                         Result.Success(user)
                     } else {
@@ -160,7 +172,7 @@ class AdminRepositoryImpl
 
                 val allUsers =
                     snapshot.documents.mapNotNull { doc ->
-                        doc.toObject(UserModel::class.java)
+                        doc.toObject(UserModel::class.java)?.copy(uid = doc.id)
                     }
 
                 val filtered =
@@ -184,7 +196,7 @@ class AdminRepositoryImpl
 
                 val allUsers =
                     snapshot.documents.mapNotNull { doc ->
-                        doc.toObject(UserModel::class.java)
+                        doc.toObject(UserModel::class.java)?.copy(uid = doc.id)
                     }
 
                 val filtered =

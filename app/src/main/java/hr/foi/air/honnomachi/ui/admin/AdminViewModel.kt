@@ -12,14 +12,11 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * ViewModel za administratorske ekrane.
+ * ViewModel za provjeru administratorskog pristupa.
  *
  * Provjerava ima li trenutni korisnik administratorske ovlasti
  * i izlaže taj status putem [isAdminChecked] StateFlow-a.
  * Koristi se kao "guard" za zaštitu admin ruta u navigaciji.
- *
- * Bit će proširen u HNM-291 s logikom za dohvat liste korisnika
- * i u HNM-293 s logikom za detalje korisnika.
  *
  * @param adminRepository Repozitorij za administratorske operacije.
  */

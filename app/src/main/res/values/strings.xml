@@ -192,4 +192,18 @@
     <string name="admin_no_users">No users found</string>
     <string name="admin_error_loading_users">Error loading users</string>
     <string name="admin_retry">Retry</string>
+    <string name="admin_search_hint">Search users…</string>
+    <string name="admin_filter_all">All</string>
+    <string name="admin_filter_active">Active</string>
+    <string name="admin_filter_suspended">Suspended</string>
+    <string name="admin_result_count">Found: %1$d users</string>
+    <string name="admin_clear_search">Clear search</string>
+    <string name="admin_section_contact">Contact</string>
+    <string name="admin_section_address">Address</string>
+    <string name="admin_section_account">Account</string>
+    <string name="admin_label_verified">Verified:</string>
+    <string name="admin_value_yes">Yes</string>
+    <string name="admin_value_no">No</string>
+    <string name="admin_user_not_found">User not found</string>
+    <string name="admin_error_loading_user">Error loading user data</string>
 </resources>

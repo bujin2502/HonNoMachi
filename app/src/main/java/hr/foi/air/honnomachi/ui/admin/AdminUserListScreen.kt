@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,14 +19,18 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -53,8 +58,9 @@ import hr.foi.air.honnomachi.model.UserModel
  * Ekran za prikaz liste korisnika u admin panel sekciji.
  *
  * Prikazuje korisnike u LazyColumn listi s podrškom za
- * infinite scroll straničenje i pull-to-refresh osvježavanje.
- * Svaki korisnik prikazuje inicijale, ime, email i status računa.
+ * infinite scroll straničenje, pull-to-refresh osvježavanje,
+ * pretragu po imenu/emailu s debounce logikom i
+ * filtriranje prema statusu računa (svi/aktivni/suspendirani).
  *
  * @param onNavigateBack Callback za povratak na prethodni ekran.
  * @param onNavigateToUserDetail Callback za navigaciju na detalje korisnika.
@@ -69,6 +75,9 @@ fun AdminUserListScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
+
+    val isSearchOrFilterActive =
+        uiState.searchQuery.isNotBlank() || uiState.selectedFilter != UserFilter.ALL
 
     val shouldLoadMore by remember {
         derivedStateOf {
@@ -98,77 +107,89 @@ fun AdminUserListScreen(
             )
         },
     ) { paddingValues ->
-        PullToRefreshBox(
-            isRefreshing = uiState.isRefreshing,
-            onRefresh = { viewModel.refreshUsers() },
+        Column(
             modifier =
                 Modifier
                     .padding(paddingValues)
                     .fillMaxSize(),
         ) {
-            when {
-                uiState.isLoading && uiState.users.isEmpty() -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-                uiState.errorMessage != null && uiState.users.isEmpty() -> {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
-                    ) {
-                        Text(
-                            text = stringResource(R.string.admin_error_loading_users),
-                            style = MaterialTheme.typography.bodyLarge,
-                            textAlign = TextAlign.Center,
-                        )
-                        Spacer(modifier = Modifier.size(16.dp))
-                        Button(onClick = { viewModel.loadUsers() }) {
-                            Text(stringResource(R.string.admin_retry))
+            SearchAndFilterSection(
+                searchQuery = uiState.searchQuery,
+                selectedFilter = uiState.selectedFilter,
+                resultCount = if (isSearchOrFilterActive) uiState.users.size else null,
+                onSearchQueryChanged = viewModel::onSearchQueryChanged,
+                onFilterSelected = viewModel::onFilterSelected,
+            )
+
+            PullToRefreshBox(
+                isRefreshing = uiState.isRefreshing,
+                onRefresh = { viewModel.refreshUsers() },
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                when {
+                    uiState.isLoading && uiState.users.isEmpty() -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            CircularProgressIndicator()
                         }
                     }
-                }
-                !uiState.isLoading && uiState.users.isEmpty() -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = stringResource(R.string.admin_no_users),
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
+                    uiState.errorMessage != null && uiState.users.isEmpty() -> {
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                        ) {
+                            Text(
+                                text = stringResource(R.string.admin_error_loading_users),
+                                style = MaterialTheme.typography.bodyLarge,
+                                textAlign = TextAlign.Center,
+                            )
+                            Spacer(modifier = Modifier.size(16.dp))
+                            Button(onClick = { viewModel.loadUsers() }) {
+                                Text(stringResource(R.string.admin_retry))
+                            }
+                        }
                     }
-                }
-                else -> {
-                    LazyColumn(
-                        state = listState,
-                        modifier =
-                            Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 12.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 8.dp),
-                    ) {
-                        items(uiState.users, key = { it.uid }) { user ->
-                            UserListItem(
-                                user = user,
-                                onClick = { onNavigateToUserDetail(user.uid) },
+                    !uiState.isLoading && uiState.users.isEmpty() -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = stringResource(R.string.admin_no_users),
+                                style = MaterialTheme.typography.bodyLarge,
                             )
                         }
-                        if (uiState.isLoadingMore) {
-                            item {
-                                Box(
-                                    modifier =
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    CircularProgressIndicator(modifier = Modifier.size(32.dp))
+                    }
+                    else -> {
+                        LazyColumn(
+                            state = listState,
+                            modifier =
+                                Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 12.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            contentPadding = PaddingValues(vertical = 8.dp),
+                        ) {
+                            items(uiState.users, key = { it.uid }) { user ->
+                                UserListItem(
+                                    user = user,
+                                    onClick = { onNavigateToUserDetail(user.uid) },
+                                )
+                            }
+                            if (uiState.isLoadingMore) {
+                                item {
+                                    Box(
+                                        modifier =
+                                            Modifier
+                                                .fillMaxWidth()
+                                                .padding(16.dp),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        CircularProgressIndicator(modifier = Modifier.size(32.dp))
+                                    }
                                 }
                             }
                         }
@@ -176,6 +197,89 @@ fun AdminUserListScreen(
                 }
             }
         }
+    }
+}
+
+/**
+ * Sekcija s poljem za pretragu, filterima i brojem rezultata.
+ *
+ * @param searchQuery Trenutni tekst pretrage.
+ * @param selectedFilter Odabrani filter statusa.
+ * @param resultCount Broj rezultata za prikaz, ili null ako nije aktivan search/filter.
+ * @param onSearchQueryChanged Callback pri promjeni teksta pretrage.
+ * @param onFilterSelected Callback pri odabiru filtera.
+ */
+@Composable
+private fun SearchAndFilterSection(
+    searchQuery: String,
+    selectedFilter: UserFilter,
+    resultCount: Int?,
+    onSearchQueryChanged: (String) -> Unit,
+    onFilterSelected: (UserFilter) -> Unit,
+) {
+    Column(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp),
+    ) {
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = onSearchQueryChanged,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text(stringResource(R.string.admin_search_hint)) },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = null,
+                )
+            },
+            trailingIcon = {
+                if (searchQuery.isNotEmpty()) {
+                    IconButton(onClick = { onSearchQueryChanged("") }) {
+                        Icon(
+                            imageVector = Icons.Default.Clear,
+                            contentDescription = stringResource(R.string.admin_clear_search),
+                        )
+                    }
+                }
+            },
+            singleLine = true,
+            shape = RoundedCornerShape(12.dp),
+        )
+
+        Spacer(modifier = Modifier.size(8.dp))
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            FilterChip(
+                selected = selectedFilter == UserFilter.ALL,
+                onClick = { onFilterSelected(UserFilter.ALL) },
+                label = { Text(stringResource(R.string.admin_filter_all)) },
+            )
+            FilterChip(
+                selected = selectedFilter == UserFilter.ACTIVE,
+                onClick = { onFilterSelected(UserFilter.ACTIVE) },
+                label = { Text(stringResource(R.string.admin_filter_active)) },
+            )
+            FilterChip(
+                selected = selectedFilter == UserFilter.SUSPENDED,
+                onClick = { onFilterSelected(UserFilter.SUSPENDED) },
+                label = { Text(stringResource(R.string.admin_filter_suspended)) },
+            )
+        }
+
+        if (resultCount != null) {
+            Spacer(modifier = Modifier.size(4.dp))
+            Text(
+                text = stringResource(R.string.admin_result_count, resultCount),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
+        Spacer(modifier = Modifier.size(4.dp))
     }
 }
 

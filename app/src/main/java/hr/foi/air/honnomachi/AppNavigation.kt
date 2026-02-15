@@ -190,7 +190,6 @@ fun AppNavigation(
                 }
                 true -> {
                     AdminUserDetailScreen(
-                        userId = backStackEntry.arguments?.getString("userId"),
                         onNavigateBack = { navController.navigateUp() },
                     )
                 }

@@ -14,9 +14,6 @@ import javax.inject.Inject
  * Definira metode za upravljanje korisnicima koje su dostupne
  * isključivo administratorima. Implementacija koristi Firestore
  * kao izvor podataka.
- *
- * Bit će prošireno u HNM-290 s metodama za dohvat svih korisnika,
- * pretragu, filtriranje i straničenje.
  */
 interface AdminRepository {
     /**
@@ -51,6 +48,7 @@ class AdminRepositoryImpl
                 if (currentUser == null) {
                     Result.Error(Exception("No user logged in."))
                 } else {
+
                     // Dohvati dokument trenutnog korisnika iz Firestore-a
                     val document =
                         firestore

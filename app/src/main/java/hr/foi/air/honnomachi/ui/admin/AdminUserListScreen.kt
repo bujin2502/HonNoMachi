@@ -19,7 +19,7 @@ import androidx.compose.ui.res.stringResource
 import hr.foi.air.honnomachi.R
 
 /**
- * Placeholder ekran za prikaz liste korisnika u admin sekciji.
+ * Ekran za prikaz liste korisnika u admin panel sekciji.
  *
  * Trenutno prikazuje samo poruku "Dolazi uskoro" s navigacijskom trakom.
  * Bit će u potpunosti implementiran u HNM-291 s LazyColumn listom,

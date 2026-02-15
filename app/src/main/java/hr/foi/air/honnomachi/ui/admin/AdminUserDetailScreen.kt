@@ -19,7 +19,7 @@ import androidx.compose.ui.res.stringResource
 import hr.foi.air.honnomachi.R
 
 /**
- * Placeholder ekran za detaljan prikaz podataka o korisniku.
+ * Ekran za detaljan prikaz podataka o korisniku.
  *
  * Trenutno prikazuje samo poruku "Dolazi uskoro" s navigacijskom trakom.
  * Bit će u potpunosti implementiran u HNM-293 s prikazom svih

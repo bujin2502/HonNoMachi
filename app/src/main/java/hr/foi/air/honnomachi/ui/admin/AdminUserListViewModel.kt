@@ -28,7 +28,7 @@ import javax.inject.Inject
  */
 @OptIn(FlowPreview::class)
 @HiltViewModel
-class AdminUserListViewModel
+open class AdminUserListViewModel
     @Inject
     constructor(
         private val adminRepository: AdminRepository,
@@ -59,7 +59,7 @@ class AdminUserListViewModel
          * Resetira listu i straničenje te prikazuje loading stanje.
          * Koristi se samo u default modu (bez pretrage i filtera).
          */
-        fun loadUsers() {
+        open fun loadUsers() {
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoading = true, errorMessage = null) }
                 lastDocSnapshot = null

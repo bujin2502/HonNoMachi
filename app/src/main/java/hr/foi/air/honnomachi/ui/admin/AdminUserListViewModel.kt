@@ -81,7 +81,7 @@ class AdminUserListViewModel
          */
         fun loadMoreUsers() {
             val currentState = _uiState.value
-            if (currentState.isLoadingMore || !currentState.hasMorePages) return
+            if (currentState.isLoading || currentState.isRefreshing || currentState.isLoadingMore || !currentState.hasMorePages) return
 
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoadingMore = true) }

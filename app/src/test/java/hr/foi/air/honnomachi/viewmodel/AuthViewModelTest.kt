@@ -321,13 +321,14 @@ class AuthViewModelTest {
     @Test
     fun `login suspended user sets isSuspended and signs out`() =
         runTest {
-            val suspendedUser = UserModel(
-                uid = "123",
-                email = testEmail,
-                isVerified = true,
-                suspended = true,
-                suspendedReason = "Kršenje pravila",
-            )
+            val suspendedUser =
+                UserModel(
+                    uid = "123",
+                    email = testEmail,
+                    isVerified = true,
+                    suspended = true,
+                    suspendedReason = "Kršenje pravila",
+                )
             coEvery { mockAuthRepository.login(testEmail, testPassword) } returns Result.Success(suspendedUser)
 
             authViewModel.login(testEmail, testPassword)
@@ -344,13 +345,14 @@ class AuthViewModelTest {
     @Test
     fun `loginWithGoogle suspended user sets isSuspended`() =
         runTest {
-            val suspendedUser = UserModel(
-                uid = "123",
-                email = testEmail,
-                isVerified = true,
-                suspended = true,
-                suspendedReason = "Spam",
-            )
+            val suspendedUser =
+                UserModel(
+                    uid = "123",
+                    email = testEmail,
+                    isVerified = true,
+                    suspended = true,
+                    suspendedReason = "Spam",
+                )
             coEvery { mockAuthRepository.loginWithGoogle("google-token") } returns Result.Success(suspendedUser)
 
             authViewModel.loginWithGoogle("google-token")
@@ -366,13 +368,14 @@ class AuthViewModelTest {
     @Test
     fun `checkSession suspended user sets isSuspended`() =
         runTest {
-            val suspendedUser = UserModel(
-                uid = "123",
-                email = testEmail,
-                isVerified = true,
-                suspended = true,
-                suspendedReason = "Neaktivnost",
-            )
+            val suspendedUser =
+                UserModel(
+                    uid = "123",
+                    email = testEmail,
+                    isVerified = true,
+                    suspended = true,
+                    suspendedReason = "Neaktivnost",
+                )
             coEvery { mockAuthRepository.checkSession() } returns Result.Success(suspendedUser)
 
             authViewModel.checkSession()
@@ -388,13 +391,14 @@ class AuthViewModelTest {
     @Test
     fun `consumeSuspendedState resets suspension state`() =
         runTest {
-            val suspendedUser = UserModel(
-                uid = "123",
-                email = testEmail,
-                isVerified = true,
-                suspended = true,
-                suspendedReason = "Razlog",
-            )
+            val suspendedUser =
+                UserModel(
+                    uid = "123",
+                    email = testEmail,
+                    isVerified = true,
+                    suspended = true,
+                    suspendedReason = "Razlog",
+                )
             coEvery { mockAuthRepository.login(testEmail, testPassword) } returns Result.Success(suspendedUser)
 
             authViewModel.login(testEmail, testPassword)

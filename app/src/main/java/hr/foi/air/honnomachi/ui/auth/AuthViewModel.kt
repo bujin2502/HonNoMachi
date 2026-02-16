@@ -402,21 +402,22 @@ open class AuthViewModel
          */
         private fun startSuspensionMonitor(userId: String) {
             suspensionMonitorJob?.cancel()
-            suspensionMonitorJob = viewModelScope.launch {
-                userDataSource.observeUser(userId).collect { userData ->
-                    if (userData?.suspended == true) {
-                        authRepository.signOut()
-                        _uiState.update {
-                            it.copy(
-                                isSuspended = true,
-                                suspendedReason = userData.suspendedReason,
-                                isUserLoggedIn = false,
-                            )
+            suspensionMonitorJob =
+                viewModelScope.launch {
+                    userDataSource.observeUser(userId).collect { userData ->
+                        if (userData?.suspended == true) {
+                            authRepository.signOut()
+                            _uiState.update {
+                                it.copy(
+                                    isSuspended = true,
+                                    suspendedReason = userData.suspendedReason,
+                                    isUserLoggedIn = false,
+                                )
+                            }
+                            suspensionMonitorJob?.cancel()
                         }
-                        suspensionMonitorJob?.cancel()
                     }
                 }
-            }
         }
 
         object ErrorMessages {

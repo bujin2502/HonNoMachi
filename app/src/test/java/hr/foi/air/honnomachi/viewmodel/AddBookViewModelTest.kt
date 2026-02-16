@@ -6,10 +6,10 @@ import com.google.firebase.auth.FirebaseUser
 import hr.foi.air.honnomachi.data.BookRepository
 import hr.foi.air.honnomachi.data.FirestoreUserDataSource
 import hr.foi.air.honnomachi.model.BookCondition
-import hr.foi.air.honnomachi.model.UserModel
 import hr.foi.air.honnomachi.model.BookGenre
 import hr.foi.air.honnomachi.model.Currency
 import hr.foi.air.honnomachi.model.Language
+import hr.foi.air.honnomachi.model.UserModel
 import hr.foi.air.honnomachi.ui.add.AddBookUiState
 import hr.foi.air.honnomachi.ui.add.AddBookViewModel
 import hr.foi.air.honnomachi.util.Result

@@ -87,7 +87,10 @@ interface AdminRepository {
      * @param userId Firestore UID korisnika za suspenziju.
      * @param reason Razlog suspenzije.
      */
-    suspend fun suspendUser(userId: String, reason: String): Result<Unit>
+    suspend fun suspendUser(
+        userId: String,
+        reason: String,
+    ): Result<Unit>
 
     /**
      * Reaktivira suspendirani korisnički račun.
@@ -235,9 +238,13 @@ class AdminRepositoryImpl
                 Result.Error(e)
             }
 
-        override suspend fun suspendUser(userId: String, reason: String): Result<Unit> {
-            val adminUid = auth.currentUser?.uid
-                ?: return Result.Error(Exception("Administrator nije prijavljen."))
+        override suspend fun suspendUser(
+            userId: String,
+            reason: String,
+        ): Result<Unit> {
+            val adminUid =
+                auth.currentUser?.uid
+                    ?: return Result.Error(Exception("Administrator nije prijavljen."))
 
             val userResult = getUserById(userId)
             if (userResult is Result.Error) {
@@ -250,7 +257,6 @@ class AdminRepositoryImpl
             }
 
             return try {
-
                 val now = Timestamp.now()
                 val batch = firestore.batch()
 
@@ -265,21 +271,23 @@ class AdminRepositoryImpl
                     ),
                 )
 
-                val auditLog = AuditLog(
-                    action = "USER_SUSPENDED",
-                    targetUserId = userId,
-                    adminUserId = adminUid,
-                    reason = reason,
-                    timestamp = now,
-                )
+                val auditLog =
+                    AuditLog(
+                        action = "USER_SUSPENDED",
+                        targetUserId = userId,
+                        adminUserId = adminUid,
+                        reason = reason,
+                        timestamp = now,
+                    )
                 val auditRef = firestore.collection("audit_logs").document()
                 batch.set(auditRef, auditLog)
 
-                val booksSnapshot = firestore
-                    .collection("books")
-                    .whereEqualTo("userID", userId)
-                    .get()
-                    .await()
+                val booksSnapshot =
+                    firestore
+                        .collection("books")
+                        .whereEqualTo("userID", userId)
+                        .get()
+                        .await()
 
                 for (bookDoc in booksSnapshot.documents) {
                     batch.update(bookDoc.reference, "sellerSuspended", true)
@@ -299,8 +307,9 @@ class AdminRepositoryImpl
         }
 
         override suspend fun reactivateUser(userId: String): Result<Unit> {
-            val adminUid = auth.currentUser?.uid
-                ?: return Result.Error(Exception("Administrator nije prijavljen."))
+            val adminUid =
+                auth.currentUser?.uid
+                    ?: return Result.Error(Exception("Administrator nije prijavljen."))
 
             val userResult = getUserById(userId)
             if (userResult is Result.Error) {
@@ -313,7 +322,6 @@ class AdminRepositoryImpl
             }
 
             return try {
-
                 val now = Timestamp.now()
                 val batch = firestore.batch()
 
@@ -328,20 +336,22 @@ class AdminRepositoryImpl
                     ),
                 )
 
-                val auditLog = AuditLog(
-                    action = "USER_REACTIVATED",
-                    targetUserId = userId,
-                    adminUserId = adminUid,
-                    timestamp = now,
-                )
+                val auditLog =
+                    AuditLog(
+                        action = "USER_REACTIVATED",
+                        targetUserId = userId,
+                        adminUserId = adminUid,
+                        timestamp = now,
+                    )
                 val auditRef = firestore.collection("audit_logs").document()
                 batch.set(auditRef, auditLog)
 
-                val booksSnapshot = firestore
-                    .collection("books")
-                    .whereEqualTo("userID", userId)
-                    .get()
-                    .await()
+                val booksSnapshot =
+                    firestore
+                        .collection("books")
+                        .whereEqualTo("userID", userId)
+                        .get()
+                        .await()
 
                 for (bookDoc in booksSnapshot.documents) {
                     batch.update(bookDoc.reference, "sellerSuspended", FieldValue.delete())

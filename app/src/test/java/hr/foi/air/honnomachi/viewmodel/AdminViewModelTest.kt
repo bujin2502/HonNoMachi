@@ -45,7 +45,10 @@ class FakeAdminRepository : AdminRepository {
 
     override suspend fun getUsersByStatus(isSuspended: Boolean): Result<List<UserModel>> = statusResult
 
-    override suspend fun suspendUser(userId: String, reason: String): Result<Unit> = suspendUserResult
+    override suspend fun suspendUser(
+        userId: String,
+        reason: String,
+    ): Result<Unit> = suspendUserResult
 
     override suspend fun reactivateUser(userId: String): Result<Unit> = reactivateUserResult
 }

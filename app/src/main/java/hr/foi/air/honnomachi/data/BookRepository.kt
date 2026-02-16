@@ -43,8 +43,7 @@ class BookRepositoryImpl
                                     snapshot.documents
                                         .mapNotNull { doc ->
                                             doc.toObject(BookModel::class.java)
-                                        }
-                                        .filter { it.sellerSuspended != true }
+                                        }.filter { it.sellerSuspended != true }
                                 trySend(Result.Success(resultList))
                             }
                         }

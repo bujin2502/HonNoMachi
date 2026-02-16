@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import dagger.hilt.android.lifecycle.HiltViewModel
+import hr.foi.air.honnomachi.CrashlyticsManager
 import hr.foi.air.honnomachi.data.AuthRepository
 import hr.foi.air.honnomachi.data.FirestoreUserDataSource
 import hr.foi.air.honnomachi.util.Result
@@ -78,6 +79,7 @@ open class AuthViewModel
                     }
                 }
             } catch (e: Exception) {
+                CrashlyticsManager.instance.logException(e)
                 _uiState.update {
                     it.copy(isUserLoggedIn = false, needsVerification = false)
                 }

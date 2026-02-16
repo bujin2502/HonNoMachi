@@ -37,9 +37,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -85,19 +84,21 @@ fun AdminUserListScreen(
     val isSearchOrFilterActive =
         uiState.searchQuery.isNotBlank() || uiState.selectedFilter != UserFilter.ALL
 
-    val shouldLoadMore by remember {
-        derivedStateOf {
-            val lastVisible =
-                listState.layoutInfo.visibleItemsInfo
-                    .lastOrNull()
-                    ?.index ?: 0
-            lastVisible >= listState.layoutInfo.totalItemsCount - 3
-        }
+    LaunchedEffect(uiState.scrollToTopTrigger) {
+        listState.scrollToItem(0)
     }
 
-    LaunchedEffect(shouldLoadMore) {
-        if (shouldLoadMore) {
-            viewModel.loadMoreUsers()
+    LaunchedEffect(listState) {
+        snapshotFlow {
+            val layoutInfo = listState.layoutInfo
+            val totalItems = layoutInfo.totalItemsCount
+            val lastVisibleIndex =
+                layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1
+            lastVisibleIndex to totalItems
+        }.collect { (lastVisible, total) ->
+            if (total > 0 && lastVisible >= total - 3) {
+                viewModel.loadMoreUsers()
+            }
         }
     }
 

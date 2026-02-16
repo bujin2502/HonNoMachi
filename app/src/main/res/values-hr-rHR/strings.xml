@@ -206,4 +206,19 @@
     <string name="admin_value_no">Ne</string>
     <string name="admin_user_not_found">Korisnik nije pronađen</string>
     <string name="admin_error_loading_user">Greška prilikom učitavanja podataka korisnika</string>
+    <string name="admin_suspend_user">Suspendiraj</string>
+    <string name="admin_reactivate_user">Reaktiviraj</string>
+    <string name="admin_suspend_dialog_title">Suspendiraj korisnika</string>
+    <string name="admin_suspend_dialog_reason_hint">Razlog suspenzije</string>
+    <string name="admin_suspend_dialog_reason_required">Razlog je obavezan</string>
+    <string name="admin_reactivate_dialog_title">Reaktiviraj korisnika</string>
+    <string name="admin_reactivate_dialog_message">Jeste li sigurni da želite reaktivirati ovog korisnika? Korisnik će ponovno dobiti puni pristup aplikaciji.</string>
+    <string name="admin_dialog_cancel">Odustani</string>
+    <string name="admin_suspend_success">Korisnik uspješno suspendiran.</string>
+    <string name="admin_reactivate_success">Korisnik uspješno reaktiviran.</string>
+    <string name="admin_suspend_error">Suspenzija nije uspjela:</string>
+    <string name="admin_reactivate_error">Reaktivacija nije uspjela:</string>
+    <string name="admin_section_suspension">Suspenzija</string>
+    <string name="admin_label_suspended_reason">Razlog:</string>
+    <string name="admin_label_suspended_at">Suspendirano:</string>
 </resources>

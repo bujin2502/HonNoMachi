@@ -40,6 +40,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -75,6 +76,11 @@ fun AdminUserListScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
+
+    LifecycleResumeEffect(Unit) {
+        viewModel.refreshUsers()
+        onPauseOrDispose {}
+    }
 
     val isSearchOrFilterActive =
         uiState.searchQuery.isNotBlank() || uiState.selectedFilter != UserFilter.ALL

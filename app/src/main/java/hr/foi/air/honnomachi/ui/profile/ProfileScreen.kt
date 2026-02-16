@@ -38,7 +38,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.R
@@ -120,12 +123,12 @@ fun ProfileScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ExitToApp,
                         contentDescription = stringResource(R.string.label_logout),
-                        tint = MaterialTheme.colorScheme.onSurface,
+                        tint = Color.Black,
                     )
                     Spacer(modifier = Modifier.size(4.dp))
                     Text(
                         text = stringResource(R.string.label_logout),
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = Color.Black,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     )
                 }
@@ -194,6 +197,8 @@ fun ProfileScreen(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
             Text(
                 text = stringResource(R.string.label_privacy_settings),
                 style = MaterialTheme.typography.headlineSmall,
@@ -232,23 +237,6 @@ fun ProfileScreen(
             HorizontalDivider()
             Spacer(modifier = Modifier.height(16.dp))
 
-            if (uiState is ProfileUiState.Success && (uiState as ProfileUiState.Success).user.admin == true) {
-                Button(
-                    onClick = onNavigateToAdmin,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ManageAccounts,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp),
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = stringResource(R.string.button_admin_panel))
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-            }
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -284,6 +272,33 @@ fun ProfileScreen(
                     }
                 }
             }
+
+            if (uiState is ProfileUiState.Success && (uiState as ProfileUiState.Success).user.admin == true) {
+                Spacer(modifier = Modifier.height(24.dp))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(
+                    onClick = onNavigateToAdmin,
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                    shape = RoundedCornerShape(24.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ManageAccounts,
+                        contentDescription = null,
+                        modifier = Modifier.size(32.dp),
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = stringResource(R.string.button_admin_panel),
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
         }
     }

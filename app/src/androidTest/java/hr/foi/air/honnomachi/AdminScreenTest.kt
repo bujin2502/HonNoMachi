@@ -37,6 +37,10 @@ class FakeAdminUserListViewModel(
     override fun loadUsers() {
         /** Prazna implementacija — sprječava Firebase pozive. */
     }
+
+    override fun loadMoreUsers() {
+        /** Prazna implementacija — sprječava Firebase pozive pri infinite scroll. */
+    }
 }
 
 /**

@@ -94,7 +94,7 @@ open class AdminUserListViewModel
          * Ignorira poziv ako je učitavanje već u tijeku, nema više stranica,
          * ili je aktivan search/filter mod.
          */
-        fun loadMoreUsers() {
+        open fun loadMoreUsers() {
             val currentState = _uiState.value
             if (currentState.isLoading ||
                 currentState.isRefreshing ||

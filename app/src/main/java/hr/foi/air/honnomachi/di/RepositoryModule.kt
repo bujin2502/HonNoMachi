@@ -4,6 +4,8 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import hr.foi.air.honnomachi.data.AdminRepository
+import hr.foi.air.honnomachi.data.AdminRepositoryImpl
 import hr.foi.air.honnomachi.data.AuthRepository
 import hr.foi.air.honnomachi.data.AuthRepositoryImpl
 import hr.foi.air.honnomachi.data.BookRepository
@@ -12,8 +14,6 @@ import hr.foi.air.honnomachi.data.CartRepository
 import hr.foi.air.honnomachi.data.CartRepositoryImpl
 import hr.foi.air.honnomachi.data.FirestoreUserDataSource
 import hr.foi.air.honnomachi.data.FirestoreUserDataSourceImpl
-import hr.foi.air.honnomachi.data.AdminRepository
-import hr.foi.air.honnomachi.data.AdminRepositoryImpl
 import hr.foi.air.honnomachi.data.ProfileRepository
 import hr.foi.air.honnomachi.data.ProfileRepositoryImpl
 

@@ -1,6 +1,5 @@
 package hr.foi.air.honnomachi
 
-
 // Regex patterns - Regularni izrazi za validaciju
 private val emailRegex = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")
 private val nameRegex = Regex("""^[\p{L} .'-]+$""")
@@ -9,7 +8,6 @@ private val streetRegex = Regex("""^[\p{L}\s.-]+ \d+[A-Za-z]?$""")
 private val cityRegex = Regex("""^[\p{L}\s-]+$""")
 private val zipRegex = Regex("""^\d{5}$""")
 private val passwordRegex = Regex("""^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]).{6,}$""")
-
 
 enum class ValidationErrorType {
     EMPTY_EMAIL,

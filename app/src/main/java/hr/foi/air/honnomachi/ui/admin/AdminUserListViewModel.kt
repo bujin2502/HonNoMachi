@@ -37,7 +37,7 @@ open class AdminUserListViewModel
         val uiState: StateFlow<AdminUserListUiState> = _uiState.asStateFlow()
 
         private var lastDocSnapshot: DocumentSnapshot? = null
-        private val _searchQuery = MutableStateFlow("")
+        private val searchQueryFlow = MutableStateFlow("")
 
         companion object {
             private const val PAGE_SIZE = 20
@@ -47,7 +47,7 @@ open class AdminUserListViewModel
         init {
             loadUsers()
             viewModelScope.launch {
-                _searchQuery
+                searchQueryFlow
                     .debounce(DEBOUNCE_MS)
                     .collectLatest { applySearchAndFilter() }
             }
@@ -174,7 +174,7 @@ open class AdminUserListViewModel
          */
         fun onSearchQueryChanged(query: String) {
             _uiState.update { it.copy(searchQuery = query) }
-            _searchQuery.value = query
+            searchQueryFlow.value = query
         }
 
         /**

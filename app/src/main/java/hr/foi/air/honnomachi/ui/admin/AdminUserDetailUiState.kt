@@ -16,12 +16,16 @@ sealed interface AdminUserDetailUiState {
      *
      * @param user Dohvaćeni model korisnika.
      */
-    data class Success(val user: UserModel) : AdminUserDetailUiState
+    data class Success(
+        val user: UserModel,
+    ) : AdminUserDetailUiState
 
     /**
      * Greška pri dohvatu podataka korisnika.
      *
      * @param message Poruka greške.
      */
-    data class Error(val message: String) : AdminUserDetailUiState
+    data class Error(
+        val message: String,
+    ) : AdminUserDetailUiState
 }

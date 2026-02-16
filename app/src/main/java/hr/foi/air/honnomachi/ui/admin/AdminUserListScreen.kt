@@ -50,8 +50,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-//import androidx.hilt.navigation.compose.hiltViewModel
-//import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.model.UserModel
@@ -83,7 +81,10 @@ fun AdminUserListScreen(
 
     val shouldLoadMore by remember {
         derivedStateOf {
-            val lastVisible = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            val lastVisible =
+                listState.layoutInfo.visibleItemsInfo
+                    .lastOrNull()
+                    ?.index ?: 0
             lastVisible >= listState.layoutInfo.totalItemsCount - 3
         }
     }

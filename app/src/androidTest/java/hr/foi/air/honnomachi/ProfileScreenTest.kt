@@ -35,8 +35,6 @@ import org.junit.runner.RunWith
 class FakeProfileViewModel(
     repository: ProfileRepository,
 ) : ProfileViewModel(repository) {
-
-
     /**
      * Pomoćna funkcija za postavljanje privatnog stanja ViewModela (`_uiState`) koristeći refleksiju.
      *
@@ -49,8 +47,7 @@ class FakeProfileViewModel(
         val stateFlow = field.get(this) as MutableStateFlow<ProfileUiState>
         stateFlow.value = state
 
-
-        if (state is ProfileUiState.Success) {      // Popuni stanje forme s podacima korisnika...
+        if (state is ProfileUiState.Success) { // Popuni stanje forme s podacima korisnika...
             onNameChange(state.user.name)
             onPhoneChange(state.user.phoneNumber ?: "")
             onStreetChange(state.user.street ?: "")
@@ -58,7 +55,6 @@ class FakeProfileViewModel(
             onZipChange(state.user.postNumber ?: "")
         }
     }
-
 
     /**
      * Prazna funkcija kojom spriječavaš stvarne Firebase pozive...
@@ -78,7 +74,6 @@ class FakeProfileViewModel(
      * @param onResult Callback funkcija koja vraća uspjeh (true) ili neuspjeh (false).
      */
     override fun saveProfile(onResult: (Boolean, String?) -> Unit) {
-
         if (formState.value.name.isBlank()) {
             validateName() // ovo ažurira stanje greške (error state)...
             onResult(false, "Error")
@@ -87,7 +82,6 @@ class FakeProfileViewModel(
         onResult(true, null)
     }
 }
-
 
 /**
  * Instrumentirani testovi za [ProfileScreen].
@@ -104,7 +98,6 @@ class ProfileScreenTest {
     private lateinit var mockRepository: ProfileRepository
 
     private fun launchScreen() {
-
         // Postavi početno stanje korisnika
         val user =
             UserModel(
@@ -134,7 +127,6 @@ class ProfileScreenTest {
             )
         }
     }
-
 
     /**
      * Testira scenarij uspješnog uređivanja profila.
@@ -174,7 +166,6 @@ class ProfileScreenTest {
             .performClick()
     }
 
-
     /**
      * Testira validaciju unosa (neispravan unos).
      *
@@ -199,7 +190,6 @@ class ProfileScreenTest {
             .onNodeWithText("Initial Name")
             .performScrollTo()
             .performTextClearance()
-
 
         // Klikni gumb "Spremi"
         composeTestRule

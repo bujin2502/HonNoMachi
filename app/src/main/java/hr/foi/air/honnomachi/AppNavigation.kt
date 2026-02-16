@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -140,8 +141,9 @@ fun AppNavigation(
                 }
                 // Korisnik nije admin - preusmjeri na početni ekran
                 false -> {
+                    val accessDeniedMsg = stringResource(R.string.error_admin_access_denied)
                     LaunchedEffect(Unit) {
-                        AppUtil.showToast(context, context.getString(R.string.error_admin_access_denied))
+                        AppUtil.showToast(context, accessDeniedMsg)
                         navController.navigate("home") {
                             popUpTo("home") { inclusive = true }
                             launchSingleTop = true
@@ -180,8 +182,9 @@ fun AppNavigation(
                     }
                 }
                 false -> {
+                    val accessDeniedMsg = stringResource(R.string.error_admin_access_denied)
                     LaunchedEffect(Unit) {
-                        AppUtil.showToast(context, context.getString(R.string.error_admin_access_denied))
+                        AppUtil.showToast(context, accessDeniedMsg)
                         navController.navigate("home") {
                             popUpTo("home") { inclusive = true }
                             launchSingleTop = true

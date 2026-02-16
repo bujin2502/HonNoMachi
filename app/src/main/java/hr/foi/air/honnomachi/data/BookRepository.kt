@@ -40,9 +40,11 @@ class BookRepositoryImpl
 
                             if (snapshot != null) {
                                 val resultList =
-                                    snapshot.documents.mapNotNull { doc ->
-                                        doc.toObject(BookModel::class.java)
-                                    }
+                                    snapshot.documents
+                                        .mapNotNull { doc ->
+                                            doc.toObject(BookModel::class.java)
+                                        }
+                                        .filter { it.sellerSuspended != true }
                                 trySend(Result.Success(resultList))
                             }
                         }

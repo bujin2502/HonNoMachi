@@ -221,4 +221,9 @@
     <string name="admin_section_suspension">Suspension</string>
     <string name="admin_label_suspended_reason">Reason:</string>
     <string name="admin_label_suspended_at">Suspended at:</string>
+    <string name="suspended_title">Your account has been suspended</string>
+    <string name="suspended_reason_label">Reason: %1$s</string>
+    <string name="suspended_contact_message">If you believe this is a mistake, please contact support.</string>
+    <string name="suspended_sign_out">Sign Out</string>
+    <string name="error_suspended_cannot_add_book">Suspended accounts cannot create new offers.</string>
 </resources>

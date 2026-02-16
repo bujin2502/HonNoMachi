@@ -221,4 +221,9 @@
     <string name="admin_section_suspension">Suspenzija</string>
     <string name="admin_label_suspended_reason">Razlog:</string>
     <string name="admin_label_suspended_at">Suspendirano:</string>
+    <string name="suspended_title">Vaš račun je suspendiran</string>
+    <string name="suspended_reason_label">Razlog: %1$s</string>
+    <string name="suspended_contact_message">Ako smatrate da je ovo greška, molimo kontaktirajte podršku.</string>
+    <string name="suspended_sign_out">Odjava</string>
+    <string name="error_suspended_cannot_add_book">Suspendirani računi ne mogu kreirati nove ponude.</string>
 </resources>

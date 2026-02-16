@@ -33,6 +33,7 @@ import hr.foi.air.honnomachi.ui.book.BookDetailScreen
 import hr.foi.air.honnomachi.ui.home.HomeScreen
 import hr.foi.air.honnomachi.ui.home.HomeViewModel
 import hr.foi.air.honnomachi.ui.policy.PrivacyPolicyScreen
+import hr.foi.air.honnomachi.ui.suspended.SuspendedAccountScreen
 
 @Composable
 fun AppNavigation(
@@ -44,9 +45,10 @@ fun AppNavigation(
 
     val uiState by authViewModel.uiState.collectAsState()
 
-    LaunchedEffect(uiState.isUserLoggedIn, uiState.needsVerification) {
+    LaunchedEffect(uiState.isUserLoggedIn, uiState.needsVerification, uiState.isSuspended) {
         val route =
             when {
+                uiState.isSuspended -> "suspended"
                 uiState.isUserLoggedIn -> "home"
                 uiState.needsVerification -> "verification"
                 else -> "auth"
@@ -120,6 +122,16 @@ fun AppNavigation(
             arguments = listOf(navArgument("bookId") { type = NavType.StringType }),
         ) { backStackEntry ->
             BookDetailScreen(bookId = backStackEntry.arguments?.getString("bookId"))
+        }
+
+        composable("suspended") {
+            SuspendedAccountScreen(
+                reason = uiState.suspendedReason,
+                onSignOut = {
+                    authViewModel.consumeSuspendedState()
+                    authViewModel.signOut()
+                },
+            )
         }
 
         // Admin ruta - lista korisnika (HNM-289)

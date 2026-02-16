@@ -8,6 +8,7 @@ import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.data.BookRepository
+import hr.foi.air.honnomachi.data.FirestoreUserDataSource
 import hr.foi.air.honnomachi.model.BookCondition
 import hr.foi.air.honnomachi.model.BookGenre
 import hr.foi.air.honnomachi.model.BookModel
@@ -30,6 +31,7 @@ class AddBookViewModel
         private val bookRepository: BookRepository,
         private val auth: FirebaseAuth,
         private val imageUploader: ImageUploader,
+        private val userDataSource: FirestoreUserDataSource,
     ) : AndroidViewModel(application) {
         private val _uiState = MutableStateFlow<AddBookUiState>(AddBookUiState.Idle)
         val uiState: StateFlow<AddBookUiState> = _uiState.asStateFlow()
@@ -191,6 +193,12 @@ class AddBookViewModel
             _uiState.value = AddBookUiState.Submitting
 
             viewModelScope.launch {
+                val userData = userDataSource.getUser(currentUser.uid)
+                if (userData?.suspended == true) {
+                    _uiState.value = AddBookUiState.Error(application.getString(R.string.error_suspended_cannot_add_book))
+                    return@launch
+                }
+
                 val imageUrls =
                     if (imageUris.isNotEmpty()) {
                         when (val uploadResult = imageUploader.uploadImages(imageUris, "images/books")) {

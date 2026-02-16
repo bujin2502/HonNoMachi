@@ -284,4 +284,108 @@ class AdminRepositoryTest {
             assertEquals(1, users.size)
             assertEquals("Suspended User", users[0].name)
         }
+
+    @Test
+    fun `suspendUser returns error when no admin logged in`() =
+        runTest {
+            every { auth.currentUser } returns null
+
+            val result = repository.suspendUser("user-uid", "Razlog")
+
+            assertTrue(result is Result.Error)
+            assertEquals("Administrator nije prijavljen.", (result as Result.Error).exception.message)
+        }
+
+    @Test
+    fun `suspendUser returns error when user not found`() =
+        runTest {
+            val mockAdmin = mockk<FirebaseUser>()
+            every { mockAdmin.uid } returns "admin-uid"
+            every { auth.currentUser } returns mockAdmin
+
+            val mockSnapshot = mockk<DocumentSnapshot>()
+            val mockTask = mockk<Task<DocumentSnapshot>>()
+            every { mockDocument.get() } returns mockTask
+            coEvery { mockTask.await() } returns mockSnapshot
+            every { mockSnapshot.exists() } returns false
+
+            val result = repository.suspendUser("nonexistent", "Razlog")
+
+            assertTrue(result is Result.Error)
+            assertEquals("User not found.", (result as Result.Error).exception.message)
+        }
+
+    @Test
+    fun `suspendUser returns error when user already suspended`() =
+        runTest {
+            val mockAdmin = mockk<FirebaseUser>()
+            every { mockAdmin.uid } returns "admin-uid"
+            every { auth.currentUser } returns mockAdmin
+
+            val suspendedUser = UserModel(name = "User", email = "user@test.com", suspended = true)
+            val mockSnapshot = mockk<DocumentSnapshot>()
+            val mockTask = mockk<Task<DocumentSnapshot>>()
+            every { mockDocument.get() } returns mockTask
+            coEvery { mockTask.await() } returns mockSnapshot
+            every { mockSnapshot.exists() } returns true
+            every { mockSnapshot.toObject(UserModel::class.java) } returns suspendedUser
+            every { mockSnapshot.id } returns "user-uid"
+
+            val result = repository.suspendUser("user-uid", "Razlog")
+
+            assertTrue(result is Result.Error)
+            assertEquals("Korisnik je već suspendiran.", (result as Result.Error).exception.message)
+        }
+
+    @Test
+    fun `reactivateUser returns error when no admin logged in`() =
+        runTest {
+            every { auth.currentUser } returns null
+
+            val result = repository.reactivateUser("user-uid")
+
+            assertTrue(result is Result.Error)
+            assertEquals("Administrator nije prijavljen.", (result as Result.Error).exception.message)
+        }
+
+    @Test
+    fun `reactivateUser returns error when user not found`() =
+        runTest {
+            val mockAdmin = mockk<FirebaseUser>()
+            every { mockAdmin.uid } returns "admin-uid"
+            every { auth.currentUser } returns mockAdmin
+
+            val mockSnapshot = mockk<DocumentSnapshot>()
+            val mockTask = mockk<Task<DocumentSnapshot>>()
+            every { mockDocument.get() } returns mockTask
+            coEvery { mockTask.await() } returns mockSnapshot
+            every { mockSnapshot.exists() } returns false
+
+            val result = repository.reactivateUser("nonexistent")
+
+            assertTrue(result is Result.Error)
+            assertEquals("User not found.", (result as Result.Error).exception.message)
+        }
+
+    @Test
+    fun `reactivateUser returns error when user not suspended`() =
+        runTest {
+            val mockAdmin = mockk<FirebaseUser>()
+            every { mockAdmin.uid } returns "admin-uid"
+            every { auth.currentUser } returns mockAdmin
+
+            val activeUser = UserModel(name = "User", email = "user@test.com", suspended = false)
+            val mockSnapshot = mockk<DocumentSnapshot>()
+            val mockTask = mockk<Task<DocumentSnapshot>>()
+            every { mockDocument.get() } returns mockTask
+            coEvery { mockTask.await() } returns mockSnapshot
+            every { mockSnapshot.exists() } returns true
+            every { mockSnapshot.toObject(UserModel::class.java) } returns activeUser
+            every { mockSnapshot.id } returns "user-uid"
+
+            val result = repository.reactivateUser("user-uid")
+
+            assertTrue(result is Result.Error)
+            assertEquals("Korisnik nije suspendiran.", (result as Result.Error).exception.message)
+        }
 }

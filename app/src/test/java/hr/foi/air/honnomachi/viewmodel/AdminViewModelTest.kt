@@ -29,6 +29,8 @@ class FakeAdminRepository : AdminRepository {
     var userByIdResult: Result<UserModel> = Result.Success(UserModel())
     var searchResult: Result<List<UserModel>> = Result.Success(emptyList())
     var statusResult: Result<List<UserModel>> = Result.Success(emptyList())
+    var suspendUserResult: Result<Unit> = Result.Success(Unit)
+    var reactivateUserResult: Result<Unit> = Result.Success(Unit)
 
     override suspend fun isCurrentUserAdmin(): Result<Boolean> = isAdminResult
 
@@ -42,6 +44,10 @@ class FakeAdminRepository : AdminRepository {
     override suspend fun searchUsers(query: String): Result<List<UserModel>> = searchResult
 
     override suspend fun getUsersByStatus(isSuspended: Boolean): Result<List<UserModel>> = statusResult
+
+    override suspend fun suspendUser(userId: String, reason: String): Result<Unit> = suspendUserResult
+
+    override suspend fun reactivateUser(userId: String): Result<Unit> = reactivateUserResult
 }
 
 @ExperimentalCoroutinesApi

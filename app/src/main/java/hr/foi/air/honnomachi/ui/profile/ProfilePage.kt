@@ -66,6 +66,8 @@ fun ProfilePage(
         ) {
             Text(stringResource(id = R.string.logout))
         }
+
+        // Ovo bi se kasnije trebalo obrisat (sa definiranom konstantnom varijablom...) Mrtav kod ??!! @Zlatko
         if (SHOW_QA_BUTTON) {
             Button(
                 onClick = { authViewModel.testSecureRead() },

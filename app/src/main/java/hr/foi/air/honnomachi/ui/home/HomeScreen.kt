@@ -166,6 +166,9 @@ fun ContentScreen(
                 onNavigateToPrivacyPolicy = {
                     navController.navigate("privacyPolicy")
                 },
+                onNavigateToAdmin = {
+                    navController.navigate("admin")
+                },
                 profileViewModel = profileViewModel,
             )
         }

@@ -2,9 +2,20 @@ rules_version = '2';
 service cloud.firestore {
     match /databases/{database}/documents {
 
+        //Pomoćna funkcija - provjerava admin status trenutnog korisnika
+        function isAdmin() {
+            return request.auth != null
+                && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.admin == true;
+        }
+
         match /users/{userId} {
             allow create: if request.auth != null;
-            allow read, update: if request.auth != null && request.auth.uid == userId;
+
+            //Običan korisnik moze citati svoj profil... Admin moze citati sve profile...
+            allow read: if request.auth != null
+                && (request.auth.uid == userId || isAdmin());
+
+            allow update: if request.auth != null && request.auth.uid == userId;
         }
 
         match /books/{bookId} {

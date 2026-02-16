@@ -4,6 +4,8 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import hr.foi.air.honnomachi.data.AdminRepository
+import hr.foi.air.honnomachi.data.AdminRepositoryImpl
 import hr.foi.air.honnomachi.data.AuthRepository
 import hr.foi.air.honnomachi.data.AuthRepositoryImpl
 import hr.foi.air.honnomachi.data.BookRepository
@@ -32,4 +34,7 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindProfileRepository(profileRepositoryImpl: ProfileRepositoryImpl): ProfileRepository
+
+    @Binds
+    abstract fun bindAdminRepository(adminRepositoryImpl: AdminRepositoryImpl): AdminRepository
 }

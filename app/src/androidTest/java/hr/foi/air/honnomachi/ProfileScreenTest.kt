@@ -23,19 +23,31 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-// Create a Fake ViewModel to bypass Firebase
+/**
+ * Lažni ViewModel za zaobilaženje Firebase poziva tijekom testiranja.
+ *
+ *
+ * Na ovaj način odvajaš "testiranje UI-a" od "prave baze podataka" (Firebase) te njezine kompleksne "asinkrone logike"...
+ *
+ * Omogućuje ručno postavljanje stanja ([setState]) i simulaciju poslovne logike bez stvarnih repozitorija.
+ *
+ */
 class FakeProfileViewModel(
     repository: ProfileRepository,
 ) : ProfileViewModel(repository) {
-    // Helper to set private state via reflection
+    /**
+     * Pomoćna funkcija za postavljanje privatnog stanja ViewModela (`_uiState`) koristeći refleksiju.
+     *
+     * Ovo je nužno jer je `_uiState` privatan, a za testiranje trebamo postaviti
+     * točno određeno početno stanje (npr. [ProfileUiState.Success] s podacima korisnika).
+     */
     fun setState(state: ProfileUiState) {
         val field = ProfileViewModel::class.java.getDeclaredField("_uiState")
         field.isAccessible = true
         val stateFlow = field.get(this) as MutableStateFlow<ProfileUiState>
         stateFlow.value = state
 
-        if (state is ProfileUiState.Success) {
-            // Also populate form state
+        if (state is ProfileUiState.Success) { // Popuni stanje forme s podacima korisnika...
             onNameChange(state.user.name)
             onPhoneChange(state.user.phoneNumber ?: "")
             onStreetChange(state.user.street ?: "")
@@ -44,14 +56,26 @@ class FakeProfileViewModel(
         }
     }
 
+    /**
+     * Prazna funkcija kojom spriječavaš stvarne Firebase pozive...
+     *
+     * Nadjačava stvarni poziv kako bi se spriječilo dohvaćanje podataka s interneta.
+     */
     override fun loadUserProfile() {
-        // No-op to prevent Firebase calls
+        // No-op
     }
 
+    /**
+     * Simulira logiku spremanja profila.
+     *
+     * Umjesto slanja podataka na server, ova metoda lokalno provjerava validnost
+     * unosa (npr. je li ime prazno) i odmah vraća rezultat.
+     *
+     * @param onResult Callback funkcija koja vraća uspjeh (true) ili neuspjeh (false).
+     */
     override fun saveProfile(onResult: (Boolean, String?) -> Unit) {
-        // Simulate save logic using the open validation methods
         if (formState.value.name.isBlank()) {
-            validateName() // this updates error state
+            validateName() // ovo ažurira stanje greške (error state)...
             onResult(false, "Error")
             return
         }
@@ -59,6 +83,12 @@ class FakeProfileViewModel(
     }
 }
 
+/**
+ * Instrumentirani testovi za [ProfileScreen].
+ *
+ * Provjeravaju interakciju korisnika s UI elementima ekrana profila,
+ * validaciju unosa i prikaz podataka, koristeći [FakeProfileViewModel].
+ */
 @RunWith(AndroidJUnit4::class)
 class ProfileScreenTest {
     @get:Rule
@@ -68,7 +98,7 @@ class ProfileScreenTest {
     private lateinit var mockRepository: ProfileRepository
 
     private fun launchScreen() {
-        // Set initial state
+        // Postavi početno stanje korisnika
         val user =
             UserModel(
                 name = "Initial Name",
@@ -91,12 +121,22 @@ class ProfileScreenTest {
                 paddingValues = PaddingValues(0.dp),
                 onLogout = {},
                 onNavigateToChangePassword = {},
-                onNavigateToPrivacyPolicy = {}, // <-- Add this line
+                onNavigateToPrivacyPolicy = {},
+                onNavigateToAdmin = {},
                 profileViewModel = fakeViewModel,
             )
         }
     }
 
+    /**
+     * Testira scenarij uspješnog uređivanja profila.
+     *
+     * Koraci:
+     * 1. Prikazuje se ekran s početnim imenom.
+     * 2. Korisnik briše staro ime i upisuje novo.
+     * 3. Korisnik klika na gumb "Spremi".
+     * 4. Očekuje se da nema grešaka (simulacija uspjeha).
+     */
     @Test
     fun successful_profile_edit() {
         launchScreen()
@@ -110,21 +150,30 @@ class ProfileScreenTest {
         val labelName = context.getString(hr.foi.air.honnomachi.R.string.label_name)
         val btnSave = context.getString(hr.foi.air.honnomachi.R.string.button_save)
 
-        // Find text field via initial value, then update it
+        // Pronađi polje za unos preko početne vrijednosti, zatim ga očisti
         composeTestRule.onNodeWithText("Initial Name").performTextClearance()
-        // Find by label now that value is gone, or use label from start
+
+        // Pronađi po oznaci (labeli) sada kada je vrijednost nestala i unesi novu
         composeTestRule
             .onNodeWithText(
                 labelName,
             ).performTextInput("Updated Name")
 
-        // Click Save
+        // Klikni gumb "Spremi"
         composeTestRule
             .onNodeWithText(btnSave)
             .performScrollTo()
             .performClick()
     }
 
+    /**
+     * Testira validaciju unosa (neispravan unos).
+     *
+     * Koraci:
+     * 1. Korisnik briše ime (ostavlja prazno polje).
+     * 2. Korisnik klikne na gumb "Spremi".
+     * 3. Očekuje se prikaz poruke o greški (da je ime obavezno).
+     */
     @Test
     fun invalid_input_shows_error() {
         launchScreen()
@@ -136,19 +185,19 @@ class ProfileScreenTest {
         val btnSave = context.getString(hr.foi.air.honnomachi.R.string.button_save)
         val errorMsg = context.getString(hr.foi.air.honnomachi.R.string.error_name_required)
 
-        // Clear Name
+        // Obriši Ime (simulacija neispravnog unosa)
         composeTestRule
             .onNodeWithText("Initial Name")
             .performScrollTo()
             .performTextClearance()
 
-        // Click Save
+        // Klikni gumb "Spremi"
         composeTestRule
             .onNodeWithText(btnSave)
             .performScrollTo()
             .performClick()
 
-        // Verify Error Message
+        // Potvrdi da je prikazana poruka greške
         composeTestRule.onNodeWithText(errorMsg).assertIsDisplayed()
     }
 }

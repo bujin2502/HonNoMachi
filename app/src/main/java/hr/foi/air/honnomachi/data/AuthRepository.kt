@@ -77,11 +77,15 @@ class AuthRepositoryImpl
                     if (user != null) {
                         val isVerified = freshUser?.isEmailVerified ?: false
 
+                        // Ovi loggovi bi se trebali maknuti (kao zbog sigurnosti jer može otkriti osjetljive informacije o statusu verifikacije korisnika...)
+                        // , zamjeniti s CrashlyticsManager ??!! @Zlatko
                         Log.d("AuthRepository", "Login - Firebase Auth isEmailVerified: $isVerified")
                         Log.d("AuthRepository", "Login - Firestore isVerified: ${user.isVerified}")
 
                         if (isVerified && !user.isVerified) {
+                            // Kao i kod gornjih loggova, zamjeniti s CrashlyticsManager ??!! @Zlatko
                             Log.d("AuthRepository", "Syncing Firestore isVerified to true")
+
                             userDataSource.updateVerificationStatus(firebaseUser.uid, true)
                         }
 

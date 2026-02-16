@@ -287,6 +287,10 @@ class AdminRepositoryImpl
 
                 batch.commit().await()
 
+                /** TODO: HNM-300 — Poslati email obavijest korisniku o suspenziji računa.
+                 *  Potrebna Cloud Functions integracija jer Firebase Auth ne podržava slanje
+                 *  prilagođenih emailova direktno s klijenta. */
+
                 Result.Success(Unit)
             } catch (e: Exception) {
                 CrashlyticsManager.instance.logException(e)
@@ -344,6 +348,10 @@ class AdminRepositoryImpl
                 }
 
                 batch.commit().await()
+
+                /** TODO: HNM-300 — Poslati email obavijest korisniku o reaktivaciji računa.
+                 *  Potrebna Cloud Functions integracija jer Firebase Auth ne podržava slanje
+                 *  prilagođenih emailova direktno s klijenta. */
 
                 Result.Success(Unit)
             } catch (e: Exception) {

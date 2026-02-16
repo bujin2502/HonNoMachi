@@ -40,7 +40,7 @@ open class AuthViewModel
             if (user == null) {
                 suspensionMonitorJob?.cancel()
                 _uiState.update {
-                    it.copy(isUserLoggedIn = false, needsVerification = false, isSuspended = false)
+                    it.copy(isUserLoggedIn = false, needsVerification = false)
                 }
                 return
             }
@@ -70,17 +70,16 @@ open class AuthViewModel
                         it.copy(
                             isUserLoggedIn = isVerified,
                             needsVerification = !isVerified,
-                            isSuspended = false,
                         )
                     }
                 } else {
                     _uiState.update {
-                        it.copy(isUserLoggedIn = false, needsVerification = false, isSuspended = false)
+                        it.copy(isUserLoggedIn = false, needsVerification = false)
                     }
                 }
             } catch (e: Exception) {
                 _uiState.update {
-                    it.copy(isUserLoggedIn = false, needsVerification = false, isSuspended = false)
+                    it.copy(isUserLoggedIn = false, needsVerification = false)
                 }
             }
         }

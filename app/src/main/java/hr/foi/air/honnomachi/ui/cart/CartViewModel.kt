@@ -6,12 +6,15 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import hr.foi.air.honnomachi.data.CartRepository
 import hr.foi.air.honnomachi.data.OrderRepository
 import hr.foi.air.honnomachi.model.BookModel
+import hr.foi.air.honnomachi.model.Currency
 import hr.foi.air.honnomachi.util.Result
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+private const val USD_TO_EUR_RATE = 1.18
 
 @HiltViewModel
 class CartViewModel
@@ -36,7 +39,12 @@ class CartViewModel
                     when (result) {
                         is Result.Success -> {
                             val items = result.data
-                            val total = items.sumOf { it.price }
+                            val total = items.sumOf { item ->
+                                when (item.currency) {
+                                    Currency.USD.name -> item.price / USD_TO_EUR_RATE
+                                    else -> item.price
+                                }
+                            }
                             _uiState.value = CartUiState.Success(items, total)
                         }
                         is Result.Error -> {

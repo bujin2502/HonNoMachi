@@ -5,6 +5,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import hr.foi.air.honnomachi.CrashlyticsManager
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.model.CartItemModel
+import hr.foi.air.honnomachi.model.ItemStatus
 import hr.foi.air.honnomachi.util.Result
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -28,6 +29,10 @@ class CartRepositoryImpl
     ) : CartRepository {
         override suspend fun addToCart(book: BookModel): Result<Unit> =
             try {
+                if (book.status != ItemStatus.AVAILABLE) {
+                    Result.Error(Exception("Knjiga trenutno nije dostupna."))
+                }
+
                 val currentUser = auth.currentUser
                 if (currentUser != null && book.bookId != null) {
                     val cartItem =

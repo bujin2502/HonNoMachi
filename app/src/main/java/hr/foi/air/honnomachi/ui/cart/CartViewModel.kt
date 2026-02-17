@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import hr.foi.air.honnomachi.data.CartRepository
+import hr.foi.air.honnomachi.data.OrderRepository
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.util.Result
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,6 +18,7 @@ class CartViewModel
     @Inject
     constructor(
         private val cartRepository: CartRepository,
+        private val orderRepository: OrderRepository
     ) : ViewModel() {
         private val _uiState = MutableStateFlow<CartUiState>(CartUiState.Loading)
         val uiState: StateFlow<CartUiState> = _uiState.asStateFlow()
@@ -66,6 +68,19 @@ class CartViewModel
                     }
                     is Result.Error -> {
                         _actionMessage.value = "Greška prilikom brisanja: ${result.exception.message}"
+                    }
+                }
+            }
+        }
+
+        fun placeOrder() {
+            viewModelScope.launch {
+                when (val result = orderRepository.placeOrder()) {
+                    is Result.Success -> {
+                        _actionMessage.value = "Narudžba uspješno kreirana!"
+                    }
+                    is Result.Error -> {
+                        _actionMessage.value = "Greška kod narudžbe: ${result.exception.message}"
                     }
                 }
             }

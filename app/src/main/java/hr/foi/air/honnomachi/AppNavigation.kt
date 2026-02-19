@@ -19,6 +19,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import hr.foi.air.honnomachi.ui.admin.AdminUserDetailScreen
 import hr.foi.air.honnomachi.ui.admin.AdminUserListScreen
 import hr.foi.air.honnomachi.ui.admin.AdminViewModel
@@ -30,6 +31,8 @@ import hr.foi.air.honnomachi.ui.auth.ForgotPasswordScreen
 import hr.foi.air.honnomachi.ui.auth.LoginScreen
 import hr.foi.air.honnomachi.ui.auth.SignupScreen
 import hr.foi.air.honnomachi.ui.book.BookDetailScreen
+import hr.foi.air.honnomachi.ui.cart.CheckoutCancelScreen
+import hr.foi.air.honnomachi.ui.cart.CheckoutSuccessScreen
 import hr.foi.air.honnomachi.ui.home.HomeScreen
 import hr.foi.air.honnomachi.ui.home.HomeViewModel
 import hr.foi.air.honnomachi.ui.policy.PrivacyPolicyScreen
@@ -47,18 +50,22 @@ fun AppNavigation(
     LaunchedEffect(uiState.isUserLoggedIn, uiState.needsVerification) {
         val route =
             when {
-                uiState.isUserLoggedIn -> "home"
-                uiState.needsVerification -> "verification"
-                else -> "auth"
+                uiState.isUserLoggedIn -> ROUTE_HOME
+                uiState.needsVerification -> ROUTE_VERIFICATION
+                else -> ROUTE_AUTH
             }
 
         val currentRoute =
             navController.currentBackStackEntry
                 ?.destination
                 ?.route
-                ?.substringBefore("/")
-        val destinationRoute = route.substringBefore("/")
-        if (destinationRoute == currentRoute) {
+                ?.substringBefore("?")
+
+        if (currentRoute == ROUTE_CHECKOUT_SUCCESS || currentRoute == ROUTE_CHECKOUT_CANCEL) {
+            return@LaunchedEffect
+        }
+
+        if (route == currentRoute) {
             return@LaunchedEffect
         }
 
@@ -75,44 +82,80 @@ fun AppNavigation(
         onDispose { }
     }
 
-    NavHost(navController = navController, startDestination = "auth") {
-        composable("auth") {
+    NavHost(navController = navController, startDestination = ROUTE_AUTH) {
+        composable(ROUTE_AUTH) {
             AuthScreen(modifier, navController, authViewModel)
         }
 
-        composable("login") {
+        composable(ROUTE_LOGIN) {
             LoginScreen(modifier, navController, authViewModel)
         }
 
-        composable("signup") {
+        composable(ROUTE_SIGNUP) {
             SignupScreen(modifier, navController, authViewModel)
         }
 
-        composable("verification") {
+        composable(ROUTE_VERIFICATION) {
             EmailVerificationScreen(
                 onNavigateToLogin = {
-                    navController.navigate("login") {
-                        popUpTo("auth") { inclusive = true }
+                    navController.navigate(ROUTE_LOGIN) {
+                        popUpTo(ROUTE_AUTH) { inclusive = true }
                     }
                 },
                 authViewModel = authViewModel,
             )
         }
 
-        composable("forgotPassword") {
+        composable(ROUTE_FORGOT_PASSWORD) {
             ForgotPasswordScreen(navController, authViewModel)
         }
 
-        composable("home") {
+        composable(ROUTE_HOME) {
             HomeScreen(navController, authViewModel, homeViewModel)
         }
 
-        composable("changePassword") {
+        composable(ROUTE_CHANGE_PASSWORD) {
             ChangePasswordScreen(navController = navController)
         }
 
-        composable("privacyPolicy") {
+        composable(ROUTE_PRIVACY_POLICY) {
             PrivacyPolicyScreen(onNavigateBack = { navController.navigateUp() })
+        }
+
+        composable(
+            route = ROUTE_CHECKOUT_SUCCESS,
+            deepLinks =
+                listOf(
+                    navDeepLink { uriPattern = CHECKOUT_SUCCESS_DEEP_LINK_HTTPS },
+                    navDeepLink { uriPattern = CHECKOUT_SUCCESS_DEEP_LINK_SCHEME },
+                ),
+        ) {
+            CheckoutSuccessScreen(
+                onNavigateHome = {
+                    navController.navigate(ROUTE_HOME) {
+                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
+            )
+        }
+
+        composable(
+            route = ROUTE_CHECKOUT_CANCEL,
+            deepLinks =
+                listOf(
+                    navDeepLink { uriPattern = CHECKOUT_CANCEL_DEEP_LINK_HTTPS },
+                    navDeepLink { uriPattern = CHECKOUT_CANCEL_DEEP_LINK_SCHEME },
+                ),
+        ) {
+            CheckoutCancelScreen(
+                onNavigateHome = {
+                    navController.navigate(ROUTE_HOME) {
+                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
+            )
         }
 
         composable(
@@ -124,7 +167,7 @@ fun AppNavigation(
 
         // Admin ruta - lista korisnika (HNM-289)
         // Guard logika: provjerava admin status prije prikaza ekrana
-        composable("admin") {
+        composable(ROUTE_ADMIN) {
             val adminViewModel: AdminViewModel = hiltViewModel()
             val isAdmin by adminViewModel.isAdminChecked.collectAsState()
             val context = LocalContext.current
@@ -144,8 +187,8 @@ fun AppNavigation(
                     val accessDeniedMsg = stringResource(R.string.error_admin_access_denied)
                     LaunchedEffect(Unit) {
                         AppUtil.showToast(context, accessDeniedMsg)
-                        navController.navigate("home") {
-                            popUpTo("home") { inclusive = true }
+                        navController.navigate(ROUTE_HOME) {
+                            popUpTo(ROUTE_HOME) { inclusive = true }
                             launchSingleTop = true
                         }
                     }
@@ -185,8 +228,8 @@ fun AppNavigation(
                     val accessDeniedMsg = stringResource(R.string.error_admin_access_denied)
                     LaunchedEffect(Unit) {
                         AppUtil.showToast(context, accessDeniedMsg)
-                        navController.navigate("home") {
-                            popUpTo("home") { inclusive = true }
+                        navController.navigate(ROUTE_HOME) {
+                            popUpTo(ROUTE_HOME) { inclusive = true }
                             launchSingleTop = true
                         }
                     }
@@ -200,3 +243,22 @@ fun AppNavigation(
         }
     }
 }
+
+private const val ROUTE_AUTH = "auth"
+private const val ROUTE_LOGIN = "login"
+private const val ROUTE_SIGNUP = "signup"
+private const val ROUTE_VERIFICATION = "verification"
+private const val ROUTE_FORGOT_PASSWORD = "forgotPassword"
+private const val ROUTE_HOME = "home"
+private const val ROUTE_CHANGE_PASSWORD = "changePassword"
+private const val ROUTE_PRIVACY_POLICY = "privacyPolicy"
+private const val ROUTE_ADMIN = "admin"
+private const val ROUTE_CHECKOUT_SUCCESS = "checkout/success"
+private const val ROUTE_CHECKOUT_CANCEL = "checkout/cancel"
+
+private const val CHECKOUT_SUCCESS_DEEP_LINK_HTTPS =
+    "https://example.com/honnomachi/checkout/success"
+private const val CHECKOUT_CANCEL_DEEP_LINK_HTTPS =
+    "https://example.com/honnomachi/checkout/cancel"
+private const val CHECKOUT_SUCCESS_DEEP_LINK_SCHEME = "honnomachi://checkout/success"
+private const val CHECKOUT_CANCEL_DEEP_LINK_SCHEME = "honnomachi://checkout/cancel"

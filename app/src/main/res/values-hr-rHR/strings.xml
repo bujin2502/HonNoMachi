@@ -138,6 +138,11 @@
     <string name="label_price">Cijena:</string>
     <string name="button_add_to_cart">Dodaj u košaricu</string>
     <string name="button_pay_with_stripe">Plati putem Stripea</string>
+    <string name="checkout_success_title">Plaćanje uspješno</string>
+    <string name="checkout_success_message">Vaše plaćanje je uspješno završeno.</string>
+    <string name="checkout_cancel_title">Plaćanje je otkazano</string>
+    <string name="checkout_cancel_message">Checkout je otkazan. Možete pokušati ponovno iz košarice.</string>
+    <string name="button_back_home">Natrag na početnu</string>
     <string name="label_description">Opis:</string>
     <string name="search_by_title">Pretraži po naslovu</string>
     <string name="no_books_found">Nema knjiga koje odgovaraju pretrazi.</string>

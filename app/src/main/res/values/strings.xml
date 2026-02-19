@@ -138,6 +138,11 @@
     <string name="label_price">Price:</string>
     <string name="button_add_to_cart">Add to cart</string>
     <string name="button_pay_with_stripe">Pay with Stripe</string>
+    <string name="checkout_success_title">Payment successful</string>
+    <string name="checkout_success_message">Your payment was completed successfully.</string>
+    <string name="checkout_cancel_title">Payment canceled</string>
+    <string name="checkout_cancel_message">Checkout was canceled. You can try again from your cart.</string>
+    <string name="button_back_home">Back to Home</string>
     <string name="label_description">Description:</string>
     <string name="search_by_title">Search by title</string>
     <string name="no_books_found">No books found matching your search.</string>

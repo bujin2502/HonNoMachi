@@ -1,5 +1,9 @@
 package hr.foi.air.honnomachi.ui.cart
 
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +20,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -42,6 +47,7 @@ import coil.compose.AsyncImage
 import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.model.CartItemModel
+import kotlinx.coroutines.flow.collect
 
 @Composable
 fun CartPage(
@@ -50,12 +56,19 @@ fun CartPage(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val actionMessage by viewModel.actionMessage.collectAsState()
+    val isCheckoutInProgress by viewModel.isCheckoutInProgress.collectAsState()
     val context = LocalContext.current
 
     LaunchedEffect(actionMessage) {
         actionMessage?.let {
             AppUtil.showToast(context, it)
             viewModel.consumeMessage()
+        }
+    }
+
+    LaunchedEffect(viewModel) {
+        viewModel.checkoutUrl.collect { checkoutUrl ->
+            openCheckoutPage(context, checkoutUrl)
         }
     }
 
@@ -93,7 +106,9 @@ fun CartPage(
                     CartContent(
                         items = state.items,
                         totalPrice = state.totalPrice,
+                        isCheckoutInProgress = isCheckoutInProgress,
                         onRemoveItem = { viewModel.removeFromCart(it) },
+                        onCheckout = { viewModel.checkoutWithStripe() },
                     )
                 }
             }
@@ -105,7 +120,9 @@ fun CartPage(
 fun CartContent(
     items: List<CartItemModel>,
     totalPrice: Double,
+    isCheckoutInProgress: Boolean,
     onRemoveItem: (String) -> Unit,
+    onCheckout: () -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
@@ -138,6 +155,24 @@ fun CartContent(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
             )
+        }
+
+        Button(
+            onClick = onCheckout,
+            enabled = !isCheckoutInProgress,
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+        ) {
+            if (isCheckoutInProgress) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(18.dp),
+                    strokeWidth = 2.dp,
+                )
+            } else {
+                Text(text = stringResource(R.string.button_pay_with_stripe))
+            }
         }
     }
 }
@@ -205,5 +240,20 @@ fun CartItemRow(
                 )
             }
         }
+    }
+}
+
+private fun openCheckoutPage(
+    context: Context,
+    checkoutUrl: String,
+) {
+    try {
+        val intent =
+            Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl)).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+        context.startActivity(intent)
+    } catch (e: ActivityNotFoundException) {
+        AppUtil.showToast(context, "Nije moguće otvoriti Stripe checkout.")
     }
 }

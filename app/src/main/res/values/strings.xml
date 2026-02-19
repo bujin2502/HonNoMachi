@@ -137,6 +137,7 @@
     <string name="label_condition">Condition:</string>
     <string name="label_price">Price:</string>
     <string name="button_add_to_cart">Add to cart</string>
+    <string name="button_pay_with_stripe">Pay with Stripe</string>
     <string name="label_description">Description:</string>
     <string name="search_by_title">Search by title</string>
     <string name="no_books_found">No books found matching your search.</string>

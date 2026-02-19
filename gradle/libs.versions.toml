@@ -44,6 +44,7 @@ coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose"
 com-google-firebase-firebase-bom = { module = "com.google.firebase:firebase-bom" }
 dagger-hilt-android = { module = "com.google.dagger:hilt-android" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-functions = { module = "com.google.firebase:firebase-functions" }
 
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-storage = { module = "com.google.firebase:firebase-storage" }

@@ -1,6 +1,8 @@
 package hr.foi.air.honnomachi.viewmodel
 
 import hr.foi.air.honnomachi.data.CartRepository
+import hr.foi.air.honnomachi.data.CheckoutRepository
+import hr.foi.air.honnomachi.data.CheckoutSessionModel
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.model.CartItemModel
 import hr.foi.air.honnomachi.ui.cart.CartUiState
@@ -10,7 +12,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -48,17 +52,40 @@ class FakeCartRepository : CartRepository {
     }
 }
 
+class FakeCheckoutRepository : CheckoutRepository {
+    var createSessionCallCount = 0
+    var resultToReturn: Result<CheckoutSessionModel> =
+        Result.Success(
+            CheckoutSessionModel(
+                sessionId = "cs_test",
+                checkoutUrl = "https://stripe.test/checkout",
+                expiresAt = null,
+                reservationIds = emptyList(),
+            ),
+        )
+
+    override suspend fun createCheckoutSession(
+        successUrl: String,
+        cancelUrl: String,
+    ): Result<CheckoutSessionModel> {
+        createSessionCallCount++
+        return resultToReturn
+    }
+}
+
 @ExperimentalCoroutinesApi
 class CartViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var fakeRepository: FakeCartRepository
+    private lateinit var fakeCheckoutRepository: FakeCheckoutRepository
     private lateinit var viewModel: CartViewModel
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         fakeRepository = FakeCartRepository()
-        viewModel = CartViewModel(fakeRepository)
+        fakeCheckoutRepository = FakeCheckoutRepository()
+        viewModel = CartViewModel(fakeRepository, fakeCheckoutRepository)
     }
 
     @After
@@ -113,5 +140,38 @@ class CartViewModelTest {
             val state = viewModel.uiState.value
             assertTrue(state is CartUiState.Success)
             assertEquals(0, (state as CartUiState.Success).items.size)
+        }
+
+    @Test
+    fun `checkoutWithStripe empty cart does not call backend`() =
+        runTest(testDispatcher) {
+            viewModel.checkoutWithStripe()
+            advanceUntilIdle()
+
+            assertEquals(0, fakeCheckoutRepository.createSessionCallCount)
+            assertEquals("Košarica je prazna.", viewModel.actionMessage.value)
+        }
+
+    @Test
+    fun `checkoutWithStripe emits checkout url on success`() =
+        runTest(testDispatcher) {
+            val emittedUrls = mutableListOf<String>()
+            val collectionJob =
+                backgroundScope.launch {
+                    viewModel.checkoutUrl.collect { emittedUrls += it }
+                }
+
+            val book = BookModel(bookId = "4", title = "Checkout Book", price = 12.0)
+            fakeRepository.addToCart(book)
+            advanceUntilIdle()
+
+            viewModel.checkoutWithStripe()
+            advanceUntilIdle()
+
+            assertEquals(1, fakeCheckoutRepository.createSessionCallCount)
+            assertEquals(listOf("https://stripe.test/checkout"), emittedUrls)
+            assertEquals(false, viewModel.isCheckoutInProgress.value)
+
+            collectionJob.cancel()
         }
 }

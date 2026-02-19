@@ -113,6 +113,10 @@ cd HonNoMachi
 2. U CI okruženju postavite varijablu:
    `STRIPE_PUBLISHABLE_KEY=pk_test_...`
 3. Nikada ne stavljajte Stripe secret key (`sk_...`) u Android aplikaciju
+4. Backend secret za Cloud Functions postavite preko Firebase CLI:
+   `npx firebase-tools functions:secrets:set STRIPE_SECRET_KEY --project <firebase-project-id>`
+5. Deploy backend funkcija (PowerShell: navodnici oko `--only`):
+   `npx firebase-tools deploy --only "functions:createCheckoutSession" --project <firebase-project-id>`
 
 ### 4. Sinkronizacija i pokretanje
 

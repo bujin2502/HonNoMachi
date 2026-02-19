@@ -1,4 +1,5 @@
 import org.gradle.api.tasks.compile.JavaCompile
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -11,6 +12,23 @@ plugins {
     alias(libs.plugins.hilt.android)
     jacoco
 }
+
+private fun String.escapeForBuildConfig(): String = replace("\\", "\\\\").replace("\"", "\\\"")
+
+val localProperties =
+    Properties().apply {
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localPropertiesFile.inputStream().use(::load)
+        }
+    }
+
+val stripePublishableKey =
+    (
+        localProperties.getProperty("STRIPE_PUBLISHABLE_KEY")
+            ?: System.getenv("STRIPE_PUBLISHABLE_KEY")
+            ?: "pk_test_REPLACE_ME"
+    ).trim()
 
 ktlint {
     reporters {
@@ -32,6 +50,11 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         manifestPlaceholders["imageUploaderAuthority"] = "hr.foi.air.honnomachi.provider"
+        buildConfigField(
+            "String",
+            "STRIPE_PUBLISHABLE_KEY",
+            "\"${stripePublishableKey.escapeForBuildConfig()}\"",
+        )
 
         multiDexEnabled = true
     }
@@ -59,6 +82,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     packaging {
         resources {

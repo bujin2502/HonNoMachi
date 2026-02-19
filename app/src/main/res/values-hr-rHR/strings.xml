@@ -119,6 +119,7 @@
     <string name="currency_eur">€</string>
     <string name="currency_usd">$</string>
     <string name="status_available">Dostupno</string>
+    <string name="status_reserved">Rezervirano</string>
     <string name="status_sold">Prodano</string>
     <string name="status_pending_sale">Čekanje prodaje</string>
     <string name="status_inactive">Neaktivno</string>

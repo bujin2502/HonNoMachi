@@ -8,6 +8,6 @@ import dagger.hilt.android.HiltAndroidApp
 class HonNoMachiApp : Application() {
     override fun onCreate() {
         super.onCreate()
-        PaymentConfiguration.init(this, getString(R.string.stripe_publishable_key))
+        PaymentConfiguration.init(this, BuildConfig.STRIPE_PUBLISHABLE_KEY)
     }
 }

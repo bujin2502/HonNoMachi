@@ -108,9 +108,11 @@ cd HonNoMachi
 
 ### 3. Stripe konfiguracija (test okruženje)
 
-1. Otvorite `app/src/main/res/values/strings.xml`
-2. Postavite vrijednost `stripe_publishable_key` na svoj Stripe test publishable key (`pk_test_...`)
-3. Nikada ne stavljajte Stripe secret key u Android aplikaciju
+1. U `local.properties` dodajte:
+   `STRIPE_PUBLISHABLE_KEY=pk_test_...`
+2. U CI okruženju postavite varijablu:
+   `STRIPE_PUBLISHABLE_KEY=pk_test_...`
+3. Nikada ne stavljajte Stripe secret key (`sk_...`) u Android aplikaciju
 
 ### 4. Sinkronizacija i pokretanje
 
@@ -118,6 +120,18 @@ cd HonNoMachi
 2. Kliknite **Sync Now** za sinkronizaciju Gradle datoteka
 3. Povežite Android uređaj ili pokrenite emulator
 4. Kliknite **Run 'app'** ili koristite `Shift + F10`
+
+Ako pokrećete Gradle iz terminala:
+
+```powershell
+# Windows PowerShell
+.\gradlew.bat :app:assembleDebug
+```
+
+```bash
+# Bash / Git Bash
+./gradlew :app:assembleDebug
+```
 
 ### Detaljne upute
 

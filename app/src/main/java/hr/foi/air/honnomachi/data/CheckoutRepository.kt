@@ -28,8 +28,8 @@ class CheckoutRepositoryImpl
         override suspend fun createCheckoutSession(
             successUrl: String,
             cancelUrl: String,
-        ): Result<CheckoutSessionModel> =
-            try {
+        ): Result<CheckoutSessionModel> {
+            return try {
                 val payload =
                     mapOf(
                         "successUrl" to successUrl,
@@ -47,27 +47,28 @@ class CheckoutRepositoryImpl
                 val checkoutUrl = responseData?.get("checkoutUrl") as? String
 
                 if (sessionId.isNullOrBlank() || checkoutUrl.isNullOrBlank()) {
-                    return Result.Error(Exception("Neispravan odgovor backend servisa za Stripe naplatu."))
+                    Result.Error(Exception("Neispravan odgovor backend servisa za Stripe naplatu."))
+                } else {
+                    val expiresAt = responseData["expiresAt"] as? String
+                    val reservationIds =
+                        (responseData["reservationIds"] as? List<*>)
+                            ?.mapNotNull { it as? String }
+                            .orEmpty()
+
+                    Result.Success(
+                        CheckoutSessionModel(
+                            sessionId = sessionId,
+                            checkoutUrl = checkoutUrl,
+                            expiresAt = expiresAt,
+                            reservationIds = reservationIds,
+                        ),
+                    )
                 }
-
-                val expiresAt = responseData["expiresAt"] as? String
-                val reservationIds =
-                    (responseData["reservationIds"] as? List<*>)
-                        ?.mapNotNull { it as? String }
-                        .orEmpty()
-
-                Result.Success(
-                    CheckoutSessionModel(
-                        sessionId = sessionId,
-                        checkoutUrl = checkoutUrl,
-                        expiresAt = expiresAt,
-                        reservationIds = reservationIds,
-                    ),
-                )
             } catch (e: Exception) {
                 CrashlyticsManager.instance.logException(e)
                 Result.Error(e)
             }
+        }
 
         companion object {
             private const val CREATE_CHECKOUT_SESSION_FUNCTION = "createCheckoutSession"

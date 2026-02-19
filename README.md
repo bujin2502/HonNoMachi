@@ -106,7 +106,13 @@ cd HonNoMachi
 4. Preuzmite `google-services.json`
 5. Premjestite datoteku u `app/` direktorij projekta
 
-### 3. Sinkronizacija i pokretanje
+### 3. Stripe konfiguracija (test okruženje)
+
+1. Otvorite `app/src/main/res/values/strings.xml`
+2. Postavite vrijednost `stripe_publishable_key` na svoj Stripe test publishable key (`pk_test_...`)
+3. Nikada ne stavljajte Stripe secret key u Android aplikaciju
+
+### 4. Sinkronizacija i pokretanje
 
 1. Otvorite projekt u Android Studiju
 2. Kliknite **Sync Now** za sinkronizaciju Gradle datoteka

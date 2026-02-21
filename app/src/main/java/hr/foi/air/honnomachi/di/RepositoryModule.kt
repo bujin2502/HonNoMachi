@@ -16,8 +16,6 @@ import hr.foi.air.honnomachi.data.CheckoutRepository
 import hr.foi.air.honnomachi.data.CheckoutRepositoryImpl
 import hr.foi.air.honnomachi.data.FirestoreUserDataSource
 import hr.foi.air.honnomachi.data.FirestoreUserDataSourceImpl
-import hr.foi.air.honnomachi.data.OrderRepository
-import hr.foi.air.honnomachi.data.OrderRepositoryImpl
 import hr.foi.air.honnomachi.data.ProfileRepository
 import hr.foi.air.honnomachi.data.ProfileRepositoryImpl
 

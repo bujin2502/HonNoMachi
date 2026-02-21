@@ -1,7 +1,8 @@
 package hr.foi.air.honnomachi.viewmodel
 
 import hr.foi.air.honnomachi.data.CartRepository
-import hr.foi.air.honnomachi.data.OrderRepository
+import hr.foi.air.honnomachi.data.CheckoutRepository
+import hr.foi.air.honnomachi.data.CheckoutSessionModel
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.model.CartItemModel
 import hr.foi.air.honnomachi.model.Currency
@@ -12,7 +13,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -55,16 +58,24 @@ class FakeCartRepository : CartRepository {
     }
 }
 
-class FakeOrderRepository(
-    private val fakeCartRepository: FakeCartRepository,
-) : OrderRepository {
-    var placeOrderCalled = false
-        private set
+class FakeCheckoutRepository : CheckoutRepository {
+    var createSessionCallCount = 0
+    var resultToReturn: Result<CheckoutSessionModel> =
+        Result.Success(
+            CheckoutSessionModel(
+                sessionId = "cs_test",
+                checkoutUrl = "https://stripe.test/checkout",
+                expiresAt = null,
+                reservationIds = emptyList(),
+            ),
+        )
 
-    override suspend fun placeOrder(): Result<Unit> {
-        placeOrderCalled = true
-        fakeCartRepository.clearCart()
-        return Result.Success(Unit)
+    override suspend fun createCheckoutSession(
+        successUrl: String,
+        cancelUrl: String,
+    ): Result<CheckoutSessionModel> {
+        createSessionCallCount++
+        return resultToReturn
     }
 }
 
@@ -72,15 +83,15 @@ class FakeOrderRepository(
 class CartViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var fakeCartRepository: FakeCartRepository
-    private lateinit var fakeOrderRepository: FakeOrderRepository
+    private lateinit var fakeCheckoutRepository: FakeCheckoutRepository
     private lateinit var viewModel: CartViewModel
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         fakeCartRepository = FakeCartRepository()
-        fakeOrderRepository = FakeOrderRepository(fakeCartRepository)
-        viewModel = CartViewModel(fakeCartRepository, fakeOrderRepository)
+        fakeCheckoutRepository = FakeCheckoutRepository()
+        viewModel = CartViewModel(fakeCartRepository, fakeCheckoutRepository)
     }
 
     @After
@@ -122,25 +133,36 @@ class CartViewModelTest {
         }
 
     @Test
-    fun `placeOrder updates message and clears cart on success`() =
+    fun `checkoutWithStripe empty cart does not call backend`() =
         runTest(testDispatcher) {
-            val book = BookModel(bookId = "1", title = "Test Book", price = 10.0, priceCurrency = Currency.EUR)
+            viewModel.checkoutWithStripe()
+            advanceUntilIdle()
+
+            assertEquals(0, fakeCheckoutRepository.createSessionCallCount)
+            assertEquals("Košarica je prazna.", viewModel.actionMessage.value)
+        }
+
+    @Test
+    fun `checkoutWithStripe emits checkout url on success`() =
+        runTest(testDispatcher) {
+            val emittedUrls = mutableListOf<String>()
+            val collectionJob =
+                backgroundScope.launch {
+                    viewModel.checkoutUrl.collect { emittedUrls += it }
+                }
+
+            val book = BookModel(bookId = "4", title = "Checkout Book", price = 12.0, priceCurrency = Currency.EUR)
             fakeCartRepository.addToCart(book)
             advanceUntilIdle()
 
-            var state = viewModel.uiState.value
-            assertTrue(state is CartUiState.Success)
-            assertEquals(1, (state as CartUiState.Success).items.size)
-
-            viewModel.placeOrder()
+            viewModel.checkoutWithStripe()
             advanceUntilIdle()
 
-            assertTrue(fakeOrderRepository.placeOrderCalled)
-            assertEquals("Narudžba uspješno kreirana!", viewModel.actionMessage.value)
+            assertEquals(1, fakeCheckoutRepository.createSessionCallCount)
+            assertEquals(listOf("https://stripe.test/checkout"), emittedUrls)
+            assertEquals(false, viewModel.isCheckoutInProgress.value)
 
-            state = viewModel.uiState.value
-            assertTrue(state is CartUiState.Success)
-            assertEquals(0, (state as CartUiState.Success).items.size)
+            collectionJob.cancel()
         }
 
     @Test

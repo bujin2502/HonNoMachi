@@ -110,7 +110,7 @@ fun CartPage(
                         totalPrice = state.totalPrice,
                         isCheckoutInProgress = isCheckoutInProgress,
                         onRemoveItem = { viewModel.removeFromCart(it) },
-                        onPlaceOrder = { viewModel.placeOrder() },
+                        onCheckout = { viewModel.checkoutWithStripe() },
                         showImages = showImages,
                     )
                 }
@@ -125,7 +125,7 @@ fun CartContent(
     totalPrice: Double,
     isCheckoutInProgress: Boolean,
     onRemoveItem: (String) -> Unit,
-    onPlaceOrder: () -> Unit,
+    onCheckout: () -> Unit,
     showImages: Boolean,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
@@ -162,14 +162,22 @@ fun CartContent(
         }
         Spacer(modifier = Modifier.height(8.dp))
         Button(
-            onClick = onPlaceOrder,
+            onClick = onCheckout,
+            enabled = !isCheckoutInProgress,
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .testTag("confirm_order_button"),
+                    .testTag("pay_with_stripe_button"),
             shape = RoundedCornerShape(8.dp),
         ) {
-            Text(text = "Potvrdi narudžbu")
+            if (isCheckoutInProgress) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(18.dp),
+                    strokeWidth = 2.dp,
+                )
+            } else {
+                Text(text = stringResource(R.string.button_pay_with_stripe))
+            }
         }
         Spacer(modifier = Modifier.height(16.dp))
     }

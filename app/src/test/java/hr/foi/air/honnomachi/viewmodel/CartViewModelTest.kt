@@ -1,10 +1,10 @@
 package hr.foi.air.honnomachi.viewmodel
 
 import hr.foi.air.honnomachi.data.CartRepository
-import hr.foi.air.honnomachi.data.CheckoutRepository
-import hr.foi.air.honnomachi.data.CheckoutSessionModel
+import hr.foi.air.honnomachi.data.OrderRepository
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.model.CartItemModel
+import hr.foi.air.honnomachi.model.Currency
 import hr.foi.air.honnomachi.ui.cart.CartUiState
 import hr.foi.air.honnomachi.ui.cart.CartViewModel
 import hr.foi.air.honnomachi.util.Result
@@ -12,9 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -36,6 +34,7 @@ class FakeCartRepository : CartRepository {
                 bookId = book.bookId ?: "testId",
                 title = book.title,
                 price = book.price,
+                currency = book.priceCurrency.name,
             )
         _cartItems.value = _cartItems.value + newItem
         return Result.Success(Unit)
@@ -50,42 +49,38 @@ class FakeCartRepository : CartRepository {
         _cartItems.value = _cartItems.value.filter { it.id != cartItemId }
         return Result.Success(Unit)
     }
+
+    fun clearCart() {
+        _cartItems.value = emptyList()
+    }
 }
 
-class FakeCheckoutRepository : CheckoutRepository {
-    var createSessionCallCount = 0
-    var resultToReturn: Result<CheckoutSessionModel> =
-        Result.Success(
-            CheckoutSessionModel(
-                sessionId = "cs_test",
-                checkoutUrl = "https://stripe.test/checkout",
-                expiresAt = null,
-                reservationIds = emptyList(),
-            ),
-        )
+class FakeOrderRepository(
+    private val fakeCartRepository: FakeCartRepository,
+) : OrderRepository {
+    var placeOrderCalled = false
+        private set
 
-    override suspend fun createCheckoutSession(
-        successUrl: String,
-        cancelUrl: String,
-    ): Result<CheckoutSessionModel> {
-        createSessionCallCount++
-        return resultToReturn
+    override suspend fun placeOrder(): Result<Unit> {
+        placeOrderCalled = true
+        fakeCartRepository.clearCart()
+        return Result.Success(Unit)
     }
 }
 
 @ExperimentalCoroutinesApi
 class CartViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
-    private lateinit var fakeRepository: FakeCartRepository
-    private lateinit var fakeCheckoutRepository: FakeCheckoutRepository
+    private lateinit var fakeCartRepository: FakeCartRepository
+    private lateinit var fakeOrderRepository: FakeOrderRepository
     private lateinit var viewModel: CartViewModel
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        fakeRepository = FakeCartRepository()
-        fakeCheckoutRepository = FakeCheckoutRepository()
-        viewModel = CartViewModel(fakeRepository, fakeCheckoutRepository)
+        fakeCartRepository = FakeCartRepository()
+        fakeOrderRepository = FakeOrderRepository(fakeCartRepository)
+        viewModel = CartViewModel(fakeCartRepository, fakeOrderRepository)
     }
 
     @After
@@ -94,10 +89,10 @@ class CartViewModelTest {
     }
 
     @Test
-    fun `loadCartItems loads items successfully`() =
+    fun `loadCartItems loads items and calculates total price`() =
         runTest(testDispatcher) {
-            val book = BookModel(bookId = "1", title = "Test Book", price = 10.0)
-            fakeRepository.addToCart(book)
+            val book = BookModel(bookId = "1", title = "Test Book", price = 10.0, priceCurrency = Currency.EUR)
+            fakeCartRepository.addToCart(book)
 
             advanceUntilIdle()
 
@@ -110,6 +105,45 @@ class CartViewModelTest {
         }
 
     @Test
+    fun `loadCartItems calculates total price correctly with mixed currencies`() =
+        runTest(testDispatcher) {
+            val bookEur = BookModel(bookId = "1", title = "EUR Book", price = 20.0, priceCurrency = Currency.EUR)
+            val bookUsd = BookModel(bookId = "2", title = "USD Book", price = 23.6, priceCurrency = Currency.USD)
+            fakeCartRepository.addToCart(bookEur)
+            fakeCartRepository.addToCart(bookUsd)
+
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            assertTrue(state is CartUiState.Success)
+            val successState = state as CartUiState.Success
+            assertEquals(2, successState.items.size)
+            assertEquals(40.0, successState.totalPrice, 0.01)
+        }
+
+    @Test
+    fun `placeOrder updates message and clears cart on success`() =
+        runTest(testDispatcher) {
+            val book = BookModel(bookId = "1", title = "Test Book", price = 10.0, priceCurrency = Currency.EUR)
+            fakeCartRepository.addToCart(book)
+            advanceUntilIdle()
+
+            var state = viewModel.uiState.value
+            assertTrue(state is CartUiState.Success)
+            assertEquals(1, (state as CartUiState.Success).items.size)
+
+            viewModel.placeOrder()
+            advanceUntilIdle()
+
+            assertTrue(fakeOrderRepository.placeOrderCalled)
+            assertEquals("Narudžba uspješno kreirana!", viewModel.actionMessage.value)
+
+            state = viewModel.uiState.value
+            assertTrue(state is CartUiState.Success)
+            assertEquals(0, (state as CartUiState.Success).items.size)
+        }
+
+    @Test
     fun `addToCart updates action message`() =
         runTest(testDispatcher) {
             val book = BookModel(bookId = "2", title = "New Book")
@@ -118,17 +152,13 @@ class CartViewModelTest {
 
             val message = viewModel.actionMessage.value
             assertEquals("Knjiga dodana u košaricu!", message)
-
-            val state = viewModel.uiState.value
-            assertTrue(state is CartUiState.Success)
-            assertEquals(1, (state as CartUiState.Success).items.size)
         }
 
     @Test
     fun `removeFromCart updates list and message`() =
         runTest(testDispatcher) {
             val book = BookModel(bookId = "3", title = "Delete Me")
-            fakeRepository.addToCart(book)
+            fakeCartRepository.addToCart(book)
             advanceUntilIdle()
 
             viewModel.removeFromCart("3")
@@ -140,38 +170,5 @@ class CartViewModelTest {
             val state = viewModel.uiState.value
             assertTrue(state is CartUiState.Success)
             assertEquals(0, (state as CartUiState.Success).items.size)
-        }
-
-    @Test
-    fun `checkoutWithStripe empty cart does not call backend`() =
-        runTest(testDispatcher) {
-            viewModel.checkoutWithStripe()
-            advanceUntilIdle()
-
-            assertEquals(0, fakeCheckoutRepository.createSessionCallCount)
-            assertEquals("Košarica je prazna.", viewModel.actionMessage.value)
-        }
-
-    @Test
-    fun `checkoutWithStripe emits checkout url on success`() =
-        runTest(testDispatcher) {
-            val emittedUrls = mutableListOf<String>()
-            val collectionJob =
-                backgroundScope.launch {
-                    viewModel.checkoutUrl.collect { emittedUrls += it }
-                }
-
-            val book = BookModel(bookId = "4", title = "Checkout Book", price = 12.0)
-            fakeRepository.addToCart(book)
-            advanceUntilIdle()
-
-            viewModel.checkoutWithStripe()
-            advanceUntilIdle()
-
-            assertEquals(1, fakeCheckoutRepository.createSessionCallCount)
-            assertEquals(listOf("https://stripe.test/checkout"), emittedUrls)
-            assertEquals(false, viewModel.isCheckoutInProgress.value)
-
-            collectionJob.cancel()
         }
 }

@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -53,6 +54,7 @@ import kotlinx.coroutines.flow.collect
 fun CartPage(
     paddingValues: PaddingValues,
     viewModel: CartViewModel = hiltViewModel(),
+    showImages: Boolean = true,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val actionMessage by viewModel.actionMessage.collectAsState()
@@ -108,7 +110,8 @@ fun CartPage(
                         totalPrice = state.totalPrice,
                         isCheckoutInProgress = isCheckoutInProgress,
                         onRemoveItem = { viewModel.removeFromCart(it) },
-                        onCheckout = { viewModel.checkoutWithStripe() },
+                        onPlaceOrder = { viewModel.placeOrder() },
+                        showImages = showImages,
                     )
                 }
             }
@@ -122,7 +125,8 @@ fun CartContent(
     totalPrice: Double,
     isCheckoutInProgress: Boolean,
     onRemoveItem: (String) -> Unit,
-    onCheckout: () -> Unit,
+    onPlaceOrder: () -> Unit,
+    showImages: Boolean,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
@@ -130,7 +134,7 @@ fun CartContent(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(items) { item ->
-                CartItemRow(item = item, onRemove = onRemoveItem)
+                CartItemRow(item = item, onRemove = onRemoveItem, showImages = showImages)
             }
         }
 
@@ -156,24 +160,18 @@ fun CartContent(
                 color = MaterialTheme.colorScheme.primary,
             )
         }
-
+        Spacer(modifier = Modifier.height(8.dp))
         Button(
-            onClick = onCheckout,
-            enabled = !isCheckoutInProgress,
+            onClick = onPlaceOrder,
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp),
+                    .testTag("confirm_order_button"),
+            shape = RoundedCornerShape(8.dp),
         ) {
-            if (isCheckoutInProgress) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(18.dp),
-                    strokeWidth = 2.dp,
-                )
-            } else {
-                Text(text = stringResource(R.string.button_pay_with_stripe))
-            }
+            Text(text = "Potvrdi narudžbu")
         }
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -181,6 +179,7 @@ fun CartContent(
 fun CartItemRow(
     item: CartItemModel,
     onRemove: (String) -> Unit,
+    showImages: Boolean,
 ) {
     Card(
         modifier =
@@ -195,17 +194,21 @@ fun CartItemRow(
             modifier = Modifier.fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            AsyncImage(
-                model = item.imageUrl,
-                contentDescription = item.title,
-                contentScale = ContentScale.Crop,
-                modifier =
-                    Modifier
-                        .size(80.dp)
-                        .padding(8.dp),
-                error = painterResource(R.drawable.baseline_broken_image_24),
-                placeholder = painterResource(R.drawable.baseline_change_circle_24),
-            )
+            if (showImages) {
+                AsyncImage(
+                    model = item.imageUrl,
+                    contentDescription = item.title,
+                    contentScale = ContentScale.Crop,
+                    modifier =
+                        Modifier
+                            .size(80.dp)
+                            .padding(8.dp),
+                    error = painterResource(R.drawable.baseline_broken_image_24),
+                    placeholder = painterResource(R.drawable.baseline_change_circle_24),
+                )
+            } else {
+                Spacer(Modifier.size(80.dp))
+            }
 
             Column(
                 modifier =

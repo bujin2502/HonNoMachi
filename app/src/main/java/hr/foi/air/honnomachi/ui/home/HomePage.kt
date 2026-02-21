@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import hr.foi.air.honnomachi.R
+import hr.foi.air.honnomachi.model.ItemStatus
 import hr.foi.air.honnomachi.ui.components.BookItemView
 
 private const val SHOW_DEBUG_BUTTON = false
@@ -93,7 +94,7 @@ fun HomePage(
             ) {
                 Text(stringResource(R.string.error_occurred) + ": ${uiState.errorMessage}")
             }
-        } else if (uiState.books.isEmpty()) {
+        } else if (uiState.books.none { it.status == ItemStatus.AVAILABLE }) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,
@@ -102,11 +103,9 @@ fun HomePage(
             }
         } else {
             val filteredBookList =
-                if (uiState.searchQuery.isEmpty()) {
-                    uiState.books
-                } else {
-                    uiState.books.filter { it.title.contains(uiState.searchQuery, ignoreCase = true) }
-                }
+                uiState.books
+                    .filter { it.status == ItemStatus.AVAILABLE }
+                    .filter { it.title.contains(uiState.searchQuery, ignoreCase = true) }
 
             if (filteredBookList.isEmpty()) {
                 Box(

@@ -34,7 +34,7 @@ class FakeCartRepository : CartRepository {
                 bookId = book.bookId ?: "testId",
                 title = book.title,
                 price = book.price,
-                currency = book.priceCurrency.name
+                currency = book.priceCurrency.name,
             )
         _cartItems.value = _cartItems.value + newItem
         return Result.Success(Unit)
@@ -56,7 +56,7 @@ class FakeCartRepository : CartRepository {
 }
 
 class FakeOrderRepository(
-    private val fakeCartRepository: FakeCartRepository
+    private val fakeCartRepository: FakeCartRepository,
 ) : OrderRepository {
     var placeOrderCalled = false
         private set
@@ -67,7 +67,6 @@ class FakeOrderRepository(
         return Result.Success(Unit)
     }
 }
-
 
 @ExperimentalCoroutinesApi
 class CartViewModelTest {
@@ -106,41 +105,43 @@ class CartViewModelTest {
         }
 
     @Test
-    fun `loadCartItems calculates total price correctly with mixed currencies`() = runTest(testDispatcher) {
-        val bookEur = BookModel(bookId = "1", title = "EUR Book", price = 20.0, priceCurrency = Currency.EUR)
-        val bookUsd = BookModel(bookId = "2", title = "USD Book", price = 23.6, priceCurrency = Currency.USD)
-        fakeCartRepository.addToCart(bookEur)
-        fakeCartRepository.addToCart(bookUsd)
+    fun `loadCartItems calculates total price correctly with mixed currencies`() =
+        runTest(testDispatcher) {
+            val bookEur = BookModel(bookId = "1", title = "EUR Book", price = 20.0, priceCurrency = Currency.EUR)
+            val bookUsd = BookModel(bookId = "2", title = "USD Book", price = 23.6, priceCurrency = Currency.USD)
+            fakeCartRepository.addToCart(bookEur)
+            fakeCartRepository.addToCart(bookUsd)
 
-        advanceUntilIdle()
+            advanceUntilIdle()
 
-        val state = viewModel.uiState.value
-        assertTrue(state is CartUiState.Success)
-        val successState = state as CartUiState.Success
-        assertEquals(2, successState.items.size)
-        assertEquals(40.0, successState.totalPrice, 0.01)
-    }
+            val state = viewModel.uiState.value
+            assertTrue(state is CartUiState.Success)
+            val successState = state as CartUiState.Success
+            assertEquals(2, successState.items.size)
+            assertEquals(40.0, successState.totalPrice, 0.01)
+        }
 
     @Test
-    fun `placeOrder updates message and clears cart on success`() = runTest(testDispatcher) {
-        val book = BookModel(bookId = "1", title = "Test Book", price = 10.0, priceCurrency = Currency.EUR)
-        fakeCartRepository.addToCart(book)
-        advanceUntilIdle()
+    fun `placeOrder updates message and clears cart on success`() =
+        runTest(testDispatcher) {
+            val book = BookModel(bookId = "1", title = "Test Book", price = 10.0, priceCurrency = Currency.EUR)
+            fakeCartRepository.addToCart(book)
+            advanceUntilIdle()
 
-        var state = viewModel.uiState.value
-        assertTrue(state is CartUiState.Success)
-        assertEquals(1, (state as CartUiState.Success).items.size)
+            var state = viewModel.uiState.value
+            assertTrue(state is CartUiState.Success)
+            assertEquals(1, (state as CartUiState.Success).items.size)
 
-        viewModel.placeOrder()
-        advanceUntilIdle()
+            viewModel.placeOrder()
+            advanceUntilIdle()
 
-        assertTrue(fakeOrderRepository.placeOrderCalled)
-        assertEquals("Narudžba uspješno kreirana!", viewModel.actionMessage.value)
+            assertTrue(fakeOrderRepository.placeOrderCalled)
+            assertEquals("Narudžba uspješno kreirana!", viewModel.actionMessage.value)
 
-        state = viewModel.uiState.value
-        assertTrue(state is CartUiState.Success)
-        assertEquals(0, (state as CartUiState.Success).items.size)
-    }
+            state = viewModel.uiState.value
+            assertTrue(state is CartUiState.Success)
+            assertEquals(0, (state as CartUiState.Success).items.size)
+        }
 
     @Test
     fun `addToCart updates action message`() =

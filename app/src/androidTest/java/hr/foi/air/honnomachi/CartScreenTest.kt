@@ -28,17 +28,28 @@ import java.util.Locale
 
 class FakeCartRepository : CartRepository {
     private val _cartItems = MutableStateFlow<List<CartItemModel>>(emptyList())
-    fun addInitialItems(items: List<CartItemModel>) { _cartItems.value = items }
+
+    fun addInitialItems(items: List<CartItemModel>) {
+        _cartItems.value = items
+    }
+
     override suspend fun addToCart(book: BookModel): Result<Unit> = Result.Success(Unit)
+
     override fun getCartItems(): Flow<Result<List<CartItemModel>>> = _cartItems.map { Result.Success(it) }
+
     override suspend fun removeFromCart(cartItemId: String): Result<Unit> {
         _cartItems.value = _cartItems.value.filter { it.id != cartItemId }
         return Result.Success(Unit)
     }
-    fun clearCart() { _cartItems.value = emptyList() }
+
+    fun clearCart() {
+        _cartItems.value = emptyList()
+    }
 }
 
-class FakeOrderRepository(private val cartRepo: FakeCartRepository) : OrderRepository {
+class FakeOrderRepository(
+    private val cartRepo: FakeCartRepository,
+) : OrderRepository {
     override suspend fun placeOrder(): Result<Unit> {
         cartRepo.clearCart()
         return Result.Success(Unit)
@@ -47,7 +58,6 @@ class FakeOrderRepository(private val cartRepo: FakeCartRepository) : OrderRepos
 
 @RunWith(AndroidJUnit4::class)
 class CartScreenTest {
-
     @get:Rule
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
@@ -60,10 +70,11 @@ class CartScreenTest {
         fakeCartRepository = FakeCartRepository()
         fakeOrderRepository = FakeOrderRepository(fakeCartRepository)
 
-        val initialItems = listOf(
-            CartItemModel(id = "1", bookId = "1", title = "Oracle-Database", price = 11.8, currency = "USD"),
-            CartItemModel(id = "2", bookId = "2", title = "Oracle-ADF", price = 30.0, currency = "EUR")
-        )
+        val initialItems =
+            listOf(
+                CartItemModel(id = "1", bookId = "1", title = "Oracle-Database", price = 11.8, currency = "USD"),
+                CartItemModel(id = "2", bookId = "2", title = "Oracle-ADF", price = 30.0, currency = "EUR"),
+            )
         fakeCartRepository.addInitialItems(initialItems)
 
         viewModel = CartViewModel(fakeCartRepository, fakeOrderRepository)

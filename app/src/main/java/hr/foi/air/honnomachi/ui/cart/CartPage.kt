@@ -49,7 +49,7 @@ import hr.foi.air.honnomachi.model.CartItemModel
 fun CartPage(
     paddingValues: PaddingValues,
     viewModel: CartViewModel = hiltViewModel(),
-    showImages: Boolean = true
+    showImages: Boolean = true,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val actionMessage by viewModel.actionMessage.collectAsState()
@@ -98,7 +98,7 @@ fun CartPage(
                         totalPrice = state.totalPrice,
                         onRemoveItem = { viewModel.removeFromCart(it) },
                         onPlaceOrder = { viewModel.placeOrder() },
-                        showImages = showImages
+                        showImages = showImages,
                     )
                 }
             }
@@ -112,7 +112,7 @@ fun CartContent(
     totalPrice: Double,
     onRemoveItem: (String) -> Unit,
     onPlaceOrder: () -> Unit,
-    showImages: Boolean
+    showImages: Boolean,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
@@ -149,10 +149,11 @@ fun CartContent(
         Spacer(modifier = Modifier.height(8.dp))
         Button(
             onClick = onPlaceOrder,
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("confirm_order_button"),
-            shape = RoundedCornerShape(8.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .testTag("confirm_order_button"),
+            shape = RoundedCornerShape(8.dp),
         ) {
             Text(text = "Potvrdi narudžbu")
         }
@@ -164,7 +165,7 @@ fun CartContent(
 fun CartItemRow(
     item: CartItemModel,
     onRemove: (String) -> Unit,
-    showImages: Boolean
+    showImages: Boolean,
 ) {
     Card(
         modifier =

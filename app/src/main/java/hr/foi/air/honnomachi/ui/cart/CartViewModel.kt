@@ -21,7 +21,7 @@ class CartViewModel
     @Inject
     constructor(
         private val cartRepository: CartRepository,
-        private val orderRepository: OrderRepository
+        private val orderRepository: OrderRepository,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow<CartUiState>(CartUiState.Loading)
         val uiState: StateFlow<CartUiState> = _uiState.asStateFlow()
@@ -39,12 +39,13 @@ class CartViewModel
                     when (result) {
                         is Result.Success -> {
                             val items = result.data
-                            val total = items.sumOf { item ->
-                                when (item.currency) {
-                                    Currency.USD.name -> item.price / USD_TO_EUR_RATE
-                                    else -> item.price
+                            val total =
+                                items.sumOf { item ->
+                                    when (item.currency) {
+                                        Currency.USD.name -> item.price / USD_TO_EUR_RATE
+                                        else -> item.price
+                                    }
                                 }
-                            }
                             _uiState.value = CartUiState.Success(items, total)
                         }
                         is Result.Error -> {

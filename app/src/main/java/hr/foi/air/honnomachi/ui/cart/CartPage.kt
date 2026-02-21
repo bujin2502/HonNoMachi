@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -33,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -47,6 +49,7 @@ import hr.foi.air.honnomachi.model.CartItemModel
 fun CartPage(
     paddingValues: PaddingValues,
     viewModel: CartViewModel = hiltViewModel(),
+    showImages: Boolean = true,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val actionMessage by viewModel.actionMessage.collectAsState()
@@ -94,6 +97,8 @@ fun CartPage(
                         items = state.items,
                         totalPrice = state.totalPrice,
                         onRemoveItem = { viewModel.removeFromCart(it) },
+                        onPlaceOrder = { viewModel.placeOrder() },
+                        showImages = showImages,
                     )
                 }
             }
@@ -106,6 +111,8 @@ fun CartContent(
     items: List<CartItemModel>,
     totalPrice: Double,
     onRemoveItem: (String) -> Unit,
+    onPlaceOrder: () -> Unit,
+    showImages: Boolean,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
@@ -113,7 +120,7 @@ fun CartContent(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(items) { item ->
-                CartItemRow(item = item, onRemove = onRemoveItem)
+                CartItemRow(item = item, onRemove = onRemoveItem, showImages = showImages)
             }
         }
 
@@ -139,6 +146,18 @@ fun CartContent(
                 color = MaterialTheme.colorScheme.primary,
             )
         }
+        Spacer(modifier = Modifier.height(8.dp))
+        Button(
+            onClick = onPlaceOrder,
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .testTag("confirm_order_button"),
+            shape = RoundedCornerShape(8.dp),
+        ) {
+            Text(text = "Potvrdi narudžbu")
+        }
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -146,6 +165,7 @@ fun CartContent(
 fun CartItemRow(
     item: CartItemModel,
     onRemove: (String) -> Unit,
+    showImages: Boolean,
 ) {
     Card(
         modifier =
@@ -160,17 +180,21 @@ fun CartItemRow(
             modifier = Modifier.fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            AsyncImage(
-                model = item.imageUrl,
-                contentDescription = item.title,
-                contentScale = ContentScale.Crop,
-                modifier =
-                    Modifier
-                        .size(80.dp)
-                        .padding(8.dp),
-                error = painterResource(R.drawable.baseline_broken_image_24),
-                placeholder = painterResource(R.drawable.baseline_change_circle_24),
-            )
+            if (showImages) {
+                AsyncImage(
+                    model = item.imageUrl,
+                    contentDescription = item.title,
+                    contentScale = ContentScale.Crop,
+                    modifier =
+                        Modifier
+                            .size(80.dp)
+                            .padding(8.dp),
+                    error = painterResource(R.drawable.baseline_broken_image_24),
+                    placeholder = painterResource(R.drawable.baseline_change_circle_24),
+                )
+            } else {
+                Spacer(Modifier.size(80.dp))
+            }
 
             Column(
                 modifier =

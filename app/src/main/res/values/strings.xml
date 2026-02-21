@@ -119,6 +119,7 @@
     <string name="currency_eur">EUR</string>
     <string name="currency_usd">USD</string>
     <string name="status_available">Available</string>
+    <string name="status_reserved">Reserved</string>
     <string name="status_sold">Sold</string>
     <string name="status_pending_sale">Pending Sale</string>
     <string name="status_inactive">Inactive</string>

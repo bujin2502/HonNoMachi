@@ -30,12 +30,6 @@ interface FirestoreUserDataSource {
         isVerified: Boolean,
     )
 
-    /**
-     * Prati promjene na korisničkom dokumentu u stvarnom vremenu.
-     *
-     * @param uid Firestore UID korisnika.
-     * @return Flow koji emitira ažurirani [UserModel] pri svakoj promjeni dokumenta.
-     */
     fun observeUser(uid: String): Flow<UserModel?>
 }
 

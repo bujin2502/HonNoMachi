@@ -13,104 +13,33 @@ import hr.foi.air.honnomachi.util.Result
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
-/**
- * Stranica korisnika s referencom na zadnji dokument za straničenje.
- *
- * @param users Lista korisnika na stranici.
- * @param lastDocSnapshot Zadnji dokument stranice, koristi se za dohvat sljedeće stranice.
- */
 data class UserPage(
     val users: List<UserModel>,
     val lastDocSnapshot: DocumentSnapshot?,
 )
 
-/**
- * Sučelje repozitorija za administratorske operacije nad korisnicima.
- *
- * Definira metode za dohvat, pretragu i filtriranje korisnika
- * koje su dostupne isključivo administratorima.
- */
 interface AdminRepository {
-    /**
-     * Provjerava ima li trenutno prijavljeni korisnik administratorske ovlasti.
-     *
-     * @return [Result.Success] s `true` ako je korisnik admin, `false` ako nije,
-     *         ili [Result.Error] ako korisnik nije prijavljen ili dođe do greške.
-     */
     suspend fun isCurrentUserAdmin(): Result<Boolean>
 
-    /**
-     * Dohvaća stranicu korisnika s "cursor-based" straničenjem.
-     *
-     * Korisnici su sortirani po imenu. Za sljedeću stranicu,
-     * proslijediti [lastDocSnapshot] zadnjeg korisnika s prethodne stranice.
-     *
-     * @param pageSize Broj korisnika po stranici.
-     * @param lastDocSnapshot Zadnji dokument prethodne stranice za nastavak, ili `null` za prvu stranicu.
-     * @return [UserPage] s listom korisnika i referencom na zadnji dokument.
-     */
     suspend fun getAllUsers(
         pageSize: Int = 20,
         lastDocSnapshot: DocumentSnapshot? = null,
     ): Result<UserPage>
 
-    /**
-     * Dohvaća podatke o korisniku prema jedinstvenom identifikatoru.
-     *
-     * @param userId Firestore UID korisnika.
-     */
     suspend fun getUserById(userId: String): Result<UserModel>
 
-    /**
-     * Pretražuje korisnike po imenu ili email adresi (case-insensitive).
-     *
-     * Dohvaća sve korisnike i filtrira lokalno jer Firestore
-     * ne podržava case-insensitive pretragu.
-     *
-     * @param query Tekst za pretragu.
-     */
     suspend fun searchUsers(query: String): Result<List<UserModel>>
 
-    /**
-     * Filtrira korisnike prema statusu računa.
-     *
-     * @param isSuspended `true` za suspendirane, `false` za aktivne korisnike.
-     */
     suspend fun getUsersByStatus(isSuspended: Boolean): Result<List<UserModel>>
 
-    /**
-     * Suspendira korisnički račun.
-     *
-     * Atomično ažurira korisnički dokument, kreira revizijski zapis
-     * i skriva sve knjige korisnika putem Firestore batch operacije.
-     *
-     * @param userId Firestore UID korisnika za suspenziju.
-     * @param reason Razlog suspenzije.
-     */
     suspend fun suspendUser(
         userId: String,
         reason: String,
     ): Result<Unit>
 
-    /**
-     * Reaktivira suspendirani korisnički račun.
-     *
-     * Atomično vraća korisnika u aktivno stanje, kreira revizijski zapis
-     * i vraća vidljivost knjigama korisnika putem Firestore batch operacije.
-     *
-     * @param userId Firestore UID korisnika za reaktivaciju.
-     */
     suspend fun reactivateUser(userId: String): Result<Unit>
 }
 
-/**
- * Implementacija [AdminRepository] koja koristi Firebase Firestore.
- *
- * Sve greške se logiraju putem [CrashlyticsManager].
- *
- * @param auth Firebase Authentication instanca za dohvat trenutnog korisnika.
- * @param firestore Firebase Firestore instanca za pristup bazi podataka.
- */
 class AdminRepositoryImpl
     @Inject
     constructor(
@@ -295,10 +224,6 @@ class AdminRepositoryImpl
 
                 batch.commit().await()
 
-                /** TODO: HNM-300 — Poslati email obavijest korisniku o suspenziji računa.
-                 *  Potrebna Cloud Functions integracija jer Firebase Auth ne podržava slanje
-                 *  prilagođenih emailova direktno s klijenta. */
-
                 Result.Success(Unit)
             } catch (e: Exception) {
                 CrashlyticsManager.instance.logException(e)
@@ -358,10 +283,6 @@ class AdminRepositoryImpl
                 }
 
                 batch.commit().await()
-
-                /** TODO: HNM-300 — Poslati email obavijest korisniku o reaktivaciji računa.
-                 *  Potrebna Cloud Functions integracija jer Firebase Auth ne podržava slanje
-                 *  prilagođenih emailova direktno s klijenta. */
 
                 Result.Success(Unit)
             } catch (e: Exception) {

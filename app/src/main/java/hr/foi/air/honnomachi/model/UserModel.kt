@@ -3,12 +3,6 @@ package hr.foi.air.honnomachi.model
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.PropertyName
 
-/**
- * Model korisnika aplikacije.
- *
- * Sadrži osobne podatke, postavke privatnosti, administratorski status
- * te polja vezana uz suspenziju i reaktivaciju računa.
- */
 data class UserModel(
     val name: String = "",
     val email: String = "",

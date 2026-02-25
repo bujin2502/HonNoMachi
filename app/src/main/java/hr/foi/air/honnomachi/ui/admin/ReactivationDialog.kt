@@ -16,17 +16,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import hr.foi.air.honnomachi.R
 
-/**
- * Dijalog za potvrdu reaktivacije korisnika.
- *
- * Prikazuje ime korisnika i poruku potvrde s gumbima za
- * potvrdu reaktivacije ili odustajanje.
- *
- * @param userName Ime korisnika koji se reaktivira.
- * @param isLoading Izvršava li se trenutno akcija reaktivacije.
- * @param onConfirm Callback za potvrdu reaktivacije.
- * @param onDismiss Callback za zatvaranje dijaloga.
- */
 @Composable
 fun ReactivationDialog(
     userName: String,

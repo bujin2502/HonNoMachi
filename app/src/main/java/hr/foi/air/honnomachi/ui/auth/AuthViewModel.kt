@@ -391,17 +391,10 @@ open class AuthViewModel
             _uiState.update { it.copy(verificationStatusResult = null) }
         }
 
-        /** Briše stanje suspenzije nakon što korisnik vidi ekran suspenzije. */
         fun consumeSuspendedState() {
             _uiState.update { it.copy(isSuspended = false, suspendedReason = null) }
         }
 
-        /**
-         * Pokreće real-time praćenje suspenzije putem Firestore snapshot listenera.
-         *
-         * Ako se korisnik suspendira dok koristi aplikaciju,
-         * automatski ga odjavljuje i prikazuje ekran suspenzije.
-         */
         private fun startSuspensionMonitor(userId: String) {
             suspensionMonitorJob?.cancel()
             suspensionMonitorJob =

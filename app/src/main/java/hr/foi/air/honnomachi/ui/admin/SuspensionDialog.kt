@@ -22,17 +22,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import hr.foi.air.honnomachi.R
 
-/**
- * Dijalog za potvrdu suspenzije korisnika.
- *
- * Sadrži polje za unos razloga suspenzije i gumbe za potvrdu ili odustajanje.
- * Gumb za potvrdu je onemogućen dok razlog nije unesen ili dok traje akcija.
- *
- * @param userName Ime korisnika koji se suspendira.
- * @param isLoading Izvršava li se trenutno akcija suspenzije.
- * @param onConfirm Callback s unesenim razlogom nakon potvrde.
- * @param onDismiss Callback za zatvaranje dijaloga.
- */
 @Composable
 fun SuspensionDialog(
     userName: String,

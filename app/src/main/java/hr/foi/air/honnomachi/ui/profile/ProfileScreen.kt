@@ -62,17 +62,9 @@ fun ProfileScreen(
     val uiState by profileViewModel.uiState.collectAsState()
     val formState by profileViewModel.formState.collectAsState()
 
-    val hasChanges =
-        if (uiState is ProfileUiState.Success) {
-            val user = (uiState as ProfileUiState.Success).user
-            formState.name != user.name ||
-                formState.phone != (user.phoneNumber ?: "") ||
-                formState.street != (user.street ?: "") ||
-                formState.zip != (user.postNumber ?: "") ||
-                formState.city != (user.city ?: "")
-        } else {
-            false
-        }
+    val successState = uiState as? ProfileUiState.Success
+    val isAdmin = successState?.user?.admin == true
+    val hasChanges = computeHasChanges(uiState, formState)
 
     Column(
         modifier =
@@ -81,58 +73,7 @@ fun ProfileScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState()),
     ) {
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            if (uiState is ProfileUiState.Success) {
-                val user = (uiState as ProfileUiState.Success).user
-                val isSuspended = user.suspended == true
-                val statusText = if (isSuspended) stringResource(R.string.value_suspended) else stringResource(R.string.value_active)
-                val statusColor = if (isSuspended) StatusSuspended else StatusActive
-
-                Column {
-                    Text(
-                        text = stringResource(R.string.label_status),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = LabelGray,
-                    )
-                    Text(
-                        text = statusText,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = statusColor,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-            } else {
-                Spacer(modifier = Modifier.width(1.dp))
-            }
-
-            Button(
-                onClick = onLogout,
-                colors = ButtonDefaults.buttonColors(containerColor = LogoutButtonBackground),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                shape = RoundedCornerShape(12.dp),
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                        contentDescription = stringResource(R.string.label_logout),
-                        tint = Color.Black,
-                    )
-                    Spacer(modifier = Modifier.size(4.dp))
-                    Text(
-                        text = stringResource(R.string.label_logout),
-                        color = Color.Black,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    )
-                }
-            }
-        }
+        ProfileHeaderRow(uiState = uiState, onLogout = onLogout)
 
         Column(
             modifier =
@@ -141,12 +82,7 @@ fun ProfileScreen(
                     .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            val icon =
-                if (uiState is ProfileUiState.Success && (uiState as ProfileUiState.Success).user.admin == true) {
-                    Icons.Default.ManageAccounts
-                } else {
-                    Icons.Default.Person
-                }
+            val icon = if (isAdmin) Icons.Default.ManageAccounts else Icons.Default.Person
             Icon(
                 imageVector = icon,
                 contentDescription = null,
@@ -236,6 +172,23 @@ fun ProfileScreen(
             HorizontalDivider()
             Spacer(modifier = Modifier.height(16.dp))
 
+            if (isAdmin) {
+                Button(
+                    onClick = onNavigateToAdmin,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ManageAccounts,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = stringResource(R.string.button_admin_panel))
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -250,8 +203,10 @@ fun ProfileScreen(
 
                 val successMessage = stringResource(R.string.profile_update_success)
                 val errorMessageFormat = stringResource(R.string.profile_update_error)
-                Button(
-                    enabled = hasChanges && !formState.isSaving,
+                SaveButton(
+                    hasChanges = hasChanges,
+                    isSaving = formState.isSaving,
+                    modifier = Modifier.weight(1f).padding(start = 8.dp),
                     onClick = {
                         profileViewModel.saveProfile { success, message ->
                             if (success) {
@@ -261,15 +216,7 @@ fun ProfileScreen(
                             }
                         }
                     },
-                    shape = RoundedCornerShape(24.dp),
-                    modifier = Modifier.weight(1f).padding(start = 8.dp),
-                ) {
-                    if (formState.isSaving) {
-                        CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
-                    } else {
-                        Text(text = stringResource(R.string.button_save))
-                    }
-                }
+                )
             }
 
             if (uiState is ProfileUiState.Success && (uiState as ProfileUiState.Success).user.admin == true) {
@@ -299,6 +246,101 @@ fun ProfileScreen(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+private fun computeHasChanges(
+    uiState: ProfileUiState,
+    formState: ProfileFormState,
+): Boolean {
+    if (uiState !is ProfileUiState.Success) return false
+    val user = uiState.user
+    return formState.name != user.name ||
+        formState.phone != (user.phoneNumber ?: "") ||
+        formState.street != (user.street ?: "") ||
+        formState.zip != (user.postNumber ?: "") ||
+        formState.city != (user.city ?: "")
+}
+
+@Composable
+private fun ProfileHeaderRow(
+    uiState: ProfileUiState,
+    onLogout: () -> Unit,
+) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (uiState is ProfileUiState.Success) {
+            val isSuspended = uiState.user.suspended == true
+            val statusText =
+                if (isSuspended) stringResource(R.string.value_suspended) else stringResource(R.string.value_active)
+            val statusColor = if (isSuspended) StatusSuspended else StatusActive
+            Column {
+                Text(
+                    text = stringResource(R.string.label_status),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = LabelGray,
+                )
+                Text(
+                    text = statusText,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = statusColor,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+        } else {
+            Spacer(modifier = Modifier.width(1.dp))
+        }
+
+        Button(
+            onClick = onLogout,
+            colors = ButtonDefaults.buttonColors(containerColor = LogoutButtonBackground),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            shape = RoundedCornerShape(12.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                    contentDescription = stringResource(R.string.label_logout),
+                    tint = MaterialTheme.colorScheme.onSurface,
+                )
+                Spacer(modifier = Modifier.size(4.dp))
+                Text(
+                    text = stringResource(R.string.label_logout),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SaveButton(
+    hasChanges: Boolean,
+    isSaving: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    Button(
+        enabled = hasChanges && !isSaving,
+        onClick = onClick,
+        shape = RoundedCornerShape(24.dp),
+        modifier = modifier,
+    ) {
+        if (isSaving) {
+            CircularProgressIndicator(
+                color = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.size(24.dp),
+            )
+        } else {
+            Text(text = stringResource(R.string.button_save))
         }
     }
 }

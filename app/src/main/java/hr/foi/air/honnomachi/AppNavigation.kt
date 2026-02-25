@@ -12,7 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -33,6 +33,7 @@ import hr.foi.air.honnomachi.ui.book.BookDetailScreen
 import hr.foi.air.honnomachi.ui.home.HomeScreen
 import hr.foi.air.honnomachi.ui.home.HomeViewModel
 import hr.foi.air.honnomachi.ui.policy.PrivacyPolicyScreen
+import hr.foi.air.honnomachi.ui.suspended.SuspendedAccountScreen
 
 @Composable
 fun AppNavigation(
@@ -44,9 +45,10 @@ fun AppNavigation(
 
     val uiState by authViewModel.uiState.collectAsState()
 
-    LaunchedEffect(uiState.isUserLoggedIn, uiState.needsVerification) {
+    LaunchedEffect(uiState.isUserLoggedIn, uiState.needsVerification, uiState.isSuspended) {
         val route =
             when {
+                uiState.isSuspended -> "suspended"
                 uiState.isUserLoggedIn -> "home"
                 uiState.needsVerification -> "verification"
                 else -> "auth"
@@ -122,6 +124,16 @@ fun AppNavigation(
             BookDetailScreen(bookId = backStackEntry.arguments?.getString("bookId"))
         }
 
+        composable("suspended") {
+            SuspendedAccountScreen(
+                reason = uiState.suspendedReason,
+                onSignOut = {
+                    authViewModel.consumeSuspendedState()
+                    authViewModel.signOut()
+                },
+            )
+        }
+
         // Admin ruta - lista korisnika (HNM-289)
         // Guard logika: provjerava admin status prije prikaza ekrana
         composable("admin") {
@@ -167,7 +179,7 @@ fun AppNavigation(
         composable(
             "admin/userDetail/{userId}",
             arguments = listOf(navArgument("userId") { type = NavType.StringType }),
-        ) { backStackEntry ->
+        ) {
             val adminViewModel: AdminViewModel = hiltViewModel()
             val isAdmin by adminViewModel.isAdminChecked.collectAsState()
             val context = LocalContext.current

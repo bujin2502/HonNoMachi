@@ -207,4 +207,24 @@
     <string name="admin_value_no">No</string>
     <string name="admin_user_not_found">User not found</string>
     <string name="admin_error_loading_user">Error loading user data</string>
+    <string name="admin_suspend_user">Suspend</string>
+    <string name="admin_reactivate_user">Reactivate</string>
+    <string name="admin_suspend_dialog_title">Suspend User</string>
+    <string name="admin_suspend_dialog_reason_hint">Reason for suspension</string>
+    <string name="admin_suspend_dialog_reason_required">Reason is required</string>
+    <string name="admin_reactivate_dialog_title">Reactivate User</string>
+    <string name="admin_reactivate_dialog_message">Are you sure you want to reactivate this user? The user will regain full access to the application.</string>
+    <string name="admin_dialog_cancel">Cancel</string>
+    <string name="admin_suspend_success">User successfully suspended.</string>
+    <string name="admin_reactivate_success">User successfully reactivated.</string>
+    <string name="admin_suspend_error">Suspension failed:</string>
+    <string name="admin_reactivate_error">Reactivation failed:</string>
+    <string name="admin_section_suspension">Suspension</string>
+    <string name="admin_label_suspended_reason">Reason:</string>
+    <string name="admin_label_suspended_at">Suspended at:</string>
+    <string name="suspended_title">Your account has been suspended</string>
+    <string name="suspended_reason_label">Reason: %1$s</string>
+    <string name="suspended_contact_message">If you believe this is a mistake, please contact support.</string>
+    <string name="suspended_sign_out">Sign Out</string>
+    <string name="error_suspended_cannot_add_book">Suspended accounts cannot create new offers.</string>
 </resources>

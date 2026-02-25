@@ -56,6 +56,7 @@ open class AdminUserListViewModel
                                 isLoading = false,
                                 users = page.users,
                                 hasMorePages = page.users.size == PAGE_SIZE,
+                                scrollToTopTrigger = it.scrollToTopTrigger + 1,
                             )
                         }
                         lastDocSnapshot = page.lastDocSnapshot
@@ -112,7 +113,12 @@ open class AdminUserListViewModel
 
                 if (isSearchOrFilterActive()) {
                     executeSearchAndFilter()
-                    _uiState.update { it.copy(isRefreshing = false) }
+                    _uiState.update {
+                        it.copy(
+                            isRefreshing = false,
+                            scrollToTopTrigger = it.scrollToTopTrigger + 1,
+                        )
+                    }
                 } else {
                     when (val result = adminRepository.getAllUsers(pageSize = PAGE_SIZE)) {
                         is Result.Success -> {
@@ -122,6 +128,7 @@ open class AdminUserListViewModel
                                     isRefreshing = false,
                                     users = page.users,
                                     hasMorePages = page.users.size == PAGE_SIZE,
+                                    scrollToTopTrigger = it.scrollToTopTrigger + 1,
                                 )
                             }
                             lastDocSnapshot = page.lastDocSnapshot
@@ -178,6 +185,7 @@ open class AdminUserListViewModel
                             isLoading = false,
                             users = filtered,
                             hasMorePages = false,
+                            scrollToTopTrigger = it.scrollToTopTrigger + 1,
                         )
                     }
                 }

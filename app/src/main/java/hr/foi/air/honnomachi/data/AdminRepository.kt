@@ -1,10 +1,13 @@
 package hr.foi.air.honnomachi.data
 
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import hr.foi.air.honnomachi.CrashlyticsManager
+import hr.foi.air.honnomachi.model.AuditLog
 import hr.foi.air.honnomachi.model.UserModel
 import hr.foi.air.honnomachi.util.Result
 import kotlinx.coroutines.tasks.await
@@ -74,6 +77,30 @@ interface AdminRepository {
      * @param isSuspended `true` za suspendirane, `false` za aktivne korisnike.
      */
     suspend fun getUsersByStatus(isSuspended: Boolean): Result<List<UserModel>>
+
+    /**
+     * Suspendira korisnički račun.
+     *
+     * Atomično ažurira korisnički dokument, kreira revizijski zapis
+     * i skriva sve knjige korisnika putem Firestore batch operacije.
+     *
+     * @param userId Firestore UID korisnika za suspenziju.
+     * @param reason Razlog suspenzije.
+     */
+    suspend fun suspendUser(
+        userId: String,
+        reason: String,
+    ): Result<Unit>
+
+    /**
+     * Reaktivira suspendirani korisnički račun.
+     *
+     * Atomično vraća korisnika u aktivno stanje, kreira revizijski zapis
+     * i vraća vidljivost knjigama korisnika putem Firestore batch operacije.
+     *
+     * @param userId Firestore UID korisnika za reaktivaciju.
+     */
+    suspend fun reactivateUser(userId: String): Result<Unit>
 }
 
 /**
@@ -210,4 +237,136 @@ class AdminRepositoryImpl
                 CrashlyticsManager.instance.logException(e)
                 Result.Error(e)
             }
+
+        override suspend fun suspendUser(
+            userId: String,
+            reason: String,
+        ): Result<Unit> {
+            val adminUid =
+                auth.currentUser?.uid
+                    ?: return Result.Error(Exception("Administrator nije prijavljen."))
+
+            val userResult = getUserById(userId)
+            if (userResult is Result.Error) {
+                return Result.Error(userResult.exception)
+            }
+
+            val user = (userResult as Result.Success).data
+            if (user.suspended == true) {
+                return Result.Error(Exception("Korisnik je već suspendiran."))
+            }
+
+            return try {
+                val now = Timestamp.now()
+                val batch = firestore.batch()
+
+                val userRef = firestore.collection("users").document(userId)
+                batch.update(
+                    userRef,
+                    mapOf(
+                        "suspended" to true,
+                        "suspendedAt" to now,
+                        "suspendedReason" to reason,
+                        "suspendedBy" to adminUid,
+                    ),
+                )
+
+                val auditLog =
+                    AuditLog(
+                        action = "USER_SUSPENDED",
+                        targetUserId = userId,
+                        adminUserId = adminUid,
+                        reason = reason,
+                        timestamp = now,
+                    )
+                val auditRef = firestore.collection("audit_logs").document()
+                batch.set(auditRef, auditLog)
+
+                val booksSnapshot =
+                    firestore
+                        .collection("books")
+                        .whereEqualTo("userID", userId)
+                        .get()
+                        .await()
+
+                for (bookDoc in booksSnapshot.documents) {
+                    batch.update(bookDoc.reference, "sellerSuspended", true)
+                }
+
+                batch.commit().await()
+
+                /** TODO: HNM-300 — Poslati email obavijest korisniku o suspenziji računa.
+                 *  Potrebna Cloud Functions integracija jer Firebase Auth ne podržava slanje
+                 *  prilagođenih emailova direktno s klijenta. */
+
+                Result.Success(Unit)
+            } catch (e: Exception) {
+                CrashlyticsManager.instance.logException(e)
+                Result.Error(e)
+            }
+        }
+
+        override suspend fun reactivateUser(userId: String): Result<Unit> {
+            val adminUid =
+                auth.currentUser?.uid
+                    ?: return Result.Error(Exception("Administrator nije prijavljen."))
+
+            val userResult = getUserById(userId)
+            if (userResult is Result.Error) {
+                return Result.Error(userResult.exception)
+            }
+
+            val user = (userResult as Result.Success).data
+            if (user.suspended != true) {
+                return Result.Error(Exception("Korisnik nije suspendiran."))
+            }
+
+            return try {
+                val now = Timestamp.now()
+                val batch = firestore.batch()
+
+                val userRef = firestore.collection("users").document(userId)
+                batch.update(
+                    userRef,
+                    mapOf(
+                        "suspended" to false,
+                        "reactivatedAt" to now,
+                        "reactivatedBy" to adminUid,
+                        "suspendedReason" to FieldValue.delete(),
+                    ),
+                )
+
+                val auditLog =
+                    AuditLog(
+                        action = "USER_REACTIVATED",
+                        targetUserId = userId,
+                        adminUserId = adminUid,
+                        timestamp = now,
+                    )
+                val auditRef = firestore.collection("audit_logs").document()
+                batch.set(auditRef, auditLog)
+
+                val booksSnapshot =
+                    firestore
+                        .collection("books")
+                        .whereEqualTo("userID", userId)
+                        .get()
+                        .await()
+
+                for (bookDoc in booksSnapshot.documents) {
+                    batch.update(bookDoc.reference, "sellerSuspended", FieldValue.delete())
+                }
+
+                batch.commit().await()
+
+                /** TODO: HNM-300 — Poslati email obavijest korisniku o reaktivaciji računa.
+                 *  Potrebna Cloud Functions integracija jer Firebase Auth ne podržava slanje
+                 *  prilagođenih emailova direktno s klijenta. */
+
+                Result.Success(Unit)
+            } catch (e: Exception) {
+                CrashlyticsManager.instance.logException(e)
+                Result.Error(e)
+            }
+        }
     }

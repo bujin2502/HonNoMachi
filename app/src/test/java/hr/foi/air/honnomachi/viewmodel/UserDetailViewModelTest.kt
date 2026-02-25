@@ -14,6 +14,8 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -105,5 +107,148 @@ class UserDetailViewModelTest {
             val state = viewModel.uiState.value
             assertTrue(state is AdminUserDetailUiState.Success)
             assertEquals("Recovered User", (state as AdminUserDetailUiState.Success).user.name)
+        }
+
+    @Test
+    fun `onSuspendClick opens suspend dialog`() =
+        runTest(testDispatcher) {
+            val fakeRepo = FakeAdminRepository()
+            fakeRepo.userByIdResult = Result.Success(UserModel(uid = "test-uid", name = "User"))
+
+            val viewModel = AdminUserDetailViewModel(SavedStateHandle(mapOf("userId" to "test-uid")), fakeRepo)
+            advanceUntilIdle()
+
+            viewModel.onSuspendClick()
+
+            val state = viewModel.uiState.value as AdminUserDetailUiState.Success
+            assertTrue(state.showSuspendDialog)
+            assertFalse(state.showReactivateDialog)
+        }
+
+    @Test
+    fun `onReactivateClick opens reactivate dialog`() =
+        runTest(testDispatcher) {
+            val fakeRepo = FakeAdminRepository()
+            fakeRepo.userByIdResult = Result.Success(UserModel(uid = "test-uid", name = "User"))
+
+            val viewModel = AdminUserDetailViewModel(SavedStateHandle(mapOf("userId" to "test-uid")), fakeRepo)
+            advanceUntilIdle()
+
+            viewModel.onReactivateClick()
+
+            val state = viewModel.uiState.value as AdminUserDetailUiState.Success
+            assertTrue(state.showReactivateDialog)
+            assertFalse(state.showSuspendDialog)
+        }
+
+    @Test
+    fun `dismissDialog closes all dialogs`() =
+        runTest(testDispatcher) {
+            val fakeRepo = FakeAdminRepository()
+            fakeRepo.userByIdResult = Result.Success(UserModel(uid = "test-uid", name = "User"))
+
+            val viewModel = AdminUserDetailViewModel(SavedStateHandle(mapOf("userId" to "test-uid")), fakeRepo)
+            advanceUntilIdle()
+
+            viewModel.onSuspendClick()
+            assertTrue((viewModel.uiState.value as AdminUserDetailUiState.Success).showSuspendDialog)
+
+            viewModel.dismissDialog()
+
+            val state = viewModel.uiState.value as AdminUserDetailUiState.Success
+            assertFalse(state.showSuspendDialog)
+            assertFalse(state.showReactivateDialog)
+        }
+
+    @Test
+    fun `confirmSuspend success refreshes user with message`() =
+        runTest(testDispatcher) {
+            val fakeRepo = FakeAdminRepository()
+            fakeRepo.userByIdResult = Result.Success(UserModel(uid = "test-uid", name = "User"))
+            fakeRepo.suspendUserResult = Result.Success(Unit)
+
+            val viewModel = AdminUserDetailViewModel(SavedStateHandle(mapOf("userId" to "test-uid")), fakeRepo)
+            advanceUntilIdle()
+
+            viewModel.confirmSuspend("Razlog", "Uspjeh", "Greška")
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value as AdminUserDetailUiState.Success
+            assertEquals("Uspjeh", state.actionMessage)
+            assertFalse(state.showSuspendDialog)
+        }
+
+    @Test
+    fun `confirmSuspend error shows error message`() =
+        runTest(testDispatcher) {
+            val fakeRepo = FakeAdminRepository()
+            fakeRepo.userByIdResult = Result.Success(UserModel(uid = "test-uid", name = "User"))
+            fakeRepo.suspendUserResult = Result.Error(Exception("Već suspendiran"))
+
+            val viewModel = AdminUserDetailViewModel(SavedStateHandle(mapOf("userId" to "test-uid")), fakeRepo)
+            advanceUntilIdle()
+
+            viewModel.confirmSuspend("Razlog", "Uspjeh", "Greška:")
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value as AdminUserDetailUiState.Success
+            assertEquals("Greška: Već suspendiran", state.actionMessage)
+            assertFalse(state.isActionLoading)
+        }
+
+    @Test
+    fun `confirmReactivate success refreshes user with message`() =
+        runTest(testDispatcher) {
+            val fakeRepo = FakeAdminRepository()
+            fakeRepo.userByIdResult = Result.Success(UserModel(uid = "test-uid", name = "User", suspended = true))
+            fakeRepo.reactivateUserResult = Result.Success(Unit)
+
+            val viewModel = AdminUserDetailViewModel(SavedStateHandle(mapOf("userId" to "test-uid")), fakeRepo)
+            advanceUntilIdle()
+
+            viewModel.confirmReactivate("Reaktivirano", "Greška")
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value as AdminUserDetailUiState.Success
+            assertEquals("Reaktivirano", state.actionMessage)
+            assertFalse(state.showReactivateDialog)
+        }
+
+    @Test
+    fun `confirmReactivate error shows error message`() =
+        runTest(testDispatcher) {
+            val fakeRepo = FakeAdminRepository()
+            fakeRepo.userByIdResult = Result.Success(UserModel(uid = "test-uid", name = "User", suspended = true))
+            fakeRepo.reactivateUserResult = Result.Error(Exception("Nije suspendiran"))
+
+            val viewModel = AdminUserDetailViewModel(SavedStateHandle(mapOf("userId" to "test-uid")), fakeRepo)
+            advanceUntilIdle()
+
+            viewModel.confirmReactivate("Reaktivirano", "Greška:")
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value as AdminUserDetailUiState.Success
+            assertEquals("Greška: Nije suspendiran", state.actionMessage)
+            assertFalse(state.isActionLoading)
+        }
+
+    @Test
+    fun `consumeActionMessage clears message`() =
+        runTest(testDispatcher) {
+            val fakeRepo = FakeAdminRepository()
+            fakeRepo.userByIdResult = Result.Success(UserModel(uid = "test-uid", name = "User"))
+            fakeRepo.suspendUserResult = Result.Success(Unit)
+
+            val viewModel = AdminUserDetailViewModel(SavedStateHandle(mapOf("userId" to "test-uid")), fakeRepo)
+            advanceUntilIdle()
+
+            viewModel.confirmSuspend("Razlog", "Uspjeh", "Greška")
+            advanceUntilIdle()
+
+            assertEquals("Uspjeh", (viewModel.uiState.value as AdminUserDetailUiState.Success).actionMessage)
+
+            viewModel.consumeActionMessage()
+
+            assertNull((viewModel.uiState.value as AdminUserDetailUiState.Success).actionMessage)
         }
 }

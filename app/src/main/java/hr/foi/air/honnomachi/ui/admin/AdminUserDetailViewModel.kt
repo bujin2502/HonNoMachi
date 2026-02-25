@@ -12,15 +12,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * ViewModel za ekran s detaljima korisnika.
- *
- * Dohvaća podatke o korisniku prema [userId] iz navigacijskog argumenta
- * i izlaže ih putem [uiState] StateFlow-a.
- *
- * @param savedStateHandle Sadrži navigacijske argumente (userId).
- * @param adminRepository Repozitorij za administratorske operacije.
- */
 @HiltViewModel
 class AdminUserDetailViewModel
     @Inject
@@ -37,12 +28,6 @@ class AdminUserDetailViewModel
             loadUser()
         }
 
-        /**
-         * Dohvaća podatke o korisniku iz repozitorija.
-         *
-         * Postavlja stanje na [AdminUserDetailUiState.Loading] tijekom dohvata,
-         * zatim na [AdminUserDetailUiState.Success] ili [AdminUserDetailUiState.Error].
-         */
         fun loadUser() {
             viewModelScope.launch {
                 _uiState.value = AdminUserDetailUiState.Loading

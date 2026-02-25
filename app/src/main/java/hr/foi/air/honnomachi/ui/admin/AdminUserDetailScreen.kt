@@ -45,16 +45,6 @@ import hr.foi.air.honnomachi.ui.theme.LabelGray
 import hr.foi.air.honnomachi.ui.theme.StatusActive
 import hr.foi.air.honnomachi.ui.theme.StatusSuspended
 
-/**
- * Ekran za detaljan prikaz podataka o korisniku.
- *
- * Prikazuje sve dostupne podatke korisnika podijeljene u sekcije:
- * header s inicijalima, račun (uloga, status, verifikacija),
- * kontakt (email, telefon) i adresa (ulica, grad, poštanski broj).
- *
- * @param onNavigateBack Callback za povratak na listu korisnika.
- * @param viewModel ViewModel za dohvat podataka korisnika.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminUserDetailScreen(
@@ -113,14 +103,6 @@ fun AdminUserDetailScreen(
     }
 }
 
-/**
- * Sadržaj ekrana s detaljima korisnika.
- *
- * Scrollable column s header sekcijom i karticama za
- * račun, kontakt i adresu.
- *
- * @param user Model korisnika za prikaz.
- */
 @Composable
 private fun UserDetailContent(user: UserModel) {
     Column(
@@ -221,12 +203,6 @@ private fun UserDetailContent(user: UserModel) {
     }
 }
 
-/**
- * Sekcija s naslovom i sadržajem unutar kartice.
- *
- * @param title Naslov sekcije prikazan iznad kartice.
- * @param content Sadržaj sekcije unutar kartice.
- */
 @Composable
 private fun DetailSection(
     title: String,
@@ -252,13 +228,6 @@ private fun DetailSection(
     }
 }
 
-/**
- * Red s labelom i vrijednošću za prikaz pojedinog podatka.
- *
- * @param label Naziv podatka (npr. "Uloga:").
- * @param value Vrijednost podatka (npr. "Administrator").
- * @param valueColor Boja teksta vrijednosti, ili null za zadanu boju.
- */
 @Composable
 private fun DetailRow(
     label: String,

@@ -1,5 +1,6 @@
 package hr.foi.air.honnomachi.ui.auth
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -52,25 +53,17 @@ fun SignupScreen(
     var emailError by remember { mutableStateOf<ValidationErrorType?>(null) }
     var nameError by remember { mutableStateOf<ValidationErrorType?>(null) }
     var passwordError by remember { mutableStateOf<ValidationErrorType?>(null) }
-    val context = LocalContext.current
     val uiState by authViewModel.uiState.collectAsState()
 
     val nameFocusRequester = remember { FocusRequester() }
     val passwordFocusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
 
-    LaunchedEffect(key1 = uiState.needsVerification) {
-        if (uiState.needsVerification) {
-            AppUtil.showToast(context, R.string.verification_email_sent)
-            navController.navigate("verification") {
-                popUpTo("auth") { inclusive = true }
-            }
-        }
-        uiState.errorMessage?.let {
-            AppUtil.showToast(context, it)
-            authViewModel.consumeErrorMessage()
-        }
-    }
+    SignupAuthEffect(
+        uiState = uiState,
+        navController = navController,
+        onConsumeError = authViewModel::consumeErrorMessage,
+    )
 
     Column(
         modifier =
@@ -171,7 +164,8 @@ fun SignupScreen(
 
         Spacer(modifier = Modifier.height(AuthDimensions.LargeSpacing))
 
-        Button(
+        SignupButton(
+            isLoading = uiState.isLoading,
             onClick = {
                 val validation = FormValidator.validateSignupForm(email, name, password)
                 emailError = validation.email.error
@@ -181,22 +175,59 @@ fun SignupScreen(
                     authViewModel.signup(name, email, password)
                 }
             },
-            enabled = !uiState.isLoading,
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .height(AuthDimensions.ButtonHeight)
-                    .testTag("signup_button"),
-        ) {
-            Text(
-                text =
-                    if (uiState.isLoading) {
-                        stringResource(R.string.creating_account)
-                    } else {
-                        stringResource(R.string.signup)
-                    },
-                fontSize = AuthDimensions.ButtonFontSize,
-            )
+        )
+    }
+}
+
+@Composable
+private fun SignupAuthEffect(
+    uiState: AuthUiState,
+    navController: NavController,
+    onConsumeError: () -> Unit,
+) {
+    val context = LocalContext.current
+    LaunchedEffect(key1 = uiState.needsVerification) {
+        handleSignupNavigation(uiState, navController, context, onConsumeError)
+    }
+}
+
+private fun handleSignupNavigation(
+    uiState: AuthUiState,
+    navController: NavController,
+    context: Context,
+    onConsumeError: () -> Unit,
+) {
+    if (uiState.needsVerification) {
+        AppUtil.showToast(context, R.string.verification_email_sent)
+        navController.navigate("verification") {
+            popUpTo("auth") { inclusive = true }
         }
+    }
+    uiState.errorMessage?.let {
+        AppUtil.showToast(context, it)
+        onConsumeError()
+    }
+}
+
+@Composable
+private fun SignupButton(
+    isLoading: Boolean,
+    onClick: () -> Unit,
+) {
+    val buttonText =
+        if (isLoading) stringResource(R.string.creating_account) else stringResource(R.string.signup)
+    Button(
+        onClick = onClick,
+        enabled = !isLoading,
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(AuthDimensions.ButtonHeight)
+                .testTag("signup_button"),
+    ) {
+        Text(
+            text = buttonText,
+            fontSize = AuthDimensions.ButtonFontSize,
+        )
     }
 }

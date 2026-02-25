@@ -16,16 +16,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * ViewModel za ekran s listom korisnika.
- *
- * Upravlja dohvatom korisnika s cursor-based straničenjem,
- * osvježavanjem liste, učitavanjem sljedećih stranica,
- * pretragom po imenu/emailu s debounce logikom (300ms)
- * i filtriranjem prema statusu računa.
- *
- * @param adminRepository Repozitorij za administratorske operacije.
- */
 @OptIn(FlowPreview::class)
 @HiltViewModel
 open class AdminUserListViewModel
@@ -53,12 +43,6 @@ open class AdminUserListViewModel
             }
         }
 
-        /**
-         * Dohvaća prvu stranicu korisnika.
-         *
-         * Resetira listu i straničenje te prikazuje loading stanje.
-         * Koristi se samo u default modu (bez pretrage i filtera).
-         */
         open fun loadUsers() {
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoading = true, errorMessage = null) }
@@ -88,12 +72,6 @@ open class AdminUserListViewModel
             }
         }
 
-        /**
-         * Učitava sljedeću stranicu korisnika i dodaje ih na postojeću listu.
-         *
-         * Ignorira poziv ako je učitavanje već u tijeku, nema više stranica,
-         * ili je aktivan search/filter mod.
-         */
         open fun loadMoreUsers() {
             val currentState = _uiState.value
             if (currentState.isLoading ||
@@ -127,12 +105,6 @@ open class AdminUserListViewModel
             }
         }
 
-        /**
-         * Osvježava listu korisnika (pull-to-refresh).
-         *
-         * Resetira straničenje i dohvaća podatke iznova.
-         * Poštuje trenutni search/filter mod.
-         */
         fun refreshUsers() {
             viewModelScope.launch {
                 _uiState.update { it.copy(isRefreshing = true, errorMessage = null) }
@@ -167,32 +139,16 @@ open class AdminUserListViewModel
             }
         }
 
-        /**
-         * Ažurira tekst pretrage i pokreće debounce pretragu.
-         *
-         * @param query Novi tekst pretrage.
-         */
         fun onSearchQueryChanged(query: String) {
             _uiState.update { it.copy(searchQuery = query) }
             searchQueryFlow.value = query
         }
 
-        /**
-         * Mijenja odabrani filter statusa i odmah primjenjuje filtriranje.
-         *
-         * @param filter Novi filter statusa korisnika.
-         */
         fun onFilterSelected(filter: UserFilter) {
             _uiState.update { it.copy(selectedFilter = filter) }
             viewModelScope.launch { applySearchAndFilter() }
         }
 
-        /**
-         * Primjenjuje kombinaciju pretrage i filtera.
-         *
-         * Ako nema aktivne pretrage ni filtera, vraća se na paginirani mod.
-         * Inače dohvaća sve korisnike i filtrira client-side.
-         */
         private suspend fun applySearchAndFilter() {
             if (!isSearchOrFilterActive()) {
                 loadUsers()
@@ -203,9 +159,6 @@ open class AdminUserListViewModel
             executeSearchAndFilter()
         }
 
-        /**
-         * Izvršava dohvat svih korisnika i primjenjuje search + filter logiku.
-         */
         private suspend fun executeSearchAndFilter() {
             val query = _uiState.value.searchQuery.trim()
             val filter = _uiState.value.selectedFilter
@@ -239,13 +192,6 @@ open class AdminUserListViewModel
             }
         }
 
-        /**
-         * Filtrira listu korisnika prema odabranom statusu.
-         *
-         * @param users Lista korisnika za filtriranje.
-         * @param filter Odabrani filter statusa.
-         * @return Filtrirana lista korisnika.
-         */
         private fun applyStatusFilter(
             users: List<hr.foi.air.honnomachi.model.UserModel>,
             filter: UserFilter,
@@ -256,9 +202,6 @@ open class AdminUserListViewModel
                 UserFilter.SUSPENDED -> users.filter { it.suspended == true }
             }
 
-        /**
-         * Provjerava je li aktivan search ili filter mod.
-         */
         private fun isSearchOrFilterActive(): Boolean {
             val state = _uiState.value
             return state.searchQuery.isNotBlank() || state.selectedFilter != UserFilter.ALL

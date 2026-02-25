@@ -134,15 +134,12 @@ fun AppNavigation(
             )
         }
 
-        // Admin ruta - lista korisnika (HNM-289)
-        // Guard logika: provjerava admin status prije prikaza ekrana
         composable("admin") {
             val adminViewModel: AdminViewModel = hiltViewModel()
             val isAdmin by adminViewModel.isAdminChecked.collectAsState()
             val context = LocalContext.current
 
             when (isAdmin) {
-                // Provjera u tijeku - prikaži loading indikator
                 null -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -151,7 +148,6 @@ fun AppNavigation(
                         CircularProgressIndicator()
                     }
                 }
-                // Korisnik nije admin - preusmjeri na početni ekran
                 false -> {
                     val accessDeniedMsg = stringResource(R.string.error_admin_access_denied)
                     LaunchedEffect(Unit) {
@@ -162,7 +158,6 @@ fun AppNavigation(
                         }
                     }
                 }
-                // Korisnik je admin - prikaži admin ekran
                 true -> {
                     AdminUserListScreen(
                         onNavigateBack = { navController.navigateUp() },
@@ -174,8 +169,6 @@ fun AppNavigation(
             }
         }
 
-        // Admin ruta - detalji korisnika (HNM-289)
-        // Prima userId kao navigacijski argument
         composable(
             "admin/userDetail/{userId}",
             arguments = listOf(navArgument("userId") { type = NavType.StringType }),

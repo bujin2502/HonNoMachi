@@ -46,28 +46,18 @@ class AdminUserDetailViewModel
             }
         }
 
-        /** Otvara dijalog za suspenziju korisnika. */
         fun onSuspendClick() {
             updateSuccessState { it.copy(showSuspendDialog = true) }
         }
 
-        /** Otvara dijalog za reaktivaciju korisnika. */
         fun onReactivateClick() {
             updateSuccessState { it.copy(showReactivateDialog = true) }
         }
 
-        /** Zatvara otvoreni dijalog. */
         fun dismissDialog() {
             updateSuccessState { it.copy(showSuspendDialog = false, showReactivateDialog = false) }
         }
 
-        /**
-         * Izvršava suspenziju korisnika.
-         *
-         * @param reason Razlog suspenzije.
-         * @param successMessage Poruka za prikaz nakon uspješne suspenzije.
-         * @param errorMessage Poruka za prikaz nakon neuspješne suspenzije.
-         */
         fun confirmSuspend(
             reason: String,
             successMessage: String,
@@ -92,12 +82,6 @@ class AdminUserDetailViewModel
             }
         }
 
-        /**
-         * Izvršava reaktivaciju korisnika.
-         *
-         * @param successMessage Poruka za prikaz nakon uspješne reaktivacije.
-         * @param errorMessage Poruka za prikaz nakon neuspješne reaktivacije.
-         */
         fun confirmReactivate(
             successMessage: String,
             errorMessage: String,
@@ -121,16 +105,10 @@ class AdminUserDetailViewModel
             }
         }
 
-        /** Briše prikazanu poruku Snackbar-a. */
         fun consumeActionMessage() {
             updateSuccessState { it.copy(actionMessage = null) }
         }
 
-        /**
-         * Ponovno dohvaća korisnika nakon uspješne akcije i postavlja poruku.
-         *
-         * @param message Poruka za prikaz u Snackbar-u.
-         */
         private suspend fun refreshUserAfterAction(message: String) {
             when (val result = adminRepository.getUserById(userId)) {
                 is Result.Success -> {
@@ -148,11 +126,6 @@ class AdminUserDetailViewModel
             }
         }
 
-        /**
-         * Ažurira [AdminUserDetailUiState.Success] stanje ako je trenutno aktivno.
-         *
-         * @param transform Transformacija nad trenutnim Success stanjem.
-         */
         private fun updateSuccessState(transform: (AdminUserDetailUiState.Success) -> AdminUserDetailUiState.Success) {
             val current = _uiState.value
             if (current is AdminUserDetailUiState.Success) {

@@ -25,15 +25,6 @@ import androidx.compose.ui.unit.dp
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.ui.theme.StatusSuspended
 
-/**
- * Ekran koji se prikazuje kada je korisnički račun suspendiran.
- *
- * Prikazuje ikonu upozorenja, razlog suspenzije (ako postoji),
- * kontakt informacije i gumb za odjavu.
- *
- * @param reason Razlog suspenzije, ili null ako razlog nije dostupan.
- * @param onSignOut Callback za odjavu korisnika.
- */
 @Composable
 fun SuspendedAccountScreen(
     reason: String?,

@@ -1,6 +1,5 @@
 package hr.foi.air.honnomachi
 
-// Regex patterns - Regularni izrazi za validaciju
 private val emailRegex = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")
 private val nameRegex = Regex("""^[\p{L} .'-]+$""")
 private val phoneRegex = Regex("""^\+?[0-9]{9,15}$""")

@@ -73,7 +73,6 @@ fun HomePage(
                 ),
         )
 
-        // Ovo bi se kasnije trebalo obrisat (sa definiranom konstantnom varijablom...) Mrtav kod ??!! @Zlatko
         if (SHOW_DEBUG_BUTTON) {
             Button(onClick = { throw RuntimeException("Testni crash") }) {
                 Text("CRASH TEST")

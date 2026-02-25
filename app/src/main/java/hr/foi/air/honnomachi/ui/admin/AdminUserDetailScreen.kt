@@ -156,17 +156,6 @@ fun AdminUserDetailScreen(
     }
 }
 
-/**
- * Sadržaj ekrana s detaljima korisnika.
- *
- * Scrollable column s header sekcijom, karticama za račun, kontakt i adresu,
- * te gumbima za suspenziju ili reaktivaciju korisnika.
- *
- * @param user Model korisnika za prikaz.
- * @param isActionLoading Izvršava li se trenutno akcija suspenzije/reaktivacije.
- * @param onSuspendClick Callback za otvaranje dijaloga suspenzije.
- * @param onReactivateClick Callback za otvaranje dijaloga reaktivacije.
- */
 @Composable
 private fun UserDetailContent(
     user: UserModel,

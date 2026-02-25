@@ -20,6 +20,7 @@ enum class UserFilter {
  * @param isRefreshing Pull-to-refresh u tijeku.
  * @param searchQuery Trenutni tekst pretrage.
  * @param selectedFilter Odabrani filter statusa korisnika.
+ * @param scrollToTopTrigger Brojač koji signalizira UI-u da scrolla na vrh liste.
  */
 data class AdminUserListUiState(
     val isLoading: Boolean = true,
@@ -30,4 +31,5 @@ data class AdminUserListUiState(
     val isRefreshing: Boolean = false,
     val searchQuery: String = "",
     val selectedFilter: UserFilter = UserFilter.ALL,
+    val scrollToTopTrigger: Int = 0,
 )

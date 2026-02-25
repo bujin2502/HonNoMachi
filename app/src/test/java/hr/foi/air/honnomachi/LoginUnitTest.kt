@@ -2,6 +2,7 @@ package hr.foi.air.honnomachi
 
 import com.google.firebase.auth.FirebaseAuth
 import hr.foi.air.honnomachi.data.AuthRepository
+import hr.foi.air.honnomachi.data.FirestoreUserDataSource
 import hr.foi.air.honnomachi.model.UserModel
 import hr.foi.air.honnomachi.ui.auth.AuthViewModel
 import hr.foi.air.honnomachi.util.Result
@@ -27,6 +28,7 @@ class LoginUnitTest {
     private lateinit var authViewModel: AuthViewModel
     private val mockAuthRepository: AuthRepository = mockk()
     private val mockFirebaseAuth: FirebaseAuth = mockk(relaxed = true)
+    private val mockUserDataSource: FirestoreUserDataSource = mockk(relaxed = true)
     private val testDispatcher = StandardTestDispatcher()
 
     private val testEmail = "test@example.com"
@@ -35,7 +37,7 @@ class LoginUnitTest {
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        authViewModel = AuthViewModel(mockAuthRepository, mockFirebaseAuth)
+        authViewModel = AuthViewModel(mockAuthRepository, mockFirebaseAuth, mockUserDataSource)
     }
 
     @After

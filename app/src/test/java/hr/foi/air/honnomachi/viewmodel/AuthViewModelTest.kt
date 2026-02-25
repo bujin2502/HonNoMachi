@@ -2,6 +2,7 @@ package hr.foi.air.honnomachi.viewmodel
 
 import com.google.firebase.auth.FirebaseAuth
 import hr.foi.air.honnomachi.data.AuthRepository
+import hr.foi.air.honnomachi.data.FirestoreUserDataSource
 import hr.foi.air.honnomachi.model.UserModel
 import hr.foi.air.honnomachi.ui.auth.AuthViewModel
 import hr.foi.air.honnomachi.util.Result
@@ -28,6 +29,7 @@ class AuthViewModelTest {
     private lateinit var authViewModel: AuthViewModel
     private val mockAuthRepository: AuthRepository = mockk(relaxed = true)
     private val mockFirebaseAuth: FirebaseAuth = mockk(relaxed = true)
+    private val mockUserDataSource: FirestoreUserDataSource = mockk(relaxed = true)
     private val testDispatcher = StandardTestDispatcher()
 
     private val testEmail = "test@example.com"
@@ -37,7 +39,7 @@ class AuthViewModelTest {
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        authViewModel = AuthViewModel(mockAuthRepository, mockFirebaseAuth)
+        authViewModel = AuthViewModel(mockAuthRepository, mockFirebaseAuth, mockUserDataSource)
     }
 
     @After
@@ -314,5 +316,100 @@ class AuthViewModelTest {
             authViewModel.consumeVerificationStatusResult()
 
             assertNull(authViewModel.uiState.first().verificationStatusResult)
+        }
+
+    @Test
+    fun `login suspended user sets isSuspended and signs out`() =
+        runTest {
+            val suspendedUser =
+                UserModel(
+                    uid = "123",
+                    email = testEmail,
+                    isVerified = true,
+                    suspended = true,
+                    suspendedReason = "Kršenje pravila",
+                )
+            coEvery { mockAuthRepository.login(testEmail, testPassword) } returns Result.Success(suspendedUser)
+
+            authViewModel.login(testEmail, testPassword)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            val uiState = authViewModel.uiState.first()
+            assertTrue(uiState.isSuspended)
+            assertEquals("Kršenje pravila", uiState.suspendedReason)
+            assertFalse(uiState.isUserLoggedIn)
+            assertFalse(uiState.isLoading)
+            coVerify { mockAuthRepository.signOut() }
+        }
+
+    @Test
+    fun `loginWithGoogle suspended user sets isSuspended`() =
+        runTest {
+            val suspendedUser =
+                UserModel(
+                    uid = "123",
+                    email = testEmail,
+                    isVerified = true,
+                    suspended = true,
+                    suspendedReason = "Spam",
+                )
+            coEvery { mockAuthRepository.loginWithGoogle("google-token") } returns Result.Success(suspendedUser)
+
+            authViewModel.loginWithGoogle("google-token")
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            val uiState = authViewModel.uiState.first()
+            assertTrue(uiState.isSuspended)
+            assertEquals("Spam", uiState.suspendedReason)
+            assertFalse(uiState.isUserLoggedIn)
+            coVerify { mockAuthRepository.signOut() }
+        }
+
+    @Test
+    fun `checkSession suspended user sets isSuspended`() =
+        runTest {
+            val suspendedUser =
+                UserModel(
+                    uid = "123",
+                    email = testEmail,
+                    isVerified = true,
+                    suspended = true,
+                    suspendedReason = "Neaktivnost",
+                )
+            coEvery { mockAuthRepository.checkSession() } returns Result.Success(suspendedUser)
+
+            authViewModel.checkSession()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            val uiState = authViewModel.uiState.first()
+            assertTrue(uiState.isSuspended)
+            assertEquals("Neaktivnost", uiState.suspendedReason)
+            assertFalse(uiState.isUserLoggedIn)
+            coVerify { mockAuthRepository.signOut() }
+        }
+
+    @Test
+    fun `consumeSuspendedState resets suspension state`() =
+        runTest {
+            val suspendedUser =
+                UserModel(
+                    uid = "123",
+                    email = testEmail,
+                    isVerified = true,
+                    suspended = true,
+                    suspendedReason = "Razlog",
+                )
+            coEvery { mockAuthRepository.login(testEmail, testPassword) } returns Result.Success(suspendedUser)
+
+            authViewModel.login(testEmail, testPassword)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            assertTrue(authViewModel.uiState.first().isSuspended)
+
+            authViewModel.consumeSuspendedState()
+
+            val uiState = authViewModel.uiState.first()
+            assertFalse(uiState.isSuspended)
+            assertNull(uiState.suspendedReason)
         }
 }

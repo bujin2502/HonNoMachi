@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,26 +19,33 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.model.UserModel
@@ -62,6 +70,45 @@ fun AdminUserDetailScreen(
     viewModel: AdminUserDetailViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    val suspendSuccessMsg = stringResource(R.string.admin_suspend_success)
+    val suspendErrorMsg = stringResource(R.string.admin_suspend_error)
+    val reactivateSuccessMsg = stringResource(R.string.admin_reactivate_success)
+    val reactivateErrorMsg = stringResource(R.string.admin_reactivate_error)
+
+    if (uiState is AdminUserDetailUiState.Success) {
+        val successState = uiState as AdminUserDetailUiState.Success
+
+        successState.actionMessage?.let { message ->
+            LaunchedEffect(message) {
+                snackbarHostState.showSnackbar(message)
+                viewModel.consumeActionMessage()
+            }
+        }
+
+        if (successState.showSuspendDialog) {
+            SuspensionDialog(
+                userName = successState.user.name,
+                isLoading = successState.isActionLoading,
+                onConfirm = { reason ->
+                    viewModel.confirmSuspend(reason, suspendSuccessMsg, suspendErrorMsg)
+                },
+                onDismiss = viewModel::dismissDialog,
+            )
+        }
+
+        if (successState.showReactivateDialog) {
+            ReactivationDialog(
+                userName = successState.user.name,
+                isLoading = successState.isActionLoading,
+                onConfirm = {
+                    viewModel.confirmReactivate(reactivateSuccessMsg, reactivateErrorMsg)
+                },
+                onDismiss = viewModel::dismissDialog,
+            )
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -77,6 +124,7 @@ fun AdminUserDetailScreen(
                 },
             )
         },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { paddingValues ->
         Box(
             modifier =
@@ -106,7 +154,12 @@ fun AdminUserDetailScreen(
                     }
                 }
                 is AdminUserDetailUiState.Success -> {
-                    UserDetailContent(user = state.user)
+                    UserDetailContent(
+                        user = state.user,
+                        isActionLoading = state.isActionLoading,
+                        onSuspendClick = viewModel::onSuspendClick,
+                        onReactivateClick = viewModel::onReactivateClick,
+                    )
                 }
             }
         }
@@ -116,13 +169,21 @@ fun AdminUserDetailScreen(
 /**
  * Sadržaj ekrana s detaljima korisnika.
  *
- * Scrollable column s header sekcijom i karticama za
- * račun, kontakt i adresu.
+ * Scrollable column s header sekcijom, karticama za račun, kontakt i adresu,
+ * te gumbima za suspenziju ili reaktivaciju korisnika.
  *
  * @param user Model korisnika za prikaz.
+ * @param isActionLoading Izvršava li se trenutno akcija suspenzije/reaktivacije.
+ * @param onSuspendClick Callback za otvaranje dijaloga suspenzije.
+ * @param onReactivateClick Callback za otvaranje dijaloga reaktivacije.
  */
 @Composable
-private fun UserDetailContent(user: UserModel) {
+private fun UserDetailContent(
+    user: UserModel,
+    isActionLoading: Boolean,
+    onSuspendClick: () -> Unit,
+    onReactivateClick: () -> Unit,
+) {
     Column(
         modifier =
             Modifier
@@ -190,6 +251,30 @@ private fun UserDetailContent(user: UserModel) {
             DetailRow(label = stringResource(R.string.admin_label_verified), value = verifiedText)
         }
 
+        if (user.suspended == true) {
+            Spacer(modifier = Modifier.height(12.dp))
+
+            DetailSection(title = stringResource(R.string.admin_section_suspension)) {
+                user.suspendedReason?.let { reason ->
+                    DetailRow(
+                        label = stringResource(R.string.admin_label_suspended_reason),
+                        value = reason,
+                    )
+                }
+                user.suspendedAt?.let { timestamp ->
+                    DetailRow(
+                        label = stringResource(R.string.admin_label_suspended_at),
+                        value =
+                            java.text
+                                .SimpleDateFormat(
+                                    "dd.MM.yyyy. HH:mm",
+                                    java.util.Locale.getDefault(),
+                                ).format(timestamp.toDate()),
+                    )
+                }
+            }
+        }
+
         Spacer(modifier = Modifier.height(12.dp))
 
         DetailSection(title = stringResource(R.string.admin_section_contact)) {
@@ -215,6 +300,62 @@ private fun UserDetailContent(user: UserModel) {
                 label = stringResource(R.string.label_zip),
                 value = user.postNumber ?: "—",
             )
+        }
+
+        if (user.admin != true) {
+            Spacer(modifier = Modifier.height(24.dp))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
+
+            if (user.suspended == true) {
+                Button(
+                    onClick = onReactivateClick,
+                    enabled = !isActionLoading,
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = StatusActive),
+                ) {
+                    if (isActionLoading) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier.size(24.dp),
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+                    Text(
+                        text = stringResource(R.string.admin_reactivate_user),
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            } else {
+                Button(
+                    onClick = onSuspendClick,
+                    enabled = !isActionLoading,
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = StatusSuspended),
+                ) {
+                    if (isActionLoading) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier.size(24.dp),
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+                    Text(
+                        text = stringResource(R.string.admin_suspend_user),
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -263,7 +404,7 @@ private fun DetailSection(
 private fun DetailRow(
     label: String,
     value: String,
-    valueColor: androidx.compose.ui.graphics.Color? = null,
+    valueColor: Color? = null,
 ) {
     Row(
         modifier =

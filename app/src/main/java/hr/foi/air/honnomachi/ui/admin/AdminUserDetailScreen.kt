@@ -45,7 +45,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.model.UserModel
@@ -202,57 +202,9 @@ private fun UserDetailContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DetailSection(title = stringResource(R.string.admin_section_account)) {
-            val roleText =
-                if (user.admin == true) {
-                    stringResource(R.string.value_admin)
-                } else {
-                    stringResource(R.string.value_user)
-                }
-            DetailRow(label = stringResource(R.string.label_role), value = roleText)
+        AccountInfoSection(user = user)
 
-            val isSuspended = user.suspended == true
-            val statusText =
-                if (isSuspended) stringResource(R.string.value_suspended) else stringResource(R.string.value_active)
-            val statusColor = if (isSuspended) StatusSuspended else StatusActive
-            DetailRow(
-                label = stringResource(R.string.label_status),
-                value = statusText,
-                valueColor = statusColor,
-            )
-
-            val verifiedText =
-                if (user.isVerified) {
-                    stringResource(R.string.admin_value_yes)
-                } else {
-                    stringResource(R.string.admin_value_no)
-                }
-            DetailRow(label = stringResource(R.string.admin_label_verified), value = verifiedText)
-        }
-
-        if (user.suspended == true) {
-            Spacer(modifier = Modifier.height(12.dp))
-
-            DetailSection(title = stringResource(R.string.admin_section_suspension)) {
-                user.suspendedReason?.let { reason ->
-                    DetailRow(
-                        label = stringResource(R.string.admin_label_suspended_reason),
-                        value = reason,
-                    )
-                }
-                user.suspendedAt?.let { timestamp ->
-                    DetailRow(
-                        label = stringResource(R.string.admin_label_suspended_at),
-                        value =
-                            java.text
-                                .SimpleDateFormat(
-                                    "dd.MM.yyyy. HH:mm",
-                                    java.util.Locale.getDefault(),
-                                ).format(timestamp.toDate()),
-                    )
-                }
-            }
-        }
+        SuspensionInfoSection(user = user)
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -285,59 +237,103 @@ private fun UserDetailContent(
             Spacer(modifier = Modifier.height(24.dp))
             HorizontalDivider()
             Spacer(modifier = Modifier.height(24.dp))
-
-            if (user.suspended == true) {
-                Button(
-                    onClick = onReactivateClick,
-                    enabled = !isActionLoading,
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = StatusActive),
-                ) {
-                    if (isActionLoading) {
-                        CircularProgressIndicator(
-                            color = Color.White,
-                            modifier = Modifier.size(24.dp),
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                    }
-                    Text(
-                        text = stringResource(R.string.admin_reactivate_user),
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-            } else {
-                Button(
-                    onClick = onSuspendClick,
-                    enabled = !isActionLoading,
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = StatusSuspended),
-                ) {
-                    if (isActionLoading) {
-                        CircularProgressIndicator(
-                            color = Color.White,
-                            modifier = Modifier.size(24.dp),
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                    }
-                    Text(
-                        text = stringResource(R.string.admin_suspend_user),
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-            }
+            UserActionButton(
+                isSuspended = user.suspended == true,
+                isActionLoading = isActionLoading,
+                onSuspendClick = onSuspendClick,
+                onReactivateClick = onReactivateClick,
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun AccountInfoSection(user: UserModel) {
+    val roleText =
+        if (user.admin == true) {
+            stringResource(R.string.value_admin)
+        } else {
+            stringResource(R.string.value_user)
+        }
+    val isSuspended = user.suspended == true
+    val statusText = if (isSuspended) stringResource(R.string.value_suspended) else stringResource(R.string.value_active)
+    val statusColor = if (isSuspended) StatusSuspended else StatusActive
+    val verifiedText =
+        if (user.isVerified) {
+            stringResource(R.string.admin_value_yes)
+        } else {
+            stringResource(R.string.admin_value_no)
+        }
+    DetailSection(title = stringResource(R.string.admin_section_account)) {
+        DetailRow(label = stringResource(R.string.label_role), value = roleText)
+        DetailRow(
+            label = stringResource(R.string.label_status),
+            value = statusText,
+            valueColor = statusColor,
+        )
+        DetailRow(label = stringResource(R.string.admin_label_verified), value = verifiedText)
+    }
+}
+
+@Composable
+private fun SuspensionInfoSection(user: UserModel) {
+    if (user.suspended != true) return
+    Spacer(modifier = Modifier.height(12.dp))
+    DetailSection(title = stringResource(R.string.admin_section_suspension)) {
+        user.suspendedReason?.let { reason ->
+            DetailRow(
+                label = stringResource(R.string.admin_label_suspended_reason),
+                value = reason,
+            )
+        }
+        user.suspendedAt?.let { timestamp ->
+            DetailRow(
+                label = stringResource(R.string.admin_label_suspended_at),
+                value =
+                    java.text
+                        .SimpleDateFormat(
+                            "dd.MM.yyyy. HH:mm",
+                            java.util.Locale.getDefault(),
+                        ).format(timestamp.toDate()),
+            )
+        }
+    }
+}
+
+@Composable
+private fun UserActionButton(
+    isSuspended: Boolean,
+    isActionLoading: Boolean,
+    onSuspendClick: () -> Unit,
+    onReactivateClick: () -> Unit,
+) {
+    val containerColor = if (isSuspended) StatusActive else StatusSuspended
+    val labelRes = if (isSuspended) R.string.admin_reactivate_user else R.string.admin_suspend_user
+    val onClick = if (isSuspended) onReactivateClick else onSuspendClick
+    Button(
+        onClick = onClick,
+        enabled = !isActionLoading,
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = containerColor),
+    ) {
+        if (isActionLoading) {
+            CircularProgressIndicator(
+                color = Color.White,
+                modifier = Modifier.size(24.dp),
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+        Text(
+            text = stringResource(labelRes),
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+        )
     }
 }
 

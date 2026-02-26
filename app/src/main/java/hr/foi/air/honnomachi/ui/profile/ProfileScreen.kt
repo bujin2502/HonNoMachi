@@ -39,7 +39,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.R
@@ -64,6 +63,19 @@ fun ProfileScreen(
     val successState = uiState as? ProfileUiState.Success
     val isAdmin = successState?.user?.admin == true
     val hasChanges = computeHasChanges(uiState, formState)
+    val icon = if (isAdmin) Icons.Default.ManageAccounts else Icons.Default.Person
+
+    val successMessage = stringResource(R.string.profile_update_success)
+    val errorMessageFormat = stringResource(R.string.profile_update_error)
+    val onSaveClick: () -> Unit = {
+        profileViewModel.saveProfile { success, message ->
+            if (success) {
+                AppUtil.showToast(context, successMessage)
+            } else {
+                AppUtil.showToast(context, String.format(errorMessageFormat, message))
+            }
+        }
+    }
 
     Column(
         modifier =
@@ -81,7 +93,6 @@ fun ProfileScreen(
                     .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            val icon = if (isAdmin) Icons.Default.ManageAccounts else Icons.Default.Person
             Icon(
                 imageVector = icon,
                 contentDescription = null,
@@ -200,48 +211,12 @@ fun ProfileScreen(
                     Text(text = stringResource(R.string.button_reset_password))
                 }
 
-                val successMessage = stringResource(R.string.profile_update_success)
-                val errorMessageFormat = stringResource(R.string.profile_update_error)
                 SaveButton(
                     hasChanges = hasChanges,
                     isSaving = formState.isSaving,
                     modifier = Modifier.weight(1f).padding(start = 8.dp),
-                    onClick = {
-                        profileViewModel.saveProfile { success, message ->
-                            if (success) {
-                                AppUtil.showToast(context, successMessage)
-                            } else {
-                                AppUtil.showToast(context, String.format(errorMessageFormat, message))
-                            }
-                        }
-                    },
+                    onClick = onSaveClick,
                 )
-            }
-
-            if (isAdmin) {
-                Spacer(modifier = Modifier.height(24.dp))
-                HorizontalDivider()
-                Spacer(modifier = Modifier.height(24.dp))
-                Button(
-                    onClick = onNavigateToAdmin,
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                    shape = RoundedCornerShape(24.dp),
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ManageAccounts,
-                        contentDescription = null,
-                        modifier = Modifier.size(32.dp),
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = stringResource(R.string.button_admin_panel),
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))

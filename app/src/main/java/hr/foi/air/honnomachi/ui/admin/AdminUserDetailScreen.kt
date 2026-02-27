@@ -57,6 +57,7 @@ import hr.foi.air.honnomachi.ui.theme.StatusSuspended
 @Composable
 fun AdminUserDetailScreen(
     onNavigateBack: () -> Unit,
+    @Suppress("DEPRECATION")
     viewModel: AdminUserDetailViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

@@ -45,6 +45,7 @@ import hr.foi.air.honnomachi.ui.components.PasswordInputField
 fun SignupScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
+    @Suppress("DEPRECATION")
     authViewModel: AuthViewModel = hiltViewModel(),
 ) {
     var email by remember { mutableStateOf("") }

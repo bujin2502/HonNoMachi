@@ -36,6 +36,7 @@ import hr.foi.air.honnomachi.R
 @Composable
 fun ForgotPasswordScreen(
     navController: NavController,
+    @Suppress("DEPRECATION")
     authViewModel: AuthViewModel = hiltViewModel(),
 ) {
     var email by remember { mutableStateOf("") }

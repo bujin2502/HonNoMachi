@@ -40,7 +40,10 @@ fun AppNavigation(
     modifier: Modifier = Modifier,
     navController: NavHostController,
 ) {
+    @Suppress("DEPRECATION")
     val authViewModel: AuthViewModel = hiltViewModel()
+
+    @Suppress("DEPRECATION")
     val homeViewModel: HomeViewModel = hiltViewModel()
 
     val uiState by authViewModel.uiState.collectAsState()
@@ -135,6 +138,7 @@ fun AppNavigation(
         }
 
         composable("admin") {
+            @Suppress("DEPRECATION")
             val adminViewModel: AdminViewModel = hiltViewModel()
             val isAdmin by adminViewModel.isAdminChecked.collectAsState()
             val context = LocalContext.current
@@ -173,6 +177,7 @@ fun AppNavigation(
             "admin/userDetail/{userId}",
             arguments = listOf(navArgument("userId") { type = NavType.StringType }),
         ) {
+            @Suppress("DEPRECATION")
             val adminViewModel: AdminViewModel = hiltViewModel()
             val isAdmin by adminViewModel.isAdminChecked.collectAsState()
             val context = LocalContext.current

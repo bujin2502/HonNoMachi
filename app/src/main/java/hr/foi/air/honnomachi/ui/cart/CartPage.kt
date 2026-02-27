@@ -48,6 +48,7 @@ import hr.foi.air.honnomachi.model.CartItemModel
 @Composable
 fun CartPage(
     paddingValues: PaddingValues,
+    @Suppress("DEPRECATION")
     viewModel: CartViewModel = hiltViewModel(),
     showImages: Boolean = true,
 ) {

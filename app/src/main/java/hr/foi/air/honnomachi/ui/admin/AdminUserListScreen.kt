@@ -60,6 +60,7 @@ import hr.foi.air.honnomachi.model.UserModel
 fun AdminUserListScreen(
     onNavigateBack: () -> Unit,
     onNavigateToUserDetail: (String) -> Unit,
+    @Suppress("DEPRECATION")
     viewModel: AdminUserListViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

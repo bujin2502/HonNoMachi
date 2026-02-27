@@ -49,6 +49,7 @@ import hr.foi.air.honnomachi.ui.profile.ProfileViewModel
 @Composable
 fun ChangePasswordScreen(
     navController: NavController,
+    @Suppress("DEPRECATION")
     profileViewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val changePasswordState by profileViewModel.changePasswordState.collectAsState()

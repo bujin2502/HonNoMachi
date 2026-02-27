@@ -54,6 +54,7 @@ fun ProfileScreen(
     onNavigateToChangePassword: () -> Unit,
     onNavigateToPrivacyPolicy: () -> Unit,
     onNavigateToAdmin: () -> Unit,
+    @Suppress("DEPRECATION")
     profileViewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current

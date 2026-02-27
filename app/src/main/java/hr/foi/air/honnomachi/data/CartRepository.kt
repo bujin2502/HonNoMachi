@@ -27,12 +27,11 @@ class CartRepositoryImpl
         private val auth: FirebaseAuth,
         private val firestore: FirebaseFirestore,
     ) : CartRepository {
-        override suspend fun addToCart(book: BookModel): Result<Unit> =
-            try {
-                if (book.status != ItemStatus.AVAILABLE) {
-                    Result.Error(Exception("Knjiga trenutno nije dostupna."))
-                }
-
+        override suspend fun addToCart(book: BookModel): Result<Unit> {
+            if (book.status != ItemStatus.AVAILABLE) {
+                return Result.Error(Exception("Knjiga trenutno nije dostupna."))
+            }
+            return try {
                 val currentUser = auth.currentUser
                 if (currentUser != null && book.bookId != null) {
                     val cartItem =
@@ -61,6 +60,7 @@ class CartRepositoryImpl
                 CrashlyticsManager.instance.logException(e)
                 Result.Error(e)
             }
+        }
 
         override fun getCartItems(): Flow<Result<List<CartItemModel>>> =
             callbackFlow {

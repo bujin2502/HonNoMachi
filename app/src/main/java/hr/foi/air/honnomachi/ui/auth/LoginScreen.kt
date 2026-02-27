@@ -39,6 +39,7 @@ import hr.foi.air.honnomachi.FormValidator
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.ValidationErrorType
 import hr.foi.air.honnomachi.ui.components.EmailInputField
+import hr.foi.air.honnomachi.ui.components.InputFieldError
 import hr.foi.air.honnomachi.ui.components.PasswordInputField
 
 @Composable
@@ -115,10 +116,9 @@ fun LoginScreen(
                 Modifier
                     .fillMaxWidth()
                     .testTag("email_field"),
-            error = emailError,
+            error = emailError?.let { InputFieldError(it, "login_email_error") },
             imeAction = ImeAction.Next,
             onImeAction = { passwordFocusRequester.requestFocus() },
-            errorTestTag = "login_email_error",
         )
 
         Spacer(modifier = Modifier.height(AuthDimensions.SmallSpacing))
@@ -134,10 +134,9 @@ fun LoginScreen(
                     .fillMaxWidth()
                     .focusRequester(passwordFocusRequester)
                     .testTag("password_field"),
-            error = passwordError,
+            error = passwordError?.let { InputFieldError(it, "login_password_error") },
             imeAction = ImeAction.Done,
             onImeAction = { focusManager.clearFocus() },
-            errorTestTag = "login_password_error",
         )
 
         Spacer(modifier = Modifier.height(AuthDimensions.LargeSpacing))

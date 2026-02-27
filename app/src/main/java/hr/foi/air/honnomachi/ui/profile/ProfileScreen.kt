@@ -120,16 +120,19 @@ fun ProfileScreen(
                     ProfileEditForm(
                         formState = formState,
                         userEmail = user.email,
-                        onNameChange = profileViewModel::onNameChange,
-                        onPhoneChange = profileViewModel::onPhoneChange,
-                        onStreetChange = profileViewModel::onStreetChange,
-                        onZipChange = profileViewModel::onZipChange,
-                        onCityChange = profileViewModel::onCityChange,
-                        onValidateName = profileViewModel::validateName,
-                        onValidatePhone = profileViewModel::validatePhone,
-                        onValidateStreet = profileViewModel::validateStreet,
-                        onValidateZip = profileViewModel::validateZip,
-                        onValidateCity = profileViewModel::validateCity,
+                        callbacks =
+                            ProfileEditFormCallbacks(
+                                onNameChange = profileViewModel::onNameChange,
+                                onPhoneChange = profileViewModel::onPhoneChange,
+                                onStreetChange = profileViewModel::onStreetChange,
+                                onZipChange = profileViewModel::onZipChange,
+                                onCityChange = profileViewModel::onCityChange,
+                                onValidateName = profileViewModel::validateName,
+                                onValidatePhone = profileViewModel::validatePhone,
+                                onValidateStreet = profileViewModel::validateStreet,
+                                onValidateZip = profileViewModel::validateZip,
+                                onValidateCity = profileViewModel::validateCity,
+                            ),
                     )
                 }
 

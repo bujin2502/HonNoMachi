@@ -13,18 +13,16 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import hr.foi.air.honnomachi.R
-import hr.foi.air.honnomachi.ValidationErrorType
 
 @Composable
 fun PasswordInputField(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    error: ValidationErrorType? = null,
+    error: InputFieldError? = null,
     imeAction: ImeAction = ImeAction.Done,
     onImeAction: () -> Unit = {},
     label: String = stringResource(R.string.password),
-    errorTestTag: String? = null,
 ) {
     OutlinedTextField(
         value = value,
@@ -46,13 +44,13 @@ fun PasswordInputField(
         supportingText = {
             error?.let {
                 val errorModifier =
-                    if (errorTestTag != null) {
-                        Modifier.testTag(errorTestTag)
+                    if (it.testTag != null) {
+                        Modifier.testTag(it.testTag)
                     } else {
                         Modifier
                     }
                 Text(
-                    text = stringResource(errorMessageFor(it)),
+                    text = stringResource(errorMessageFor(it.type)),
                     color = MaterialTheme.colorScheme.error,
                     modifier = errorModifier,
                 )

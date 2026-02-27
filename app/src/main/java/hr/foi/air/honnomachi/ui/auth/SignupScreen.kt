@@ -38,6 +38,7 @@ import hr.foi.air.honnomachi.FormValidator
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.ValidationErrorType
 import hr.foi.air.honnomachi.ui.components.EmailInputField
+import hr.foi.air.honnomachi.ui.components.InputFieldError
 import hr.foi.air.honnomachi.ui.components.NameInputField
 import hr.foi.air.honnomachi.ui.components.PasswordInputField
 
@@ -119,10 +120,9 @@ fun SignupScreen(
                 Modifier
                     .fillMaxWidth()
                     .testTag("signup_email"),
-            error = emailError,
+            error = emailError?.let { InputFieldError(it, "signup_email_error") },
             imeAction = ImeAction.Next,
             onImeAction = { nameFocusRequester.requestFocus() },
-            errorTestTag = "signup_email_error",
         )
 
         Spacer(modifier = Modifier.height(AuthDimensions.SmallSpacing))
@@ -138,10 +138,9 @@ fun SignupScreen(
                     .fillMaxWidth()
                     .focusRequester(nameFocusRequester)
                     .testTag("signup_name"),
-            error = nameError,
+            error = nameError?.let { InputFieldError(it, "signup_name_error") },
             imeAction = ImeAction.Next,
             onImeAction = { passwordFocusRequester.requestFocus() },
-            errorTestTag = "signup_name_error",
         )
 
         Spacer(modifier = Modifier.height(AuthDimensions.SmallSpacing))
@@ -157,10 +156,9 @@ fun SignupScreen(
                     .fillMaxWidth()
                     .focusRequester(passwordFocusRequester)
                     .testTag("signup_password"),
-            error = passwordError,
+            error = passwordError?.let { InputFieldError(it, "signup_password_error") },
             imeAction = ImeAction.Done,
             onImeAction = { focusManager.clearFocus() },
-            errorTestTag = "signup_password_error",
         )
 
         Spacer(modifier = Modifier.height(AuthDimensions.LargeSpacing))

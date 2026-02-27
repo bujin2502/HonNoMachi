@@ -43,6 +43,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.R
+import hr.foi.air.honnomachi.ui.components.InputFieldError
 import hr.foi.air.honnomachi.ui.components.PasswordInputField
 import hr.foi.air.honnomachi.ui.profile.ProfileViewModel
 
@@ -115,7 +116,7 @@ fun ChangePasswordScreen(
             value = changePasswordState.oldPassword,
             onValueChange = { profileViewModel.onOldPasswordChange(it) },
             modifier = Modifier.fillMaxWidth(),
-            error = changePasswordState.oldPasswordError,
+            error = changePasswordState.oldPasswordError?.let { InputFieldError(it) },
             label = stringResource(R.string.label_old_password),
             imeAction = ImeAction.Next,
             onImeAction = { newPasswordFocusRequester.requestFocus() },
@@ -130,7 +131,7 @@ fun ChangePasswordScreen(
                 Modifier
                     .fillMaxWidth()
                     .focusRequester(newPasswordFocusRequester),
-            error = changePasswordState.newPasswordError,
+            error = changePasswordState.newPasswordError?.let { InputFieldError(it) },
             label = stringResource(R.string.label_new_password),
             imeAction = ImeAction.Next,
             onImeAction = { confirmPasswordFocusRequester.requestFocus() },
@@ -145,7 +146,7 @@ fun ChangePasswordScreen(
                 Modifier
                     .fillMaxWidth()
                     .focusRequester(confirmPasswordFocusRequester),
-            error = changePasswordState.confirmPasswordError,
+            error = changePasswordState.confirmPasswordError?.let { InputFieldError(it) },
             label = stringResource(R.string.label_confirm_password),
             imeAction = ImeAction.Done,
             onImeAction = { focusManager.clearFocus() },

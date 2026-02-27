@@ -52,7 +52,9 @@ import hr.foi.air.honnomachi.ui.cart.CartViewModel
 @Composable
 fun BookDetailScreen(
     bookId: String?,
+    @Suppress("DEPRECATION")
     viewModel: BookDetailViewModel = hiltViewModel(),
+    @Suppress("DEPRECATION")
     cartViewModel: CartViewModel = hiltViewModel(),
 ) {
     LaunchedEffect(key1 = bookId) {

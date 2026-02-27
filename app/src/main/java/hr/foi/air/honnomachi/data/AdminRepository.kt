@@ -175,12 +175,11 @@ class AdminRepositoryImpl
                 auth.currentUser?.uid
                     ?: return Result.Error(Exception("Administrator nije prijavljen."))
 
-            val userResult = getUserById(userId)
-            if (userResult is Result.Error) {
-                return Result.Error(userResult.exception)
-            }
-
-            val user = (userResult as Result.Success).data
+            val user =
+                when (val userResult = getUserById(userId)) {
+                    is Result.Success -> userResult.data
+                    is Result.Error -> return Result.Error(userResult.exception)
+                }
             if (user.suspended == true) {
                 return Result.Error(Exception("Korisnik je već suspendiran."))
             }
@@ -236,12 +235,11 @@ class AdminRepositoryImpl
                 auth.currentUser?.uid
                     ?: return Result.Error(Exception("Administrator nije prijavljen."))
 
-            val userResult = getUserById(userId)
-            if (userResult is Result.Error) {
-                return Result.Error(userResult.exception)
-            }
-
-            val user = (userResult as Result.Success).data
+            val user =
+                when (val userResult = getUserById(userId)) {
+                    is Result.Success -> userResult.data
+                    is Result.Error -> return Result.Error(userResult.exception)
+                }
             if (user.suspended != true) {
                 return Result.Error(Exception("Korisnik nije suspendiran."))
             }

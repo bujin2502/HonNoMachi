@@ -39,6 +39,7 @@ private object AddPageDimensions {
 @Composable
 fun AddPage(
     paddingValues: PaddingValues,
+    @Suppress("DEPRECATION")
     viewModel: AddBookViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current

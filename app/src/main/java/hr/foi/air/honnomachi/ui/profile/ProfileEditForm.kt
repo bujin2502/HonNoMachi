@@ -10,25 +10,29 @@ import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.ui.components.ProfileItem
 import hr.foi.air.honnomachi.ui.components.errorMessageFor
 
+data class ProfileEditFormCallbacks(
+    val onNameChange: (String) -> Unit,
+    val onPhoneChange: (String) -> Unit,
+    val onStreetChange: (String) -> Unit,
+    val onZipChange: (String) -> Unit,
+    val onCityChange: (String) -> Unit,
+    val onValidateName: () -> Unit,
+    val onValidatePhone: () -> Unit,
+    val onValidateStreet: () -> Unit,
+    val onValidateZip: () -> Unit,
+    val onValidateCity: () -> Unit,
+)
+
 @Composable
 fun ProfileEditForm(
     formState: ProfileFormState,
     userEmail: String,
-    onNameChange: (String) -> Unit,
-    onPhoneChange: (String) -> Unit,
-    onStreetChange: (String) -> Unit,
-    onZipChange: (String) -> Unit,
-    onCityChange: (String) -> Unit,
-    onValidateName: () -> Unit,
-    onValidatePhone: () -> Unit,
-    onValidateStreet: () -> Unit,
-    onValidateZip: () -> Unit,
-    onValidateCity: () -> Unit,
+    callbacks: ProfileEditFormCallbacks,
 ) {
     ProfileItem(
         label = stringResource(R.string.label_name),
         value = formState.name,
-        onValueChange = onNameChange,
+        onValueChange = callbacks.onNameChange,
         isEditable = true,
         keyboardOptions =
             KeyboardOptions(
@@ -36,7 +40,7 @@ fun ProfileEditForm(
                 imeAction = ImeAction.Next,
             ),
         errorText = formState.nameError?.let { stringResource(errorMessageFor(it)) },
-        onFocusLost = onValidateName,
+        onFocusLost = callbacks.onValidateName,
     )
 
     ProfileItem(
@@ -48,7 +52,7 @@ fun ProfileEditForm(
     ProfileItem(
         label = stringResource(R.string.label_phone),
         value = formState.phone,
-        onValueChange = onPhoneChange,
+        onValueChange = callbacks.onPhoneChange,
         isEditable = true,
         keyboardOptions =
             KeyboardOptions(
@@ -56,13 +60,13 @@ fun ProfileEditForm(
                 imeAction = ImeAction.Next,
             ),
         errorText = formState.phoneError?.let { stringResource(errorMessageFor(it)) },
-        onFocusLost = onValidatePhone,
+        onFocusLost = callbacks.onValidatePhone,
     )
 
     ProfileItem(
         label = stringResource(R.string.label_street),
         value = formState.street,
-        onValueChange = onStreetChange,
+        onValueChange = callbacks.onStreetChange,
         isEditable = true,
         keyboardOptions =
             KeyboardOptions(
@@ -70,13 +74,13 @@ fun ProfileEditForm(
                 imeAction = ImeAction.Next,
             ),
         errorText = formState.streetError?.let { stringResource(errorMessageFor(it)) },
-        onFocusLost = onValidateStreet,
+        onFocusLost = callbacks.onValidateStreet,
     )
 
     ProfileItem(
         label = stringResource(R.string.label_zip),
         value = formState.zip,
-        onValueChange = onZipChange,
+        onValueChange = callbacks.onZipChange,
         isEditable = true,
         keyboardOptions =
             KeyboardOptions(
@@ -84,13 +88,13 @@ fun ProfileEditForm(
                 imeAction = ImeAction.Next,
             ),
         errorText = formState.zipError?.let { stringResource(errorMessageFor(it)) },
-        onFocusLost = onValidateZip,
+        onFocusLost = callbacks.onValidateZip,
     )
 
     ProfileItem(
         label = stringResource(R.string.label_city),
         value = formState.city,
-        onValueChange = onCityChange,
+        onValueChange = callbacks.onCityChange,
         isEditable = true,
         keyboardOptions =
             KeyboardOptions(
@@ -98,6 +102,6 @@ fun ProfileEditForm(
                 imeAction = ImeAction.Done,
             ),
         errorText = formState.cityError?.let { stringResource(errorMessageFor(it)) },
-        onFocusLost = onValidateCity,
+        onFocusLost = callbacks.onValidateCity,
     )
 }

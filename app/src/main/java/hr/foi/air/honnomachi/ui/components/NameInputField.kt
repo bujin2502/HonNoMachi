@@ -12,18 +12,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import hr.foi.air.honnomachi.R
-import hr.foi.air.honnomachi.ValidationErrorType
 
 @Composable
 fun NameInputField(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    error: ValidationErrorType? = null,
+    error: InputFieldError? = null,
     imeAction: ImeAction = ImeAction.Next,
     onImeAction: () -> Unit = {},
     label: String = stringResource(R.string.name),
-    errorTestTag: String? = null,
 ) {
     OutlinedTextField(
         value = value,
@@ -44,13 +42,13 @@ fun NameInputField(
         supportingText = {
             error?.let {
                 val errorModifier =
-                    if (errorTestTag != null) {
-                        Modifier.testTag(errorTestTag)
+                    if (it.testTag != null) {
+                        Modifier.testTag(it.testTag)
                     } else {
                         Modifier
                     }
                 Text(
-                    text = stringResource(errorMessageFor(it)),
+                    text = stringResource(errorMessageFor(it.type)),
                     color = MaterialTheme.colorScheme.error,
                     modifier = errorModifier,
                 )

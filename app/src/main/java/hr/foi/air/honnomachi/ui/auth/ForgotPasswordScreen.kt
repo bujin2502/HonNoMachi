@@ -45,11 +45,9 @@ fun ForgotPasswordScreen(
     var resetLinkSent by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = uiState) {
-        if (!uiState.isLoading && uiState.errorMessage == null) {
-            if (resetLinkSent) {
-                AppUtil.showToast(context, R.string.password_reset_link_sent)
-                navController.navigate("login")
-            }
+        if (!uiState.isLoading && uiState.errorMessage == null && resetLinkSent) {
+            AppUtil.showToast(context, R.string.password_reset_link_sent)
+            navController.navigate("login")
         }
         uiState.errorMessage?.let {
             AppUtil.showToast(context, it)

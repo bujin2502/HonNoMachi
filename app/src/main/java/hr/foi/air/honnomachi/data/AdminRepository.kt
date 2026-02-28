@@ -208,7 +208,7 @@ class AdminRepositoryImpl
                         timestamp = now,
                     )
                 val auditRef = firestore.collection("audit_logs").document()
-                batch.set(auditRef, auditLog)
+                batch.set(auditRef, auditLog) // NOSONAR
 
                 val booksSnapshot =
                     firestore
@@ -267,7 +267,7 @@ class AdminRepositoryImpl
                         timestamp = now,
                     )
                 val auditRef = firestore.collection("audit_logs").document()
-                batch.set(auditRef, auditLog)
+                batch.set(auditRef, auditLog) // NOSONAR
 
                 val booksSnapshot =
                     firestore

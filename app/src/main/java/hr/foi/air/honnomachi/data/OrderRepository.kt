@@ -9,7 +9,7 @@ import hr.foi.air.honnomachi.util.Result
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
-interface OrderRepository {
+fun interface OrderRepository {
     suspend fun placeOrder(): Result<Unit>
 }
 

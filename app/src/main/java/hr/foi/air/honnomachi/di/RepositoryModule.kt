@@ -21,25 +21,25 @@ import hr.foi.air.honnomachi.data.ProfileRepositoryImpl
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class RepositoryModule {
+interface RepositoryModule {
     @Binds
-    abstract fun bindFirestoreUserDataSource(impl: FirestoreUserDataSourceImpl): FirestoreUserDataSource
+    fun bindFirestoreUserDataSource(impl: FirestoreUserDataSourceImpl): FirestoreUserDataSource
 
     @Binds
-    abstract fun bindAuthRepository(authRepositoryImpl: AuthRepositoryImpl): AuthRepository
+    fun bindAuthRepository(authRepositoryImpl: AuthRepositoryImpl): AuthRepository
 
     @Binds
-    abstract fun bindBookRepository(bookRepositoryImpl: BookRepositoryImpl): BookRepository
+    fun bindBookRepository(bookRepositoryImpl: BookRepositoryImpl): BookRepository
 
     @Binds
-    abstract fun bindCartRepository(cartRepositoryImpl: CartRepositoryImpl): CartRepository
+    fun bindCartRepository(cartRepositoryImpl: CartRepositoryImpl): CartRepository
 
     @Binds
-    abstract fun bindOrderRepository(orderRepositoryImpl: OrderRepositoryImpl): OrderRepository
+    fun bindOrderRepository(orderRepositoryImpl: OrderRepositoryImpl): OrderRepository
 
     @Binds
-    abstract fun bindProfileRepository(profileRepositoryImpl: ProfileRepositoryImpl): ProfileRepository
+    fun bindProfileRepository(profileRepositoryImpl: ProfileRepositoryImpl): ProfileRepository
 
     @Binds
-    abstract fun bindAdminRepository(adminRepositoryImpl: AdminRepositoryImpl): AdminRepository
+    fun bindAdminRepository(adminRepositoryImpl: AdminRepositoryImpl): AdminRepository
 }

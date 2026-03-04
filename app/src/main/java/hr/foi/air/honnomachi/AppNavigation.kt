@@ -19,7 +19,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
-import androidx.navigation.navDeepLink
 import hr.foi.air.honnomachi.ui.admin.AdminUserDetailScreen
 import hr.foi.air.honnomachi.ui.admin.AdminUserListScreen
 import hr.foi.air.honnomachi.ui.admin.AdminViewModel
@@ -122,14 +121,7 @@ fun AppNavigation(
             PrivacyPolicyScreen(onNavigateBack = { navController.navigateUp() })
         }
 
-        composable(
-            route = ROUTE_CHECKOUT_SUCCESS,
-            deepLinks =
-                listOf(
-                    navDeepLink { uriPattern = CHECKOUT_SUCCESS_DEEP_LINK_HTTPS },
-                    navDeepLink { uriPattern = CHECKOUT_SUCCESS_DEEP_LINK_SCHEME },
-                ),
-        ) {
+        composable(route = ROUTE_CHECKOUT_SUCCESS) {
             CheckoutSuccessScreen(
                 onNavigateHome = {
                     navController.navigate(ROUTE_HOME) {
@@ -140,14 +132,7 @@ fun AppNavigation(
             )
         }
 
-        composable(
-            route = ROUTE_CHECKOUT_CANCEL,
-            deepLinks =
-                listOf(
-                    navDeepLink { uriPattern = CHECKOUT_CANCEL_DEEP_LINK_HTTPS },
-                    navDeepLink { uriPattern = CHECKOUT_CANCEL_DEEP_LINK_SCHEME },
-                ),
-        ) {
+        composable(route = ROUTE_CHECKOUT_CANCEL) {
             CheckoutCancelScreen(
                 onNavigateHome = {
                     navController.navigate(ROUTE_HOME) {
@@ -255,10 +240,3 @@ private const val ROUTE_PRIVACY_POLICY = "privacyPolicy"
 private const val ROUTE_ADMIN = "admin"
 private const val ROUTE_CHECKOUT_SUCCESS = "checkout/success"
 private const val ROUTE_CHECKOUT_CANCEL = "checkout/cancel"
-
-private const val CHECKOUT_SUCCESS_DEEP_LINK_HTTPS =
-    "https://example.com/honnomachi/checkout/success"
-private const val CHECKOUT_CANCEL_DEEP_LINK_HTTPS =
-    "https://example.com/honnomachi/checkout/cancel"
-private const val CHECKOUT_SUCCESS_DEEP_LINK_SCHEME = "honnomachi://checkout/success"
-private const val CHECKOUT_CANCEL_DEEP_LINK_SCHEME = "honnomachi://checkout/cancel"

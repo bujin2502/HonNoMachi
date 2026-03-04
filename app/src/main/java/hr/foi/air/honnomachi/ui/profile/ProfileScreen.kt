@@ -1,5 +1,6 @@
 package hr.foi.air.honnomachi.ui.profile
 
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,22 +31,30 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.stripe.android.paymentsheet.PaymentSheet
 import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.R
+import hr.foi.air.honnomachi.data.WalletTopupStatus
 import hr.foi.air.honnomachi.ui.theme.LabelGray
 import hr.foi.air.honnomachi.ui.theme.LogoutButtonBackground
 import hr.foi.air.honnomachi.ui.theme.StatusActive
 import hr.foi.air.honnomachi.ui.theme.StatusSuspended
+import hr.foi.air.honnomachi.ui.wallet.WalletUiState
+import hr.foi.air.honnomachi.ui.wallet.WalletViewModel
+import java.util.Locale
 
 @Composable
 fun ProfileScreen(
@@ -55,10 +64,48 @@ fun ProfileScreen(
     onNavigateToPrivacyPolicy: () -> Unit,
     onNavigateToAdmin: () -> Unit,
     profileViewModel: ProfileViewModel = hiltViewModel(),
+    walletViewModel: WalletViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
+    val activity = context as? ComponentActivity
     val uiState by profileViewModel.uiState.collectAsState()
     val formState by profileViewModel.formState.collectAsState()
+    val walletUiState by walletViewModel.uiState.collectAsState()
+    val walletMessage by walletViewModel.actionMessage.collectAsState()
+    val paymentSheetUnavailableMessage = stringResource(R.string.wallet_payment_sheet_unavailable)
+
+    val paymentSheet =
+        remember(activity) {
+            activity?.let { hostActivity ->
+                PaymentSheet(hostActivity) { result ->
+                    walletViewModel.onPaymentSheetResult(result)
+                }
+            }
+        }
+
+    LaunchedEffect(walletViewModel, paymentSheet, activity) {
+        if (paymentSheet == null || activity == null) return@LaunchedEffect
+
+        walletViewModel.paymentSheetRequests.collect { request ->
+            runCatching {
+                paymentSheet.presentWithPaymentIntent(
+                    request.clientSecret,
+                    PaymentSheet.Configuration(
+                        merchantDisplayName = "HonNoMachi",
+                    ),
+                )
+            }.onFailure { error ->
+                walletViewModel.onPaymentSheetPresentationFailed(error)
+            }
+        }
+    }
+
+    LaunchedEffect(walletMessage) {
+        walletMessage?.let {
+            AppUtil.showToast(context, it)
+            walletViewModel.consumeMessage()
+        }
+    }
 
     val hasChanges =
         if (uiState is ProfileUiState.Success) {
@@ -194,6 +241,19 @@ fun ProfileScreen(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
+            WalletTopupSection(
+                uiState = walletUiState,
+                onSelectAmount = walletViewModel::selectTopupAmount,
+                onStartTopup = {
+                    if (paymentSheet == null) {
+                        AppUtil.showToast(context, paymentSheetUnavailableMessage)
+                    } else {
+                        walletViewModel.startTopup()
+                    }
+                },
+                isPaymentSheetReady = paymentSheet != null,
+            )
+            Spacer(modifier = Modifier.height(24.dp))
             Text(
                 text = stringResource(R.string.label_privacy_settings),
                 style = MaterialTheme.typography.headlineSmall,
@@ -285,6 +345,110 @@ fun ProfileScreen(
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+@Composable
+private fun WalletTopupSection(
+    uiState: WalletUiState,
+    onSelectAmount: (Int) -> Unit,
+    onStartTopup: () -> Unit,
+    isPaymentSheetReady: Boolean,
+) {
+    val isBusy = uiState.isCreatingTopup || uiState.activeTopupId != null
+    val amounts = listOf(500, 1000, 2000)
+    val balance =
+        String.format(
+            Locale.getDefault(),
+            "%.2f %s",
+            uiState.balanceMinor / 100.0,
+            uiState.currency.uppercase(Locale.ROOT),
+        )
+    val selectedAmountText =
+        String.format(
+            Locale.getDefault(),
+            "%.2f %s",
+            uiState.selectedTopupAmountMinor / 100.0,
+            uiState.currency.uppercase(Locale.ROOT),
+        )
+
+    Text(
+        text = stringResource(R.string.wallet_title),
+        style = MaterialTheme.typography.headlineSmall,
+        fontWeight = FontWeight.Bold,
+    )
+    Spacer(modifier = Modifier.height(8.dp))
+    Text(
+        text = stringResource(R.string.wallet_balance, balance),
+        style = MaterialTheme.typography.bodyLarge,
+    )
+    Spacer(modifier = Modifier.height(8.dp))
+    Text(
+        text = stringResource(R.string.wallet_topup_select_amount),
+        style = MaterialTheme.typography.bodyMedium,
+        color = LabelGray,
+    )
+    Spacer(modifier = Modifier.height(8.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        amounts.forEach { amountMinor ->
+            val isSelected = amountMinor == uiState.selectedTopupAmountMinor
+            val amountLabel = String.format(Locale.getDefault(), "%.0f €", amountMinor / 100.0)
+            if (isSelected) {
+                Button(
+                    onClick = { onSelectAmount(amountMinor) },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(16.dp),
+                ) {
+                    Text(text = amountLabel)
+                }
+            } else {
+                OutlinedButton(
+                    onClick = { onSelectAmount(amountMinor) },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(16.dp),
+                ) {
+                    Text(text = amountLabel)
+                }
+            }
+        }
+    }
+    Spacer(modifier = Modifier.height(12.dp))
+    if (uiState.activeTopupStatus == WalletTopupStatus.PENDING || uiState.isCreatingTopup) {
+        Text(
+            text = stringResource(R.string.wallet_topup_pending_status),
+            style = MaterialTheme.typography.bodySmall,
+            color = LabelGray,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+    }
+    if (!isPaymentSheetReady) {
+        Text(
+            text = stringResource(R.string.wallet_payment_sheet_unavailable),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+    }
+    Button(
+        onClick = onStartTopup,
+        enabled = !isBusy && isPaymentSheetReady,
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .testTag("wallet_topup_button"),
+        shape = RoundedCornerShape(24.dp),
+    ) {
+        if (uiState.isCreatingTopup) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(18.dp),
+                strokeWidth = 2.dp,
+            )
+        } else {
+            Text(text = stringResource(R.string.wallet_add_funds_cta, selectedAmountText))
         }
     }
 }

@@ -138,10 +138,17 @@
     <string name="label_price">Price:</string>
     <string name="button_add_to_cart">Add to cart</string>
     <string name="button_pay_with_stripe">Pay with Stripe</string>
+    <string name="checkout_payment_sheet_unavailable">Stripe payment form is currently unavailable.</string>
     <string name="checkout_success_title">Payment successful</string>
     <string name="checkout_success_message">Your payment was completed successfully.</string>
     <string name="checkout_cancel_title">Payment canceled</string>
     <string name="checkout_cancel_message">Checkout was canceled. You can try again from your cart.</string>
+    <string name="wallet_title">Wallet</string>
+    <string name="wallet_balance">Balance: %1$s</string>
+    <string name="wallet_topup_select_amount">Select top-up amount</string>
+    <string name="wallet_topup_pending_status">Top-up is pending confirmation...</string>
+    <string name="wallet_add_funds_cta">Add funds (%1$s)</string>
+    <string name="wallet_payment_sheet_unavailable">Stripe payment form is currently unavailable.</string>
     <string name="button_back_home">Back to Home</string>
     <string name="label_description">Description:</string>
     <string name="search_by_title">Search by title</string>

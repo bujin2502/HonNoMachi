@@ -32,37 +32,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <data
-                    android:host="example.com"
-                    android:pathPrefix="/honnomachi/checkout/success"
-                    android:scheme="https" />
-                <data
-                    android:host="example.com"
-                    android:pathPrefix="/honnomachi/checkout/cancel"
-                    android:scheme="https" />
-            </intent-filter>
-
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <data
-                    android:host="checkout"
-                    android:pathPrefix="/success"
-                    android:scheme="honnomachi" />
-                <data
-                    android:host="checkout"
-                    android:pathPrefix="/cancel"
-                    android:scheme="honnomachi" />
-            </intent-filter>
         </activity>
     </application>
 

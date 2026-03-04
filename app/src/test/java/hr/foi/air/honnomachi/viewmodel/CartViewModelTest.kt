@@ -1,8 +1,8 @@
 package hr.foi.air.honnomachi.viewmodel
 
 import hr.foi.air.honnomachi.data.CartRepository
+import hr.foi.air.honnomachi.data.CheckoutPaymentIntentModel
 import hr.foi.air.honnomachi.data.CheckoutRepository
-import hr.foi.air.honnomachi.data.CheckoutSessionModel
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.model.CartItemModel
 import hr.foi.air.honnomachi.model.Currency
@@ -59,22 +59,28 @@ class FakeCartRepository : CartRepository {
 }
 
 class FakeCheckoutRepository : CheckoutRepository {
-    var createSessionCallCount = 0
-    var resultToReturn: Result<CheckoutSessionModel> =
+    var createPaymentIntentCallCount = 0
+    var resultToReturn: Result<CheckoutPaymentIntentModel> =
         Result.Success(
-            CheckoutSessionModel(
-                sessionId = "cs_test",
-                checkoutUrl = "https://stripe.test/checkout",
+            CheckoutPaymentIntentModel(
+                checkoutId = "pi_test",
+                paymentIntentId = "pi_test",
+                clientSecret = "pi_test_secret_123",
+                amountMinor = 1200,
+                totalAmountMinor = 1200,
+                walletContributionMinor = 0,
+                currency = "eur",
                 expiresAt = null,
                 reservationIds = emptyList(),
+                requiresPaymentSheet = true,
+                checkoutCompleted = false,
             ),
         )
 
-    override suspend fun createCheckoutSession(
-        successUrl: String,
-        cancelUrl: String,
-    ): Result<CheckoutSessionModel> {
-        createSessionCallCount++
+    override suspend fun createCheckoutPaymentIntent(
+        reservationTtlMinutes: Int?,
+    ): Result<CheckoutPaymentIntentModel> {
+        createPaymentIntentCallCount++
         return resultToReturn
     }
 }
@@ -138,17 +144,17 @@ class CartViewModelTest {
             viewModel.checkoutWithStripe()
             advanceUntilIdle()
 
-            assertEquals(0, fakeCheckoutRepository.createSessionCallCount)
+            assertEquals(0, fakeCheckoutRepository.createPaymentIntentCallCount)
             assertEquals("Košarica je prazna.", viewModel.actionMessage.value)
         }
 
     @Test
-    fun `checkoutWithStripe emits checkout url on success`() =
+    fun `checkoutWithStripe emits payment sheet request on success`() =
         runTest(testDispatcher) {
-            val emittedUrls = mutableListOf<String>()
+            val emittedRequests = mutableListOf<CheckoutPaymentIntentModel>()
             val collectionJob =
                 backgroundScope.launch {
-                    viewModel.checkoutUrl.collect { emittedUrls += it }
+                    viewModel.paymentSheetRequests.collect { emittedRequests += it }
                 }
 
             val book = BookModel(bookId = "4", title = "Checkout Book", price = 12.0, priceCurrency = Currency.EUR)
@@ -158,11 +164,59 @@ class CartViewModelTest {
             viewModel.checkoutWithStripe()
             advanceUntilIdle()
 
-            assertEquals(1, fakeCheckoutRepository.createSessionCallCount)
-            assertEquals(listOf("https://stripe.test/checkout"), emittedUrls)
+            assertEquals(1, fakeCheckoutRepository.createPaymentIntentCallCount)
+            assertEquals(1, emittedRequests.size)
+            assertEquals("pi_test_secret_123", emittedRequests[0].clientSecret)
             assertEquals(false, viewModel.isCheckoutInProgress.value)
 
             collectionJob.cancel()
+        }
+
+    @Test
+    fun `checkoutWithStripe wallet only navigates to success without payment sheet`() =
+        runTest(testDispatcher) {
+            fakeCheckoutRepository.resultToReturn =
+                Result.Success(
+                    CheckoutPaymentIntentModel(
+                        checkoutId = "wallet_checkout",
+                        paymentIntentId = null,
+                        clientSecret = null,
+                        amountMinor = 0,
+                        totalAmountMinor = 1200,
+                        walletContributionMinor = 1200,
+                        currency = "eur",
+                        expiresAt = null,
+                        reservationIds = emptyList(),
+                        requiresPaymentSheet = false,
+                        checkoutCompleted = true,
+                    ),
+                )
+
+            val emittedRequests = mutableListOf<CheckoutPaymentIntentModel>()
+            val emittedNavigation = mutableListOf<hr.foi.air.honnomachi.ui.cart.CheckoutNavigationTarget>()
+
+            val requestCollectionJob =
+                backgroundScope.launch {
+                    viewModel.paymentSheetRequests.collect { emittedRequests += it }
+                }
+            val navigationCollectionJob =
+                backgroundScope.launch {
+                    viewModel.checkoutNavigation.collect { emittedNavigation += it }
+                }
+
+            val book = BookModel(bookId = "4", title = "Checkout Book", price = 12.0, priceCurrency = Currency.EUR)
+            fakeCartRepository.addToCart(book)
+            advanceUntilIdle()
+
+            viewModel.checkoutWithStripe()
+            advanceUntilIdle()
+
+            assertEquals(0, emittedRequests.size)
+            assertEquals(1, emittedNavigation.size)
+            assertEquals(hr.foi.air.honnomachi.ui.cart.CheckoutNavigationTarget.SUCCESS, emittedNavigation[0])
+
+            requestCollectionJob.cancel()
+            navigationCollectionJob.cancel()
         }
 
     @Test

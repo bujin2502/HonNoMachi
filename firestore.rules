@@ -55,6 +55,40 @@ service cloud.firestore {
             allow write: if false;
         }
 
+        // Novčanik je vidljiv samo vlasniku i administratoru.
+        // Stanje i ledger zapise ažurira backend (Cloud Functions).
+        match /wallets/{userId} {
+            allow read: if request.auth != null
+                && request.auth.token.email_verified == true
+                && (
+                    request.auth.uid == userId
+                    || isAdmin()
+                );
+            allow write: if false;
+
+            match /ledger/{entryId} {
+                allow read: if request.auth != null
+                    && request.auth.token.email_verified == true
+                    && (
+                        request.auth.uid == userId
+                        || isAdmin()
+                    );
+                allow write: if false;
+            }
+        }
+
+        // Wallet topup evidencija je vidljiva vlasniku i administratoru.
+        // Upise i promjene statusa obavlja backend (Cloud Functions).
+        match /walletTopups/{topupId} {
+            allow read: if request.auth != null
+                && request.auth.token.email_verified == true
+                && (
+                    resource.data.userId == request.auth.uid
+                    || isAdmin()
+                );
+            allow write: if false;
+        }
+
         // Sve ostalo je zatvoreno dok se eksplicitno ne doda pravilo za kolekciju.
         match /{document=**} {
             allow read, write: if false;

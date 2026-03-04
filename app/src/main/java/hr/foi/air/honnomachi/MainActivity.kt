@@ -1,6 +1,5 @@
 package hr.foi.air.honnomachi
 
-import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -14,12 +13,9 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import hr.foi.air.honnomachi.ui.theme.HonNoMachiTheme
-import kotlinx.coroutines.flow.MutableSharedFlow
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private val deepLinkIntents = MutableSharedFlow<Intent>(extraBufferCapacity = 1)
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -36,12 +32,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            LaunchedEffect(navController) {
-                deepLinkIntents.collect { incomingIntent ->
-                    navController.handleDeepLink(incomingIntent)
-                }
-            }
-
             HonNoMachiTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     AppNavigation(
@@ -51,15 +41,5 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-
-        intent?.let { launchIntent ->
-            deepLinkIntents.tryEmit(launchIntent)
-        }
-    }
-
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        setIntent(intent)
-        deepLinkIntents.tryEmit(intent)
     }
 }

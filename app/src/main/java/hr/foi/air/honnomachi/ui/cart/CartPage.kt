@@ -1,9 +1,6 @@
 package hr.foi.air.honnomachi.ui.cart
 
-import android.content.ActivityNotFoundException
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -44,6 +42,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.stripe.android.paymentsheet.PaymentSheet
 import coil.compose.AsyncImage
 import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.R
@@ -55,11 +54,24 @@ fun CartPage(
     paddingValues: PaddingValues,
     viewModel: CartViewModel = hiltViewModel(),
     showImages: Boolean = true,
+    onCheckoutSuccess: () -> Unit = {},
+    onCheckoutCancel: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val actionMessage by viewModel.actionMessage.collectAsState()
     val isCheckoutInProgress by viewModel.isCheckoutInProgress.collectAsState()
     val context = LocalContext.current
+    val activity = context as? ComponentActivity
+    val paymentSheetUnavailableMessage = stringResource(R.string.checkout_payment_sheet_unavailable)
+
+    val paymentSheet =
+        remember(activity) {
+            activity?.let { hostActivity ->
+                PaymentSheet(hostActivity) { result ->
+                    viewModel.onPaymentSheetResult(result)
+                }
+            }
+        }
 
     LaunchedEffect(actionMessage) {
         actionMessage?.let {
@@ -68,9 +80,37 @@ fun CartPage(
         }
     }
 
+    LaunchedEffect(viewModel, paymentSheet, activity) {
+        if (paymentSheet == null || activity == null) return@LaunchedEffect
+
+        viewModel.paymentSheetRequests.collect { request ->
+            val clientSecret = request.clientSecret
+            if (clientSecret.isNullOrBlank()) {
+                viewModel.onPaymentSheetPresentationFailed(
+                    IllegalStateException("Missing Stripe PaymentIntent client secret."),
+                )
+                return@collect
+            }
+
+            runCatching {
+                paymentSheet.presentWithPaymentIntent(
+                    clientSecret,
+                    PaymentSheet.Configuration(
+                        merchantDisplayName = "HonNoMachi",
+                    ),
+                )
+            }.onFailure { error ->
+                viewModel.onPaymentSheetPresentationFailed(error)
+            }
+        }
+    }
+
     LaunchedEffect(viewModel) {
-        viewModel.checkoutUrl.collect { checkoutUrl ->
-            openCheckoutPage(context, checkoutUrl)
+        viewModel.checkoutNavigation.collect { target ->
+            when (target) {
+                CheckoutNavigationTarget.SUCCESS -> onCheckoutSuccess()
+                CheckoutNavigationTarget.CANCELED -> onCheckoutCancel()
+            }
         }
     }
 
@@ -110,7 +150,13 @@ fun CartPage(
                         totalPrice = state.totalPrice,
                         isCheckoutInProgress = isCheckoutInProgress,
                         onRemoveItem = { viewModel.removeFromCart(it) },
-                        onCheckout = { viewModel.checkoutWithStripe() },
+                        onCheckout = {
+                            if (paymentSheet == null) {
+                                AppUtil.showToast(context, paymentSheetUnavailableMessage)
+                            } else {
+                                viewModel.checkoutWithStripe()
+                            }
+                        },
                         showImages = showImages,
                     )
                 }
@@ -251,20 +297,5 @@ fun CartItemRow(
                 )
             }
         }
-    }
-}
-
-private fun openCheckoutPage(
-    context: Context,
-    checkoutUrl: String,
-) {
-    try {
-        val intent =
-            Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl)).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-        context.startActivity(intent)
-    } catch (e: ActivityNotFoundException) {
-        AppUtil.showToast(context, "Nije moguće otvoriti Stripe checkout.")
     }
 }

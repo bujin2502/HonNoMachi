@@ -10,8 +10,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import hr.foi.air.honnomachi.data.CartRepository
+import hr.foi.air.honnomachi.data.CheckoutPaymentIntentModel
 import hr.foi.air.honnomachi.data.CheckoutRepository
-import hr.foi.air.honnomachi.data.CheckoutSessionModel
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.model.CartItemModel
 import hr.foi.air.honnomachi.ui.cart.CartPage
@@ -46,19 +46,25 @@ class FakeCartRepository : CartRepository {
 }
 
 class FakeCheckoutRepository : CheckoutRepository {
-    var createSessionCallCount = 0
+    var createPaymentIntentCallCount = 0
 
-    override suspend fun createCheckoutSession(
-        successUrl: String,
-        cancelUrl: String,
-    ): Result<CheckoutSessionModel> {
-        createSessionCallCount++
+    override suspend fun createCheckoutPaymentIntent(
+        reservationTtlMinutes: Int?,
+    ): Result<CheckoutPaymentIntentModel> {
+        createPaymentIntentCallCount++
         return Result.Success(
-            CheckoutSessionModel(
-                sessionId = "cs_test",
-                checkoutUrl = "https://stripe.test/checkout",
+            CheckoutPaymentIntentModel(
+                checkoutId = "pi_test",
+                paymentIntentId = "pi_test",
+                clientSecret = "pi_test_secret_123",
+                amountMinor = 1200,
+                totalAmountMinor = 1200,
+                walletContributionMinor = 0,
+                currency = "eur",
                 expiresAt = null,
                 reservationIds = emptyList(),
+                requiresPaymentSheet = true,
+                checkoutCompleted = false,
             ),
         )
     }
@@ -111,7 +117,7 @@ class CartScreenTest {
         composeTestRule.onNodeWithTag("pay_with_stripe_button").performClick()
 
         composeTestRule.waitUntil(timeoutMillis = 5000) {
-            fakeCheckoutRepository.createSessionCallCount == 1
+            fakeCheckoutRepository.createPaymentIntentCallCount == 1
         }
     }
 }

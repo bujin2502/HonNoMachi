@@ -2,8 +2,10 @@ package hr.foi.air.honnomachi.ui.cart
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.stripe.android.paymentsheet.PaymentSheetResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import hr.foi.air.honnomachi.data.CartRepository
+import hr.foi.air.honnomachi.data.CheckoutPaymentIntentModel
 import hr.foi.air.honnomachi.data.CheckoutRepository
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.model.Currency
@@ -18,6 +20,12 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 private const val USD_TO_EUR_RATE = 1.18
+private const val DEFAULT_RESERVATION_TTL_MINUTES = 15
+
+enum class CheckoutNavigationTarget {
+    SUCCESS,
+    CANCELED,
+}
 
 @HiltViewModel
 class CartViewModel
@@ -35,8 +43,15 @@ class CartViewModel
         private val _isCheckoutInProgress = MutableStateFlow(false)
         val isCheckoutInProgress: StateFlow<Boolean> = _isCheckoutInProgress.asStateFlow()
 
-        private val _checkoutUrl = MutableSharedFlow<String>(extraBufferCapacity = 1)
-        val checkoutUrl: SharedFlow<String> = _checkoutUrl.asSharedFlow()
+        private val _paymentSheetRequests =
+            MutableSharedFlow<CheckoutPaymentIntentModel>(extraBufferCapacity = 1)
+        val paymentSheetRequests: SharedFlow<CheckoutPaymentIntentModel> =
+            _paymentSheetRequests.asSharedFlow()
+
+        private val _checkoutNavigation =
+            MutableSharedFlow<CheckoutNavigationTarget>(extraBufferCapacity = 1)
+        val checkoutNavigation: SharedFlow<CheckoutNavigationTarget> =
+            _checkoutNavigation.asSharedFlow()
 
         init {
             loadCartItems()
@@ -93,14 +108,33 @@ class CartViewModel
                 _isCheckoutInProgress.value = true
                 when (
                     val result =
-                        checkoutRepository.createCheckoutSession(
-                            successUrl = CHECKOUT_SUCCESS_URL,
-                            cancelUrl = CHECKOUT_CANCEL_URL,
+                        checkoutRepository.createCheckoutPaymentIntent(
+                            reservationTtlMinutes = DEFAULT_RESERVATION_TTL_MINUTES,
                         )
                 ) {
                     is Result.Success -> {
-                        _checkoutUrl.tryEmit(result.data.checkoutUrl)
-                        _actionMessage.value = "Preusmjeravanje na Stripe naplatu..."
+                        val checkout = result.data
+                        if (checkout.requiresPaymentSheet) {
+                            if (checkout.clientSecret.isNullOrBlank()) {
+                                _actionMessage.value = "Stripe client secret nedostaje."
+                            } else {
+                                _paymentSheetRequests.tryEmit(checkout)
+                                _actionMessage.value =
+                                    if (checkout.walletContributionMinor > 0) {
+                                        "Wallet je djelomično iskorišten. Otvaranje Stripe naplate..."
+                                    } else {
+                                        "Otvaranje Stripe naplate..."
+                                    }
+                            }
+                        } else {
+                            _actionMessage.value =
+                                if (checkout.walletContributionMinor > 0) {
+                                    "Plaćanje uspješno putem walleta."
+                                } else {
+                                    "Plaćanje uspješno."
+                                }
+                            _checkoutNavigation.tryEmit(CheckoutNavigationTarget.SUCCESS)
+                        }
                     }
                     is Result.Error -> {
                         val message = result.exception.message ?: "Nepoznata greška."
@@ -109,6 +143,28 @@ class CartViewModel
                 }
                 _isCheckoutInProgress.value = false
             }
+        }
+
+        fun onPaymentSheetResult(result: PaymentSheetResult) {
+            when (result) {
+                PaymentSheetResult.Completed -> {
+                    _actionMessage.value = "Plaćanje zaprimljeno."
+                    _checkoutNavigation.tryEmit(CheckoutNavigationTarget.SUCCESS)
+                }
+                PaymentSheetResult.Canceled -> {
+                    _actionMessage.value = "Plaćanje je otkazano."
+                    _checkoutNavigation.tryEmit(CheckoutNavigationTarget.CANCELED)
+                }
+                is PaymentSheetResult.Failed -> {
+                    val error = result.error.localizedMessage ?: "Nepoznata greška."
+                    _actionMessage.value = "Plaćanje nije uspjelo: $error"
+                }
+            }
+        }
+
+        fun onPaymentSheetPresentationFailed(throwable: Throwable) {
+            val error = throwable.localizedMessage ?: "Nepoznata greška."
+            _actionMessage.value = "Prikaz Stripe naplate nije uspio: $error"
         }
 
         fun removeFromCart(cartItemId: String) {
@@ -126,10 +182,5 @@ class CartViewModel
 
         fun consumeMessage() {
             _actionMessage.value = null
-        }
-
-        companion object {
-            private const val CHECKOUT_SUCCESS_URL = "https://example.com/honnomachi/checkout/success"
-            private const val CHECKOUT_CANCEL_URL = "https://example.com/honnomachi/checkout/cancel"
         }
     }

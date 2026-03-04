@@ -18,6 +18,8 @@ import hr.foi.air.honnomachi.data.FirestoreUserDataSource
 import hr.foi.air.honnomachi.data.FirestoreUserDataSourceImpl
 import hr.foi.air.honnomachi.data.ProfileRepository
 import hr.foi.air.honnomachi.data.ProfileRepositoryImpl
+import hr.foi.air.honnomachi.data.WalletRepository
+import hr.foi.air.honnomachi.data.WalletRepositoryImpl
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -39,6 +41,9 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindProfileRepository(profileRepositoryImpl: ProfileRepositoryImpl): ProfileRepository
+
+    @Binds
+    abstract fun bindWalletRepository(walletRepositoryImpl: WalletRepositoryImpl): WalletRepository
 
     @Binds
     abstract fun bindAdminRepository(adminRepositoryImpl: AdminRepositoryImpl): AdminRepository

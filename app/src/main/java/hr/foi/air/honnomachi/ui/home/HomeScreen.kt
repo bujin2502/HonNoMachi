@@ -148,6 +148,16 @@ fun ContentScreen(
             CartPage(
                 paddingValues = paddingValues,
                 viewModel = cartViewModel,
+                onCheckoutSuccess = {
+                    navController.navigate(ROUTE_CHECKOUT_SUCCESS) {
+                        launchSingleTop = true
+                    }
+                },
+                onCheckoutCancel = {
+                    navController.navigate(ROUTE_CHECKOUT_CANCEL) {
+                        launchSingleTop = true
+                    }
+                },
             )
         }
 
@@ -179,3 +189,6 @@ data class NavItem(
     val label: String,
     val icon: ImageVector,
 )
+
+private const val ROUTE_CHECKOUT_SUCCESS = "checkout/success"
+private const val ROUTE_CHECKOUT_CANCEL = "checkout/cancel"

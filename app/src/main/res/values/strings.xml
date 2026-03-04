@@ -146,7 +146,7 @@
     <string name="wallet_title">Wallet</string>
     <string name="wallet_balance">Balance: %1$s</string>
     <string name="wallet_topup_select_amount">Select top-up amount</string>
-    <string name="wallet_topup_pending_status">Top-up is pending confirmation...</string>
+    <string name="wallet_topup_pending_status">Top-up is pending confirmation…</string>
     <string name="wallet_add_funds_cta">Add funds (%1$s)</string>
     <string name="wallet_payment_sheet_unavailable">Stripe payment form is currently unavailable.</string>
     <string name="button_back_home">Back to Home</string>

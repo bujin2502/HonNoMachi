@@ -146,7 +146,7 @@
     <string name="wallet_title">Novčanik</string>
     <string name="wallet_balance">Stanje: %1$s</string>
     <string name="wallet_topup_select_amount">Odaberi iznos nadoplate</string>
-    <string name="wallet_topup_pending_status">Nadoplata čeka potvrdu...</string>
+    <string name="wallet_topup_pending_status">Nadoplata čeka potvrdu…</string>
     <string name="wallet_add_funds_cta">Nadoplati (%1$s)</string>
     <string name="wallet_payment_sheet_unavailable">Stripe forma za plaćanje trenutno nije dostupna.</string>
     <string name="button_back_home">Natrag na početnu</string>

@@ -298,7 +298,7 @@ CI pipeline pokreće se automatski na svakom `push` i `pull request` prema `mast
 
 Planirane aktivnosti za kontinuiranu isporuku:
 - [x] Automatsko potpisivanje release APK-a (keystore putem GitHub Secrets)
-- [ ] Distribucija putem Firebase App Distribution za interni QA
+- [x] Distribucija putem Firebase App Distribution za interni QA
 - [x] Verzioniranje buildova na temelju Git tagova
 
 ### 7. Analiza kvalitete programskog koda

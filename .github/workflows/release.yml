@@ -54,3 +54,12 @@ jobs:
         with:
           files: app/build/outputs/apk/release/*.apk
           generate_release_notes: true
+
+      - name: Distribuiraj na Firebase App Distribution
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{ secrets.FIREBASE_APP_ID }}
+          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          groups: testers
+          file: app/build/outputs/apk/release/app-release.apk
+          releaseNotes: "Tag ${{ github.ref_name }}"

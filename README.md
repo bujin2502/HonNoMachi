@@ -190,6 +190,39 @@ Za detaljnije upute o postavljanju projekta, pogledajte:
 
 ### Sprint 05
 
+#### Refaktoriranje UI komponenti
+- [x] Refaktoriran `AddPage.kt` – validacija u ViewModel, custom state holder, form polja kao zasebne composable komponente
+- [x] Refaktoriran `AuthRepository.kt` – Firestore operacije u zasebnu klasu, `getUserDocument()` helper, konstante za kolekcije
+- [x] Refaktoriran `ProfileScreen.kt` – boje u temu, ekstrahirana `ProfileEditForm` composable, stringovi u resources
+- [x] Refaktoriran `AuthViewModel.kt` – callbackovi zamijenjeni sa StateFlow, pojednostavljen init blok, uklonjeni magic stringovi
+- [x] Kreirane reusable auth komponente (`EmailInputField`, `PasswordInputField`)
+- [x] Refaktoriran `LoginScreen.kt`, `SignupScreen.kt` i `ChangePasswordScreen.kt` – integrirane zajedničke auth komponente, uklonjen duplicirani kod
+
+#### Testna pokrivenost
+- [x] Unit testovi za `AuthViewModel` (19), `AddBookViewModel` (25), `HomeViewModel` (6)
+- [x] Unit testovi za `AuthRepository` (12), `BookRepository` (5), `ProfileRepository` (8), `CartRepository` (5)
+- [x] Unit testovi za `FirestoreUserDataSourceImpl` (4), `Result<T>` (3), `ImageSourceInitializer` (+2)
+- [x] Pokrivenost koda (JaCoCo) povećana s 3.6% na 29.39% (89 novih testova u 10 test klasa)
+
+#### Administratorski pregled korisnika
+- [x] Administratorska navigacija, zaštita ruta i Firestore sigurnosna pravila
+- [x] `AdminRepository` – dohvat, pretraga i filtriranje korisnika po statusu
+- [x] Sučelje – lista korisnika, pretraga i filteri, detaljan prikaz, account status sekcija
+- [x] Unit testovi: `AdminRepositoryTest` (11), `AdminViewModelTest` (3), `AdminUserListViewModelTest` (8), `UserDetailViewModelTest` (4)
+- [x] Instrumentirani testovi: `AdminScreenTest` (4)
+
+#### Suspenzija i reaktivacija korisnika
+- [x] Pozadinska logika suspenzije i reaktivacije korisnika
+- [x] Firestore sigurnosna pravila za suspenziju
+- [x] Sučelje – dijalog, akcije i efekti suspenzije na korisnički račun
+
+#### Narudžbe i košarica
+- [x] `OrderRepository` – ažuriranje statusa knjige u `SOLD` i brisanje iz košarica svih korisnika
+- [x] Validacija nedostupnih knjiga pri dodavanju u košaricu
+- [x] Konverzija valuta (USD u EUR), `HomePage` prikazuje samo dostupne knjige
+- [x] Unit i Instrumented testovi za upravljanje košaricom
+
+
 ### Sprint 06
 
 ### Sprint 07
@@ -268,8 +301,7 @@ CI pipeline pokreće se automatski na svakom `push` i `pull request` prema `mast
 Planirane aktivnosti za kontinuiranu isporuku:
 - [ ] Automatsko potpisivanje release APK-a (keystore putem GitHub Secrets)
 - [ ] Distribucija putem Firebase App Distribution za interni QA
-- [ ] Automatski deployment na Google Play (Internal Testing track)
-- [ ] Verzioniranje buildova na temelju Git tagova
+- [x] Verzioniranje buildova na temelju Git tagova
 
 ### 7. Analiza kvalitete programskog koda
 
@@ -344,7 +376,7 @@ Projekt razvija tim studenata **Fakulteta organizacije i informatike (FOI)**, Va
 
 ---
 
-**Status projekta:** Sprint 05 - U tijeku | Sprint 06 - U planiranju
-**Zadnje ažuriranje:** 13.02.2026.
+**Status projekta:** Sprint 06 - U tijeku | Sprint 07 - U planiranju
+**Zadnje ažuriranje:** 05.03.2026.
 
 </div>

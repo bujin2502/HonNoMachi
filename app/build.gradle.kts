@@ -1,5 +1,29 @@
 import org.gradle.api.tasks.compile.JavaCompile
 
+fun gitVersionName(): String =
+    try {
+        val tag =
+            ProcessBuilder("git", "describe", "--tags", "--abbrev=0")
+                .directory(rootDir)
+                .start()
+                .inputStream
+                .bufferedReader()
+                .readLine()
+                ?.trim()
+                ?: "v1.0.0"
+        if (tag.startsWith("v")) tag.substring(1) else tag
+    } catch (_: Exception) {
+        "1.0.0"
+    }
+
+fun gitVersionCode(): Int {
+    val parts = gitVersionName().split(".")
+    val major = parts.getOrNull(0)?.toIntOrNull() ?: 1
+    val minor = parts.getOrNull(1)?.toIntOrNull() ?: 0
+    val patch = parts.getOrNull(2)?.toIntOrNull() ?: 0
+    return major * 10000 + minor * 100 + patch
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -27,8 +51,8 @@ android {
         applicationId = "hr.foi.air.honnomachi"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = gitVersionCode()
+        versionName = gitVersionName()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         manifestPlaceholders["imageUploaderAuthority"] = "hr.foi.air.honnomachi.provider"

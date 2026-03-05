@@ -296,10 +296,8 @@ CI pipeline pokreće se automatski na svakom `push` i `pull request` prema `mast
 
 ### 6. Kontinuirana isporuka (CD)
 
-> **U planiranju** — CD pipeline još nije implementiran.
-
 Planirane aktivnosti za kontinuiranu isporuku:
-- [ ] Automatsko potpisivanje release APK-a (keystore putem GitHub Secrets)
+- [x] Automatsko potpisivanje release APK-a (keystore putem GitHub Secrets)
 - [ ] Distribucija putem Firebase App Distribution za interni QA
 - [x] Verzioniranje buildova na temelju Git tagova
 

@@ -227,4 +227,8 @@
     <string name="suspended_contact_message">Ako smatrate da je ovo greška, molimo kontaktirajte podršku.</string>
     <string name="suspended_sign_out">Odjava</string>
     <string name="error_suspended_cannot_add_book">Suspendirani računi ne mogu kreirati nove ponude.</string>
+    <string name="shelf_purchased">Kupljeno</string>
+    <string name="shelf_sold">Prodano</string>
+    <string name="shelf_no_purchased">Još niste kupili nijednu knjigu.</string>
+    <string name="shelf_no_sold">Još niste prodali nijednu knjigu.</string>
 </resources>

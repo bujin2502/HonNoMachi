@@ -10,12 +10,14 @@ import hr.foi.air.honnomachi.data.CheckoutRepository
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.model.Currency
 import hr.foi.air.honnomachi.util.Result
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -53,8 +55,35 @@ class CartViewModel
         val checkoutNavigation: SharedFlow<CheckoutNavigationTarget> =
             _checkoutNavigation.asSharedFlow()
 
+        private var activeCheckoutId: String? = null
+
+        private val _secondsUntilExpiry = MutableStateFlow<Long?>(null)
+        val secondsUntilExpiry: StateFlow<Long?> = _secondsUntilExpiry.asStateFlow()
+
         init {
             loadCartItems()
+            startExpiryTicker()
+        }
+
+        private fun startExpiryTicker() {
+            viewModelScope.launch {
+                while (isActive) {
+                    val state = _uiState.value
+                    if (state is CartUiState.Success) {
+                        val nowMs = System.currentTimeMillis()
+                        val nearestExpiry = state.items
+                            .mapNotNull { it.reservationExpiresAt }
+                            .minOfOrNull { it.toDate().time }
+                        _secondsUntilExpiry.value = nearestExpiry?.let {
+                            val remainingMs = it - nowMs
+                            if (remainingMs > 0) remainingMs / 1000L else 0L
+                        }
+                    } else {
+                        _secondsUntilExpiry.value = null
+                    }
+                    delay(1_000L)
+                }
+            }
         }
 
         private fun loadCartItems() {
@@ -114,6 +143,7 @@ class CartViewModel
                 ) {
                     is Result.Success -> {
                         val checkout = result.data
+                        activeCheckoutId = checkout.checkoutId
                         if (checkout.requiresPaymentSheet) {
                             if (checkout.clientSecret.isNullOrBlank()) {
                                 _actionMessage.value = "Stripe client secret nedostaje."
@@ -154,11 +184,21 @@ class CartViewModel
                 PaymentSheetResult.Canceled -> {
                     _actionMessage.value = "Plaćanje je otkazano."
                     _checkoutNavigation.tryEmit(CheckoutNavigationTarget.CANCELED)
+                    releaseActiveCheckout()
                 }
                 is PaymentSheetResult.Failed -> {
                     val error = result.error.localizedMessage ?: "Nepoznata greška."
                     _actionMessage.value = "Plaćanje nije uspjelo: $error"
+                    releaseActiveCheckout()
                 }
+            }
+        }
+
+        private fun releaseActiveCheckout() {
+            val checkoutId = activeCheckoutId ?: return
+            activeCheckoutId = null
+            viewModelScope.launch {
+                checkoutRepository.cancelCheckout(checkoutId)
             }
         }
 

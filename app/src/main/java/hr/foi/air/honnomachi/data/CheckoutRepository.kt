@@ -24,6 +24,8 @@ interface CheckoutRepository {
     suspend fun createCheckoutPaymentIntent(
         reservationTtlMinutes: Int? = null,
     ): Result<CheckoutPaymentIntentModel>
+
+    suspend fun cancelCheckout(checkoutId: String): Result<Unit>
 }
 
 class CheckoutRepositoryImpl
@@ -112,7 +114,20 @@ class CheckoutRepositoryImpl
             }
         }
 
+        override suspend fun cancelCheckout(checkoutId: String): Result<Unit> =
+            try {
+                functions
+                    .getHttpsCallable(CANCEL_CHECKOUT_FUNCTION)
+                    .call(mapOf("checkoutId" to checkoutId))
+                    .await()
+                Result.Success(Unit)
+            } catch (e: Exception) {
+                CrashlyticsManager.instance.logException(e)
+                Result.Error(e)
+            }
+
         companion object {
             private const val CREATE_CHECKOUT_PAYMENT_INTENT_FUNCTION = "createCheckoutPaymentIntent"
+            private const val CANCEL_CHECKOUT_FUNCTION = "cancelCheckout"
         }
     }

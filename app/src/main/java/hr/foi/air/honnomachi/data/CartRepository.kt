@@ -2,6 +2,7 @@ package hr.foi.air.honnomachi.data
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import hr.foi.air.honnomachi.CrashlyticsManager
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.model.CartItemModel
@@ -71,7 +72,27 @@ class CartRepositoryImpl
                     return@callbackFlow
                 }
 
-                val listener =
+                var latestCartItems: List<CartItemModel> = emptyList()
+                val bookExpiryCache = mutableMapOf<String, Pair<com.google.firebase.Timestamp?, String?>>()
+                val bookListeners = mutableMapOf<String, ListenerRegistration>()
+                var previousBookIds = emptySet<String>()
+
+                fun emitMerged() {
+                    val merged = latestCartItems.map { item ->
+                        val cached = bookExpiryCache[item.bookId]
+                        if (cached != null && cached.second == currentUser.uid) {
+                            item.copy(
+                                reservationExpiresAt = cached.first,
+                                reservedByUid = cached.second,
+                            )
+                        } else {
+                            item
+                        }
+                    }
+                    trySend(Result.Success(merged))
+                }
+
+                val cartListener =
                     firestore
                         .collection("users")
                         .document(currentUser.uid)
@@ -85,11 +106,40 @@ class CartRepositoryImpl
                             }
 
                             if (snapshot != null) {
-                                val items = snapshot.toObjects(CartItemModel::class.java)
-                                trySend(Result.Success(items))
+                                latestCartItems = snapshot.toObjects(CartItemModel::class.java)
+                                val newBookIds = latestCartItems.map { it.bookId }.toSet()
+
+                                (newBookIds - previousBookIds).forEach { bookId ->
+                                    val bookListener = firestore
+                                        .collection("books")
+                                        .document(bookId)
+                                        .addSnapshotListener { bookSnap, bookErr ->
+                                            if (bookErr != null) return@addSnapshotListener
+                                            if (bookSnap != null) {
+                                                bookExpiryCache[bookId] = Pair(
+                                                    bookSnap.getTimestamp("reservationExpiresAt"),
+                                                    bookSnap.getString("reservedByUid"),
+                                                )
+                                                emitMerged()
+                                            }
+                                        }
+                                    bookListeners[bookId] = bookListener
+                                }
+
+                                (previousBookIds - newBookIds).forEach { bookId ->
+                                    bookListeners.remove(bookId)?.remove()
+                                    bookExpiryCache.remove(bookId)
+                                }
+
+                                previousBookIds = newBookIds
+                                emitMerged()
                             }
                         }
-                awaitClose { listener.remove() }
+
+                awaitClose {
+                    cartListener.remove()
+                    bookListeners.values.forEach { it.remove() }
+                }
             }
 
         override suspend fun removeFromCart(cartItemId: String): Result<Unit> =

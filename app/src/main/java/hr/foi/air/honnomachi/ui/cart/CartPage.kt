@@ -24,6 +24,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -39,6 +40,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import java.util.Locale
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.stripe.android.paymentsheet.PaymentSheet
@@ -59,6 +61,8 @@ fun CartPage(
     val uiState by viewModel.uiState.collectAsState()
     val actionMessage by viewModel.actionMessage.collectAsState()
     val isCheckoutInProgress by viewModel.isCheckoutInProgress.collectAsState()
+    @Suppress("UNUSED_VARIABLE")
+    val secondsUntilExpiry by viewModel.secondsUntilExpiry.collectAsState()
     val context = LocalContext.current
 
     val paymentSheet = rememberPaymentSheet { result ->
@@ -142,6 +146,7 @@ fun CartPage(
                         onRemoveItem = { viewModel.removeFromCart(it) },
                         onCheckout = { viewModel.checkoutWithStripe() },
                         showImages = showImages,
+                        ticker = secondsUntilExpiry,
                     )
                 }
             }
@@ -157,6 +162,7 @@ fun CartContent(
     onRemoveItem: (String) -> Unit,
     onCheckout: () -> Unit,
     showImages: Boolean,
+    ticker: Long? = null,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
@@ -164,7 +170,7 @@ fun CartContent(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(items) { item ->
-                CartItemRow(item = item, onRemove = onRemoveItem, showImages = showImages)
+                CartItemRow(item = item, onRemove = onRemoveItem, showImages = showImages, ticker = ticker)
             }
         }
 
@@ -218,18 +224,16 @@ fun CartItemRow(
     item: CartItemModel,
     onRemove: (String) -> Unit,
     showImages: Boolean,
+    ticker: Long? = null,
 ) {
     Card(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .height(100.dp),
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Row(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (showImages) {
@@ -271,6 +275,34 @@ fun CartItemRow(
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                 )
+                item.reservationExpiresAt?.let { expiresAt ->
+                    val nowMs = if (ticker != null) System.currentTimeMillis() else System.currentTimeMillis()
+                    val remainingMs = expiresAt.toDate().time - nowMs
+                    if (remainingMs > 0) {
+                        val totalSeconds = remainingMs / 1000L
+                        val minutes = totalSeconds / 60
+                        val seconds = totalSeconds % 60
+                        val label = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
+                        val chipColor = when {
+                            totalSeconds > 300 -> Color(0xFF4CAF50)
+                            totalSeconds > 60  -> Color(0xFFFF9800)
+                            else               -> Color(0xFFF44336)
+                        }
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = chipColor.copy(alpha = 0.15f),
+                            modifier = Modifier.padding(top = 2.dp),
+                        ) {
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = chipColor,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            )
+                        }
+                    }
+                }
             }
 
             IconButton(onClick = { onRemove(item.id) }) {

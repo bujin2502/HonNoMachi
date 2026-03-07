@@ -23,6 +23,19 @@ const stripeWalletWebhookSecret = defineSecret("STRIPE_WALLET_WEBHOOK_SECRET");
 const DEFAULT_RESERVATION_TTL_MINUTES = 15;
 const MAX_RESERVATION_TTL_MINUTES = 60;
 const CENTS_MULTIPLIER = 100;
+// Exchange rates: units of target currency per 1 unit of source currency.
+// Kept in sync with the Android app's USD_TO_EUR_RATE constant (1 EUR = 1.18 USD).
+const EXCHANGE_RATE_TABLE: Record<string, Record<string, number>> = {
+  eur: { usd: 1.18, eur: 1.0 },
+  usd: { eur: 1.0 / 1.18, usd: 1.0 },
+};
+
+function convertMinorBetweenCurrencies(amount: number, from: string, to: string): number {
+  if (from === to) return amount;
+  const rate = EXCHANGE_RATE_TABLE[from]?.[to];
+  if (!rate) return 0;
+  return Math.floor(amount * rate);
+}
 const MIN_WALLET_TOPUP_MINOR = 100;
 const MAX_WALLET_TOPUP_MINOR = 100000;
 const WALLET_DEFAULT_CURRENCY = "eur";
@@ -130,14 +143,17 @@ export const createCheckoutPaymentIntent = onCall(
     const stripe = new Stripe(stripeSecretKey.value());
     let createdPaymentIntentId: string | null = null;
     let walletContributionMinor = 0;
+    let walletDeductionMinor = 0;
     let persistedCheckoutSessionId: string | null = null;
 
     try {
-      walletContributionMinor = await reserveWalletContributionForCheckout({
+      const walletResult = await reserveWalletContributionForCheckout({
         userId: buyerUid,
         currency,
         requestedAmountMinor: totalAmountMinor,
       });
+      walletContributionMinor = walletResult.contributionMinor;
+      walletDeductionMinor = walletResult.walletDeductionMinor;
 
       const remainingStripeAmountMinor = totalAmountMinor - walletContributionMinor;
 
@@ -154,6 +170,7 @@ export const createCheckoutPaymentIntent = onCall(
           totalAmountMinor,
           stripeAmountMinor: 0,
           walletContributionMinor,
+          walletDeductionMinor,
           currency,
           checkoutFlow: CHECKOUT_FLOW_WALLET_ONLY,
         });
@@ -217,6 +234,7 @@ export const createCheckoutPaymentIntent = onCall(
         totalAmountMinor,
         stripeAmountMinor: remainingStripeAmountMinor,
         walletContributionMinor,
+        walletDeductionMinor,
         currency,
         checkoutFlow: CHECKOUT_FLOW_PAYMENT_INTENT,
       });
@@ -260,8 +278,7 @@ export const createCheckoutPaymentIntent = onCall(
           try {
             await refundWalletContributionForCheckout({
               userId: buyerUid,
-              currency,
-              amountMinor: walletContributionMinor,
+              amountMinor: walletDeductionMinor,
             });
           } catch (walletRollbackError) {
             logger.error(
@@ -394,15 +411,14 @@ export const createWalletTopupIntent = onCall(
       });
 
       const walletRef = db.collection("wallets").doc(userId);
-      transaction.set(
-        walletRef,
-        {
+      const walletSnapshot = await transaction.get(walletRef);
+      if (!walletSnapshot.exists) {
+        transaction.set(walletRef, {
           currency,
           balanceMinor: 0,
           updatedAt: FieldValue.serverTimestamp(),
-        },
-        { merge: true },
-      );
+        });
+      }
     });
 
     return loadWalletTopupIntentResponse({
@@ -546,6 +562,51 @@ export const stripeWebhook = onRequest(
   },
 );
 
+export const cancelCheckout = onCall(
+  {
+    region: "us-central1",
+    secrets: [stripeSecretKey],
+  },
+  async (request) => {
+    const buyerUid = request.auth?.uid;
+    if (!buyerUid) {
+      throw new HttpsError("unauthenticated", "User must be authenticated.");
+    }
+
+    const payload = toRecord(request.data);
+    const checkoutId = asString(payload.checkoutId);
+    if (!checkoutId) {
+      throw new HttpsError("invalid-argument", "Missing checkoutId.");
+    }
+
+    const checkoutSessionRef = db.collection("checkoutSessions").doc(checkoutId);
+    const checkoutSnapshot = await checkoutSessionRef.get();
+    if (!checkoutSnapshot.exists) {
+      throw new HttpsError("not-found", "Checkout session not found.");
+    }
+    const checkoutData = toRecord(checkoutSnapshot.data());
+    if (asString(checkoutData.buyerUid) !== buyerUid) {
+      throw new HttpsError("permission-denied", "Not your checkout session.");
+    }
+
+    await releaseCheckoutSession({
+      sessionId: checkoutId,
+      releaseStatus: CHECKOUT_STATUS_CANCELED,
+      fallbackBuyerUid: buyerUid,
+      fallbackReservationIds: parseReservationIds(checkoutData.reservationIds),
+    });
+
+    const checkoutFlow = asString(checkoutData.checkoutFlow);
+    if (checkoutFlow === CHECKOUT_FLOW_PAYMENT_INTENT) {
+      const stripe = new Stripe(stripeSecretKey.value());
+      const paymentIntentId = asString(checkoutData.paymentIntentId) ?? checkoutId;
+      await cancelStripePaymentIntentSafely(stripe, paymentIntentId);
+    }
+
+    return { canceled: true };
+  },
+);
+
 export const releaseExpiredCheckoutSessions = onSchedule(
   {
     region: "us-central1",
@@ -559,6 +620,7 @@ export const releaseExpiredCheckoutSessions = onSchedule(
     const now = Timestamp.now();
     const expiredSessions = await db
       .collection("checkoutSessions")
+      .where("status", "==", CHECKOUT_STATUS_PENDING)
       .where("expiresAt", "<=", now)
       .limit(100)
       .get();
@@ -739,6 +801,7 @@ async function persistCheckoutSession({
   totalAmountMinor,
   stripeAmountMinor,
   walletContributionMinor,
+  walletDeductionMinor,
   currency,
   checkoutFlow,
 }: {
@@ -750,6 +813,7 @@ async function persistCheckoutSession({
   totalAmountMinor: number;
   stripeAmountMinor: number;
   walletContributionMinor: number;
+  walletDeductionMinor: number;
   currency: string;
   checkoutFlow: typeof CHECKOUT_FLOW_PAYMENT_INTENT | typeof CHECKOUT_FLOW_WALLET_ONLY;
 }): Promise<void> {
@@ -768,6 +832,7 @@ async function persistCheckoutSession({
     amountMinor: totalAmountMinor,
     stripeAmountMinor,
     walletContributionMinor,
+    walletDeductionMinor,
     currency,
   });
 
@@ -800,6 +865,11 @@ async function rollbackReservationState(
   await batch.commit();
 }
 
+interface WalletContributionResult {
+  contributionMinor: number;
+  walletDeductionMinor: number;
+}
+
 async function reserveWalletContributionForCheckout({
   userId,
   currency,
@@ -808,52 +878,70 @@ async function reserveWalletContributionForCheckout({
   userId: string;
   currency: string;
   requestedAmountMinor: number;
-}): Promise<number> {
+}): Promise<WalletContributionResult> {
+  const zero: WalletContributionResult = { contributionMinor: 0, walletDeductionMinor: 0 };
+
   if (requestedAmountMinor <= 0) {
-    return 0;
+    return zero;
   }
 
   return db.runTransaction(async (transaction) => {
     const walletRef = db.collection("wallets").doc(userId);
     const walletSnapshot = await transaction.get(walletRef);
     if (!walletSnapshot.exists) {
-      return 0;
+      return zero;
     }
 
     const walletData = toRecord(walletSnapshot.data());
-    const walletCurrency = asString(walletData.currency)?.toLowerCase();
-    if (walletCurrency && walletCurrency !== currency) {
-      return 0;
-    }
-
+    const walletCurrency = asString(walletData.currency)?.toLowerCase() ?? currency;
     const currentBalanceMinor = asInteger(walletData.balanceMinor) ?? 0;
     if (currentBalanceMinor <= 0) {
-      return 0;
+      return zero;
     }
 
-    const contributionMinor = Math.min(currentBalanceMinor, requestedAmountMinor);
-    const newBalanceMinor = currentBalanceMinor - contributionMinor;
+    // Convert wallet balance to checkout currency for comparison.
+    // If currencies differ, use EXCHANGE_RATE_TABLE; returns 0 for unsupported pairs.
+    const walletBalanceInCheckoutCurrency = convertMinorBetweenCurrencies(
+      currentBalanceMinor,
+      walletCurrency,
+      currency,
+    );
+    if (walletBalanceInCheckoutCurrency <= 0) {
+      return zero;
+    }
+
+    // How much of the checkout total can the wallet cover (in checkout currency)?
+    const contributionMinor = Math.min(walletBalanceInCheckoutCurrency, requestedAmountMinor);
+
+    // How much to deduct from the wallet (in wallet currency)?
+    // Round up so we never under-deduct relative to the discount given.
+    const walletDeductionMinor =
+      walletCurrency === currency
+        ? contributionMinor
+        : Math.min(
+            Math.ceil(contributionMinor / (EXCHANGE_RATE_TABLE[walletCurrency]?.[currency] ?? 1)),
+            currentBalanceMinor,
+          );
+
     transaction.set(
       walletRef,
       {
-        currency: walletCurrency ?? currency,
-        balanceMinor: newBalanceMinor,
+        currency: walletCurrency,
+        balanceMinor: currentBalanceMinor - walletDeductionMinor,
         updatedAt: FieldValue.serverTimestamp(),
       },
       { merge: true },
     );
 
-    return contributionMinor;
+    return { contributionMinor, walletDeductionMinor };
   });
 }
 
 async function refundWalletContributionForCheckout({
   userId,
-  currency,
   amountMinor,
 }: {
   userId: string;
-  currency: string;
   amountMinor: number;
 }): Promise<void> {
   if (amountMinor <= 0) {
@@ -864,7 +952,6 @@ async function refundWalletContributionForCheckout({
     await applyWalletCheckoutRefundInTransaction({
       transaction,
       userId,
-      currency,
       amountMinor,
     });
   });
@@ -873,28 +960,23 @@ async function refundWalletContributionForCheckout({
 async function applyWalletCheckoutRefundInTransaction({
   transaction,
   userId,
-  currency,
   amountMinor,
 }: {
   transaction: Transaction;
   userId: string;
-  currency: string;
   amountMinor: number;
 }): Promise<void> {
   const walletRef = db.collection("wallets").doc(userId);
   const walletSnapshot = await transaction.get(walletRef);
   const walletData = toRecord(walletSnapshot.data());
   const currentBalanceMinor = asInteger(walletData.balanceMinor) ?? 0;
-  const currentCurrency = asString(walletData.currency)?.toLowerCase();
+  const currentCurrency = asString(walletData.currency);
 
-  if (currentCurrency && currentCurrency !== currency) {
-    throw new Error("Wallet currency mismatch while releasing checkout contribution.");
-  }
-
+  // amountMinor is already in wallet currency - add it back directly.
   transaction.set(
     walletRef,
     {
-      currency: currentCurrency ?? currency,
+      currency: currentCurrency ?? WALLET_DEFAULT_CURRENCY,
       balanceMinor: currentBalanceMinor + amountMinor,
       updatedAt: FieldValue.serverTimestamp(),
     },
@@ -1576,6 +1658,9 @@ async function releaseCheckoutSession({
     const buyerUid = asString(checkoutData.buyerUid) ?? mergedFallbackBuyerUid;
     const checkoutCurrency = asString(checkoutData.currency)?.toLowerCase();
     const walletContributionMinor = asInteger(checkoutData.walletContributionMinor) ?? 0;
+    // walletDeductionMinor is the actual wallet-currency amount deducted. Falls back to
+    // walletContributionMinor for older sessions where currencies always matched.
+    const walletDeductionMinor = asInteger(checkoutData.walletDeductionMinor) ?? walletContributionMinor;
     const reservationIds = uniqueStrings([
       ...parseReservationIds(checkoutData.reservationIds),
       ...mergedFallbackReservationIds,
@@ -1594,19 +1679,14 @@ async function releaseCheckoutSession({
           `Cannot release checkout session ${sessionId}: missing buyerUid for wallet refund.`,
         );
       }
-      if (!checkoutCurrency) {
-        throw new Error(
-          `Cannot release checkout session ${sessionId}: missing currency for wallet refund.`,
-        );
-      }
-
       await applyWalletCheckoutRefundInTransaction({
         transaction,
         userId: buyerUid,
-        currency: checkoutCurrency,
-        amountMinor: walletContributionMinor,
+        amountMinor: walletDeductionMinor,
       });
     }
+
+    const releasedBookIds = new Set<string>();
 
     for (const reservationId of reservationIds) {
       const reservationRef = db.collection("reservations").doc(reservationId);
@@ -1686,12 +1766,24 @@ async function releaseCheckoutSession({
         continue;
       }
 
+      releasedBookIds.add(bookId);
       transaction.update(bookRef, {
         status: "AVAILABLE",
         reservedByUid: FieldValue.delete(),
         reservationId: FieldValue.delete(),
         reservationExpiresAt: FieldValue.delete(),
       });
+    }
+
+    if (buyerUid) {
+      for (const bookId of releasedBookIds) {
+        const cartItemRef = db
+          .collection("users")
+          .doc(buyerUid)
+          .collection("cart")
+          .doc(bookId);
+        transaction.delete(cartItemRef);
+      }
     }
 
     return true;

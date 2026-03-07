@@ -1,6 +1,5 @@
 package hr.foi.air.honnomachi.ui.cart
 
-import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,7 +29,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,8 +40,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.stripe.android.paymentsheet.PaymentSheet
 import coil.compose.AsyncImage
+import com.stripe.android.paymentsheet.PaymentSheet
+import com.stripe.android.paymentsheet.rememberPaymentSheet
 import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.model.CartItemModel
@@ -61,17 +60,10 @@ fun CartPage(
     val actionMessage by viewModel.actionMessage.collectAsState()
     val isCheckoutInProgress by viewModel.isCheckoutInProgress.collectAsState()
     val context = LocalContext.current
-    val activity = context as? ComponentActivity
-    val paymentSheetUnavailableMessage = stringResource(R.string.checkout_payment_sheet_unavailable)
 
-    val paymentSheet =
-        remember(activity) {
-            activity?.let { hostActivity ->
-                PaymentSheet(hostActivity) { result ->
-                    viewModel.onPaymentSheetResult(result)
-                }
-            }
-        }
+    val paymentSheet = rememberPaymentSheet { result ->
+        viewModel.onPaymentSheetResult(result)
+    }
 
     LaunchedEffect(actionMessage) {
         actionMessage?.let {
@@ -80,9 +72,7 @@ fun CartPage(
         }
     }
 
-    LaunchedEffect(viewModel, paymentSheet, activity) {
-        if (paymentSheet == null || activity == null) return@LaunchedEffect
-
+    LaunchedEffect(viewModel) {
         viewModel.paymentSheetRequests.collect { request ->
             val clientSecret = request.clientSecret
             if (clientSecret.isNullOrBlank()) {
@@ -150,13 +140,7 @@ fun CartPage(
                         totalPrice = state.totalPrice,
                         isCheckoutInProgress = isCheckoutInProgress,
                         onRemoveItem = { viewModel.removeFromCart(it) },
-                        onCheckout = {
-                            if (paymentSheet == null) {
-                                AppUtil.showToast(context, paymentSheetUnavailableMessage)
-                            } else {
-                                viewModel.checkoutWithStripe()
-                            }
-                        },
+                        onCheckout = { viewModel.checkoutWithStripe() },
                         showImages = showImages,
                     )
                 }

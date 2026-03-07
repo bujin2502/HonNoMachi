@@ -1,6 +1,5 @@
 package hr.foi.air.honnomachi.ui.profile
 
-import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,7 +33,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -45,6 +43,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.stripe.android.paymentsheet.PaymentSheet
+import com.stripe.android.paymentsheet.rememberPaymentSheet
 import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.data.WalletTopupStatus
@@ -67,25 +66,16 @@ fun ProfileScreen(
     walletViewModel: WalletViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
-    val activity = context as? ComponentActivity
     val uiState by profileViewModel.uiState.collectAsState()
     val formState by profileViewModel.formState.collectAsState()
     val walletUiState by walletViewModel.uiState.collectAsState()
     val walletMessage by walletViewModel.actionMessage.collectAsState()
-    val paymentSheetUnavailableMessage = stringResource(R.string.wallet_payment_sheet_unavailable)
 
-    val paymentSheet =
-        remember(activity) {
-            activity?.let { hostActivity ->
-                PaymentSheet(hostActivity) { result ->
-                    walletViewModel.onPaymentSheetResult(result)
-                }
-            }
-        }
+    val paymentSheet = rememberPaymentSheet { result ->
+        walletViewModel.onPaymentSheetResult(result)
+    }
 
-    LaunchedEffect(walletViewModel, paymentSheet, activity) {
-        if (paymentSheet == null || activity == null) return@LaunchedEffect
-
+    LaunchedEffect(walletViewModel) {
         walletViewModel.paymentSheetRequests.collect { request ->
             runCatching {
                 paymentSheet.presentWithPaymentIntent(
@@ -244,14 +234,8 @@ fun ProfileScreen(
             WalletTopupSection(
                 uiState = walletUiState,
                 onSelectAmount = walletViewModel::selectTopupAmount,
-                onStartTopup = {
-                    if (paymentSheet == null) {
-                        AppUtil.showToast(context, paymentSheetUnavailableMessage)
-                    } else {
-                        walletViewModel.startTopup()
-                    }
-                },
-                isPaymentSheetReady = paymentSheet != null,
+                onStartTopup = { walletViewModel.startTopup() },
+                isPaymentSheetReady = true,
             )
             Spacer(modifier = Modifier.height(24.dp))
             Text(

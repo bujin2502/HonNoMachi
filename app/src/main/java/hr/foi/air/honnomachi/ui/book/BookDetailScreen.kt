@@ -62,6 +62,7 @@ fun BookDetailScreen(
     val uiState by viewModel.uiState.collectAsState()
     val cartState by cartViewModel.uiState.collectAsState()
     val actionMessage by cartViewModel.actionMessage.collectAsState()
+    val addingBookId by cartViewModel.addingBookId.collectAsState()
     val context = LocalContext.current
 
     val isItemInCart =
@@ -70,6 +71,7 @@ fun BookDetailScreen(
         } else {
             false
         }
+    val isAddingToCart = bookId != null && addingBookId == bookId
 
     LaunchedEffect(actionMessage) {
         actionMessage?.let {
@@ -106,6 +108,7 @@ fun BookDetailScreen(
                     BookDetailContent(
                         book = book,
                         isItemInCart = isItemInCart,
+                        isAddingToCart = isAddingToCart,
                         onAddToCart = { cartViewModel.addToCart(book) },
                     )
                 }
@@ -159,6 +162,7 @@ fun BookDetailNotFound(bookId: String?) {
 fun BookDetailContent(
     book: BookModel,
     isItemInCart: Boolean,
+    isAddingToCart: Boolean,
     onAddToCart: () -> Unit,
 ) {
     Column(
@@ -257,7 +261,7 @@ fun BookDetailContent(
 
         Button(
             onClick = onAddToCart,
-            enabled = !isItemInCart,
+            enabled = !isItemInCart && !isAddingToCart,
             modifier =
                 Modifier
                     .fillMaxWidth(0.6f)
@@ -267,10 +271,28 @@ fun BookDetailContent(
                     containerColor = colorResource(id = R.color.blue),
                 ),
         ) {
-            Text(
-                text = if (isItemInCart) "Već u košarici" else stringResource(id = R.string.button_add_to_cart),
-                color = colorResource(id = R.color.black),
-            )
+            if (isAddingToCart) {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        color = colorResource(id = R.color.black),
+                        strokeWidth = 2.dp,
+                    )
+                    Spacer(modifier = Modifier.size(8.dp))
+                    Text(
+                        text = stringResource(id = R.string.button_adding_to_cart),
+                        color = colorResource(id = R.color.black),
+                    )
+                }
+            } else {
+                Text(
+                    text = if (isItemInCart) "Već u košarici" else stringResource(id = R.string.button_add_to_cart),
+                    color = colorResource(id = R.color.black),
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))

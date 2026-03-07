@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.stripe.android.paymentsheet.PaymentSheetResult
 import dagger.hilt.android.lifecycle.HiltViewModel
+import hr.foi.air.honnomachi.data.WalletHistoryItemModel
 import hr.foi.air.honnomachi.data.WalletRepository
 import hr.foi.air.honnomachi.data.WalletTopupIntentModel
 import hr.foi.air.honnomachi.data.WalletTopupStatus
@@ -24,6 +25,8 @@ data class WalletUiState(
     val balanceMinor: Int = 0,
     val currency: String = "eur",
     val isBalanceLoading: Boolean = true,
+    val history: List<WalletHistoryItemModel> = emptyList(),
+    val isHistoryLoading: Boolean = true,
     val selectedTopupAmountMinor: Int = 500,
     val isCreatingTopup: Boolean = false,
     val activeTopupId: String? = null,
@@ -52,6 +55,7 @@ class WalletViewModel
 
         init {
             observeWalletBalance()
+            observeWalletHistory()
         }
 
         fun selectTopupAmount(amountMinor: Int) {
@@ -168,6 +172,28 @@ class WalletViewModel
                             _uiState.update { it.copy(isBalanceLoading = false) }
                             val message = result.exception.message ?: "Nepoznata greška."
                             _actionMessage.value = "Wallet nije učitan: $message"
+                        }
+                    }
+                }
+            }
+        }
+
+        private fun observeWalletHistory() {
+            viewModelScope.launch {
+                walletRepository.observeWalletHistory().collect { result ->
+                    when (result) {
+                        is Result.Success -> {
+                            _uiState.update {
+                                it.copy(
+                                    history = result.data,
+                                    isHistoryLoading = false,
+                                )
+                            }
+                        }
+                        is Result.Error -> {
+                            _uiState.update { it.copy(isHistoryLoading = false) }
+                            val message = result.exception.message ?: "Nepoznata greška."
+                            _actionMessage.value = "Povijest wallet transakcija nije učitana: $message"
                         }
                     }
                 }

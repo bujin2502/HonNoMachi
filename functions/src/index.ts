@@ -22,6 +22,7 @@ const stripeWalletWebhookSecret = defineSecret("STRIPE_WALLET_WEBHOOK_SECRET");
 
 const DEFAULT_RESERVATION_TTL_MINUTES = 15;
 const MAX_RESERVATION_TTL_MINUTES = 60;
+const MAX_CART_SIZE = 20;
 const CENTS_MULTIPLIER = 100;
 // Exchange rates: units of target currency per 1 unit of source currency.
 // Kept in sync with the Android app's USD_TO_EUR_RATE constant (1 EUR = 1.18 USD).
@@ -121,7 +122,7 @@ export const createCheckoutPaymentIntent = onCall(
       throw new HttpsError("failed-precondition", "Cart contains no valid books.");
     }
 
-    const transactionResult = await reserveBooksForCheckout(
+    const transactionResult = await validateAndExtendCartReservations(
       buyerUid,
       cartBookIds,
       reservationTtlMinutes,
@@ -267,25 +268,17 @@ export const createCheckoutPaymentIntent = onCall(
             releaseError,
           });
         }
-      } else {
+      } else if (walletContributionMinor > 0) {
         try {
-          await rollbackReservationState(transactionResult.reservations);
-        } catch (rollbackError) {
-          logger.error("Failed to rollback reservation state", rollbackError);
-        }
-
-        if (walletContributionMinor > 0) {
-          try {
-            await refundWalletContributionForCheckout({
-              userId: buyerUid,
-              amountMinor: walletDeductionMinor,
-            });
-          } catch (walletRollbackError) {
-            logger.error(
-              "Failed to rollback wallet contribution after checkout error.",
-              walletRollbackError,
-            );
-          }
+          await refundWalletContributionForCheckout({
+            userId: buyerUid,
+            amountMinor: walletDeductionMinor,
+          });
+        } catch (walletRollbackError) {
+          logger.error(
+            "Failed to rollback wallet contribution after checkout error.",
+            walletRollbackError,
+          );
         }
       }
 
@@ -298,6 +291,247 @@ export const createCheckoutPaymentIntent = onCall(
   },
 );
 
+export const addToCartAndReserve = onCall(
+  {
+    region: "us-central1",
+    timeoutSeconds: 30,
+    memory: "256MiB",
+  },
+  async (request) => {
+    const buyerUid = request.auth?.uid;
+    if (!buyerUid) {
+      throw new HttpsError("unauthenticated", "User must be authenticated.");
+    }
+
+    const payload = toRecord(request.data);
+    const bookId = asString(payload.bookId);
+    if (!bookId) {
+      throw new HttpsError("invalid-argument", "Missing bookId.");
+    }
+
+    const expiresAt = await db.runTransaction(async (transaction) => {
+      const now = Timestamp.now();
+      const newExpiresAt = Timestamp.fromMillis(
+        now.toMillis() + DEFAULT_RESERVATION_TTL_MINUTES * 60_000,
+      );
+
+      const bookRef = db.collection("books").doc(bookId);
+      const bookSnapshot = await transaction.get(bookRef);
+      if (!bookSnapshot.exists) {
+        throw new HttpsError("not-found", "Book not found.");
+      }
+
+      const bookData = toRecord(bookSnapshot.data());
+      const sellerUid = asString(bookData.userID);
+      if (!sellerUid) {
+        throw new HttpsError("failed-precondition", "Book has no valid seller.");
+      }
+      if (sellerUid === buyerUid) {
+        throw new HttpsError("failed-precondition", "Cannot purchase your own book.");
+      }
+
+      const status = asString(bookData.status);
+      const reservedByUid = asString(bookData.reservedByUid);
+      const alreadyReservedByBuyer =
+        status === "RESERVED" && reservedByUid === buyerUid;
+
+      if (!alreadyReservedByBuyer && status !== "AVAILABLE") {
+        throw new HttpsError("failed-precondition", "Book is not available.");
+      }
+
+      const price = asNumber(bookData.price);
+      if (price === null || price <= 0) {
+        throw new HttpsError("failed-precondition", "Book has invalid price.");
+      }
+      const unitAmount = Math.round(price * CENTS_MULTIPLIER);
+      if (unitAmount <= 0) {
+        throw new HttpsError("failed-precondition", "Book has invalid amount.");
+      }
+
+      const currencyRaw = asString(bookData.priceCurrency) ?? "EUR";
+      const currency = currencyRaw.toUpperCase();
+      const reservationCurrency = currencyRaw.toLowerCase();
+      const title = asString(bookData.title) ?? "Book";
+      const authors = bookData.authors;
+      const author =
+        Array.isArray(authors) ? asString(authors[0]) ?? "Unknown Author" : "Unknown Author";
+      const imageUrls = bookData.imageUrls;
+      const imageUrl =
+        Array.isArray(imageUrls) ? asString(imageUrls[0]) ?? null : null;
+
+      // Read existing cart items
+      const cartRef = db.collection("users").doc(buyerUid).collection("cart");
+      const cartSnapshot = await transaction.get(cartRef);
+
+      const existingCartBookIds = cartSnapshot.docs
+        .map((doc) => doc.id)
+        .filter((id) => id !== bookId);
+
+      if (!alreadyReservedByBuyer && existingCartBookIds.length >= MAX_CART_SIZE) {
+        throw new HttpsError(
+          "failed-precondition",
+          `Cart cannot contain more than ${MAX_CART_SIZE} items.`,
+        );
+      }
+
+      // Read existing cart books for TTL refresh
+      const existingBooks: Array<{
+        bookRef: DocumentReference;
+        reservationId: string | null;
+      }> = [];
+      for (const existingBookId of existingCartBookIds) {
+        const existingBookRef = db.collection("books").doc(existingBookId);
+        const existingBookSnap = await transaction.get(existingBookRef);
+        if (existingBookSnap.exists) {
+          const existingBookData = toRecord(existingBookSnap.data());
+          if (asString(existingBookData.reservedByUid) === buyerUid) {
+            existingBooks.push({
+              bookRef: existingBookRef,
+              reservationId: asString(existingBookData.reservationId),
+            });
+          }
+        }
+      }
+
+      // Writes
+      if (!alreadyReservedByBuyer) {
+        const reservationRef = db.collection("reservations").doc();
+        transaction.set(reservationRef, {
+          bookId,
+          buyerUid,
+          sellerUid,
+          status: RESERVATION_STATUS_PENDING,
+          createdAt: now,
+          expiresAt: newExpiresAt,
+          checkoutSessionId: null,
+          unitAmount,
+          currency: reservationCurrency,
+        });
+
+        transaction.update(bookRef, {
+          status: "RESERVED",
+          reservedByUid: buyerUid,
+          reservationId: reservationRef.id,
+          reservationExpiresAt: newExpiresAt,
+        });
+
+        const cartItemRef = cartRef.doc(bookId);
+        transaction.set(cartItemRef, {
+          bookId,
+          title,
+          author,
+          price,
+          currency,
+          imageUrl,
+          addedAt: now,
+        });
+      } else {
+        // Idempotent re-add: refresh TTL on this book
+        const existingReservationId = asString(bookData.reservationId);
+        transaction.update(bookRef, {
+          reservationExpiresAt: newExpiresAt,
+        });
+        if (existingReservationId) {
+          const existingReservationRef = db
+            .collection("reservations")
+            .doc(existingReservationId);
+          transaction.update(existingReservationRef, {
+            expiresAt: newExpiresAt,
+          });
+        }
+      }
+
+      // Refresh TTL on ALL existing cart items
+      for (const existing of existingBooks) {
+        transaction.update(existing.bookRef, {
+          reservationExpiresAt: newExpiresAt,
+        });
+        if (existing.reservationId) {
+          const reservationRef = db
+            .collection("reservations")
+            .doc(existing.reservationId);
+          transaction.update(reservationRef, {
+            expiresAt: newExpiresAt,
+          });
+        }
+      }
+
+      return newExpiresAt;
+    });
+
+    return {
+      success: true,
+      expiresAt: expiresAt.toDate().toISOString(),
+    };
+  },
+);
+
+export const removeFromCartAndRelease = onCall(
+  {
+    region: "us-central1",
+    timeoutSeconds: 30,
+  },
+  async (request) => {
+    const buyerUid = request.auth?.uid;
+    if (!buyerUid) {
+      throw new HttpsError("unauthenticated", "User must be authenticated.");
+    }
+
+    const payload = toRecord(request.data);
+    const bookId = asString(payload.bookId);
+    if (!bookId) {
+      throw new HttpsError("invalid-argument", "Missing bookId.");
+    }
+
+    await db.runTransaction(async (transaction) => {
+      const now = Timestamp.now();
+      const bookRef = db.collection("books").doc(bookId);
+      const bookSnapshot = await transaction.get(bookRef);
+
+      if (!bookSnapshot.exists) {
+        throw new HttpsError("not-found", "Book not found.");
+      }
+
+      const bookData = toRecord(bookSnapshot.data());
+      const status = asString(bookData.status);
+      const reservedByUid = asString(bookData.reservedByUid);
+      const reservationId = asString(bookData.reservationId);
+
+      if (status !== "RESERVED" || reservedByUid !== buyerUid) {
+        throw new HttpsError(
+          "failed-precondition",
+          "Book is not reserved by you.",
+        );
+      }
+
+      transaction.update(bookRef, {
+        status: "AVAILABLE",
+        reservedByUid: FieldValue.delete(),
+        reservationId: FieldValue.delete(),
+        reservationExpiresAt: FieldValue.delete(),
+      });
+
+      if (reservationId) {
+        const reservationRef = db.collection("reservations").doc(reservationId);
+        transaction.update(reservationRef, {
+          status: RESERVATION_STATUS_CANCELED,
+          canceledAt: now,
+          updatedAt: now,
+        });
+      }
+
+      const cartItemRef = db
+        .collection("users")
+        .doc(buyerUid)
+        .collection("cart")
+        .doc(bookId);
+      transaction.delete(cartItemRef);
+    });
+
+    return { success: true };
+  },
+);
+
 export const createWalletTopupIntent = onCall(
   {
     region: "us-central1",
@@ -306,126 +540,140 @@ export const createWalletTopupIntent = onCall(
     memory: "256MiB",
   },
   async (request) => {
-    const userId = request.auth?.uid;
-    if (!userId) {
-      throw new HttpsError("unauthenticated", "User must be authenticated.");
-    }
+    try {
+      const userId = request.auth?.uid;
+      if (!userId) {
+        throw new HttpsError("unauthenticated", "User must be authenticated.");
+      }
 
-    if (request.auth?.token?.email_verified !== true) {
-      throw new HttpsError(
-        "permission-denied",
-        "Email must be verified before wallet topup.",
-      );
-    }
-
-    const payload = toRecord(request.data);
-    const amountMinor = readWalletTopupAmountMinor(payload);
-    const currency = readWalletTopupCurrency(payload);
-    const idempotencyKey = readWalletTopupIdempotencyKey(payload);
-    const idempotencyDocId = buildWalletTopupIdempotencyDocId(
-      userId,
-      idempotencyKey,
-    );
-
-    const stripe = new Stripe(stripeSecretKey.value());
-    const idempotencyRef = db
-      .collection("walletTopupIdempotency")
-      .doc(idempotencyDocId);
-
-    const idempotencySnapshot = await idempotencyRef.get();
-    if (idempotencySnapshot.exists) {
-      const topupId = asString(idempotencySnapshot.data()?.topupId);
-      if (!topupId) {
+      if (request.auth?.token?.email_verified !== true) {
         throw new HttpsError(
-          "internal",
-          "Idempotency mapping is invalid for wallet topup.",
+          "permission-denied",
+          "Email must be verified before wallet topup.",
         );
       }
+
+      const payload = toRecord(request.data);
+      const amountMinor = readWalletTopupAmountMinor(payload);
+      const currency = readWalletTopupCurrency(payload);
+      const idempotencyKey = readWalletTopupIdempotencyKey(payload);
+      const idempotencyDocId = buildWalletTopupIdempotencyDocId(
+        userId,
+        idempotencyKey,
+      );
+
+      const stripeSecret = stripeSecretKey.value();
+      if (!stripeSecret) {
+        throw new HttpsError(
+          "failed-precondition",
+          "Stripe secret key is not configured.",
+        );
+      }
+      const stripe = new Stripe(stripeSecret);
+      const idempotencyRef = db
+        .collection("walletTopupIdempotency")
+        .doc(idempotencyDocId);
+
+      const idempotencySnapshot = await idempotencyRef.get();
+      if (idempotencySnapshot.exists) {
+        const topupId = asString(idempotencySnapshot.data()?.topupId);
+        if (!topupId) {
+          throw new HttpsError(
+            "internal",
+            "Idempotency mapping is invalid for wallet topup.",
+          );
+        }
+
+        return loadWalletTopupIntentResponse({
+          stripe,
+          userId,
+          topupId,
+        });
+      }
+
+      const topupRef = db.collection("walletTopups").doc(idempotencyDocId);
+      const stripeIdempotencyKey = buildStripeWalletIdempotencyKey(
+        userId,
+        idempotencyKey,
+      );
+
+      const paymentIntent = await stripe.paymentIntents.create(
+        {
+          amount: amountMinor,
+          currency,
+          automatic_payment_methods: {
+            enabled: true,
+          },
+          metadata: {
+            purpose: WALLET_TOPUP_PURPOSE,
+            topupId: topupRef.id,
+            userId,
+          },
+        },
+        {
+          idempotencyKey: stripeIdempotencyKey,
+        },
+      );
+
+      if (!paymentIntent.client_secret) {
+        throw new HttpsError("internal", "Stripe PaymentIntent missing client_secret.");
+      }
+
+      let resolvedTopupId = topupRef.id;
+      await db.runTransaction(async (transaction) => {
+        const existingIdempotencySnapshot = await transaction.get(idempotencyRef);
+        if (existingIdempotencySnapshot.exists) {
+          const existingTopupId = asString(existingIdempotencySnapshot.data()?.topupId);
+          if (existingTopupId) {
+            resolvedTopupId = existingTopupId;
+          }
+          return;
+        }
+
+        // Firestore transactions require all reads to happen before any writes.
+        const walletRef = db.collection("wallets").doc(userId);
+        const walletSnapshot = await transaction.get(walletRef);
+
+        transaction.set(topupRef, {
+          userId,
+          paymentIntentId: paymentIntent.id,
+          status: WALLET_TOPUP_STATUS_PENDING,
+          amountMinor,
+          currency,
+          idempotencyKey,
+          createdAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+          settledAt: null,
+          failureCode: null,
+          failureMessage: null,
+        });
+
+        transaction.set(idempotencyRef, {
+          userId,
+          idempotencyKey,
+          topupId: topupRef.id,
+          paymentIntentId: paymentIntent.id,
+          createdAt: FieldValue.serverTimestamp(),
+        });
+
+        if (!walletSnapshot.exists) {
+          transaction.set(walletRef, {
+            currency,
+            balanceMinor: 0,
+            updatedAt: FieldValue.serverTimestamp(),
+          });
+        }
+      });
 
       return loadWalletTopupIntentResponse({
         stripe,
         userId,
-        topupId,
+        topupId: resolvedTopupId,
       });
+    } catch (error) {
+      logger.error("createWalletTopupIntent failed.", error);
+      throw toHttpsError(error);
     }
-
-    const topupRef = db.collection("walletTopups").doc(idempotencyDocId);
-    const stripeIdempotencyKey = buildStripeWalletIdempotencyKey(
-      userId,
-      idempotencyKey,
-    );
-
-    const paymentIntent = await stripe.paymentIntents.create(
-      {
-        amount: amountMinor,
-        currency,
-        automatic_payment_methods: {
-          enabled: true,
-        },
-        metadata: {
-          purpose: WALLET_TOPUP_PURPOSE,
-          topupId: topupRef.id,
-          userId,
-        },
-      },
-      {
-        idempotencyKey: stripeIdempotencyKey,
-      },
-    );
-
-    if (!paymentIntent.client_secret) {
-      throw new HttpsError("internal", "Stripe PaymentIntent missing client_secret.");
-    }
-
-    let resolvedTopupId = topupRef.id;
-    await db.runTransaction(async (transaction) => {
-      const existingIdempotencySnapshot = await transaction.get(idempotencyRef);
-      if (existingIdempotencySnapshot.exists) {
-        const existingTopupId = asString(existingIdempotencySnapshot.data()?.topupId);
-        if (existingTopupId) {
-          resolvedTopupId = existingTopupId;
-        }
-        return;
-      }
-
-      transaction.set(topupRef, {
-        userId,
-        paymentIntentId: paymentIntent.id,
-        status: WALLET_TOPUP_STATUS_PENDING,
-        amountMinor,
-        currency,
-        idempotencyKey,
-        createdAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp(),
-        settledAt: null,
-        failureCode: null,
-        failureMessage: null,
-      });
-
-      transaction.set(idempotencyRef, {
-        userId,
-        idempotencyKey,
-        topupId: topupRef.id,
-        paymentIntentId: paymentIntent.id,
-        createdAt: FieldValue.serverTimestamp(),
-      });
-
-      const walletRef = db.collection("wallets").doc(userId);
-      const walletSnapshot = await transaction.get(walletRef);
-      if (!walletSnapshot.exists) {
-        transaction.set(walletRef, {
-          currency,
-          balanceMinor: 0,
-          updatedAt: FieldValue.serverTimestamp(),
-        });
-      }
-    });
-
-    return loadWalletTopupIntentResponse({
-      stripe,
-      userId,
-      topupId: resolvedTopupId,
-    });
   },
 );
 
@@ -661,6 +909,71 @@ export const releaseExpiredCheckoutSessions = onSchedule(
   },
 );
 
+export const releaseExpiredCartReservations = onSchedule(
+  {
+    region: "us-central1",
+    schedule: "every 5 minutes",
+    timeZone: "Etc/UTC",
+    timeoutSeconds: 60,
+    memory: "256MiB",
+  },
+  async () => {
+    const now = Timestamp.now();
+    const expiredBooks = await db
+      .collection("books")
+      .where("status", "==", "RESERVED")
+      .where("reservationExpiresAt", "<=", now)
+      .limit(100)
+      .get();
+
+    if (expiredBooks.empty) {
+      return;
+    }
+
+    const batch = db.batch();
+    let processedCount = 0;
+
+    for (const doc of expiredBooks.docs) {
+      const bookData = toRecord(doc.data());
+      const reservedByUid = asString(bookData.reservedByUid);
+      const reservationId = asString(bookData.reservationId);
+
+      batch.update(doc.ref, {
+        status: "AVAILABLE",
+        reservedByUid: FieldValue.delete(),
+        reservationId: FieldValue.delete(),
+        reservationExpiresAt: FieldValue.delete(),
+      });
+
+      if (reservationId) {
+        const reservationRef = db.collection("reservations").doc(reservationId);
+        batch.update(reservationRef, {
+          status: RESERVATION_STATUS_EXPIRED,
+          expiredAt: now,
+          updatedAt: now,
+        });
+      }
+
+      if (reservedByUid) {
+        const cartItemRef = db
+          .collection("users")
+          .doc(reservedByUid)
+          .collection("cart")
+          .doc(doc.id);
+        batch.delete(cartItemRef);
+      }
+
+      processedCount++;
+    }
+
+    await batch.commit();
+
+    if (processedCount > 0) {
+      logger.info("Expired cart reservations released.", { processedCount });
+    }
+  },
+);
+
 async function reserveBooksForCheckout(
   buyerUid: string,
   cartBookIds: string[],
@@ -753,24 +1066,6 @@ async function reserveBooksForCheckout(
         unitAmount,
         currency,
       };
-
-      transaction.set(reservationRef, {
-        bookId,
-        buyerUid,
-        sellerUid,
-        status: RESERVATION_STATUS_PENDING,
-        createdAt: now,
-        expiresAt,
-        checkoutSessionId: null,
-      });
-
-      transaction.update(bookRef, {
-        status: "RESERVED",
-        reservedByUid: buyerUid,
-        reservationId: reservationRef.id,
-        reservationExpiresAt: expiresAt,
-      });
-
       reservations.push(draft);
     }
 
@@ -782,6 +1077,148 @@ async function reserveBooksForCheckout(
         "failed-precondition",
         "All cart items must use the same currency.",
       );
+    }
+
+    for (const reservation of reservations) {
+      transaction.set(reservation.reservationRef, {
+        bookId: reservation.bookId,
+        buyerUid,
+        sellerUid: reservation.sellerUid,
+        status: RESERVATION_STATUS_PENDING,
+        createdAt: now,
+        expiresAt,
+        checkoutSessionId: null,
+        unitAmount: reservation.unitAmount,
+        currency: reservation.currency,
+      });
+
+      transaction.update(reservation.bookRef, {
+        status: "RESERVED",
+        reservedByUid: buyerUid,
+        reservationId: reservation.reservationId,
+        reservationExpiresAt: expiresAt,
+      });
+    }
+
+    return {
+      reservations,
+      reservationIds: reservations.map((reservation) => reservation.reservationId),
+      expiresAt,
+    };
+  });
+}
+
+async function validateAndExtendCartReservations(
+  buyerUid: string,
+  cartBookIds: string[],
+  reservationTtlMinutes: number,
+): Promise<{
+  reservations: ReservationDraft[];
+  reservationIds: string[];
+  expiresAt: Timestamp;
+}> {
+  return db.runTransaction(async (transaction) => {
+    const now = Timestamp.now();
+    const expiresAt = Timestamp.fromMillis(
+      now.toMillis() + reservationTtlMinutes * 60_000,
+    );
+    const reservations: ReservationDraft[] = [];
+
+    for (const bookId of cartBookIds) {
+      const bookRef = db.collection("books").doc(bookId);
+      const bookSnapshot = await transaction.get(bookRef);
+
+      if (!bookSnapshot.exists) {
+        throw new HttpsError(
+          "failed-precondition",
+          `Book ${bookId} no longer exists.`,
+        );
+      }
+
+      const bookData = toRecord(bookSnapshot.data());
+      const status = asString(bookData.status);
+      const reservedByUid = asString(bookData.reservedByUid);
+      const reservationId = asString(bookData.reservationId);
+
+      if (status !== "RESERVED" || reservedByUid !== buyerUid || !reservationId) {
+        throw new HttpsError(
+          "failed-precondition",
+          `Book ${bookId} is not reserved by you. Please add it to cart first.`,
+        );
+      }
+
+      const sellerUid = asString(bookData.userID);
+      if (!sellerUid) {
+        throw new HttpsError(
+          "failed-precondition",
+          `Book ${bookId} has no valid seller.`,
+        );
+      }
+      if (sellerUid === buyerUid) {
+        throw new HttpsError(
+          "failed-precondition",
+          "Cannot purchase your own book listing.",
+        );
+      }
+
+      const title = asString(bookData.title) ?? "Book";
+      const price = asNumber(bookData.price);
+      if (price === null || price <= 0) {
+        throw new HttpsError(
+          "failed-precondition",
+          `Book ${bookId} has invalid price.`,
+        );
+      }
+      const unitAmount = Math.round(price * CENTS_MULTIPLIER);
+      if (unitAmount <= 0) {
+        throw new HttpsError(
+          "failed-precondition",
+          `Book ${bookId} has invalid amount.`,
+        );
+      }
+
+      const currencyRaw = asString(bookData.priceCurrency) ?? "EUR";
+      const currency = currencyRaw.toLowerCase();
+      if (!/^[a-z]{3}$/.test(currency)) {
+        throw new HttpsError(
+          "failed-precondition",
+          `Book ${bookId} has invalid currency.`,
+        );
+      }
+
+      const reservationRef = db.collection("reservations").doc(reservationId);
+
+      const draft: ReservationDraft = {
+        reservationRef,
+        reservationId,
+        bookRef,
+        bookId,
+        sellerUid,
+        title,
+        unitAmount,
+        currency,
+      };
+      reservations.push(draft);
+    }
+
+    const uniqueCurrencies = Array.from(
+      new Set(reservations.map((reservation) => reservation.currency)),
+    );
+    if (uniqueCurrencies.length > 1) {
+      throw new HttpsError(
+        "failed-precondition",
+        "All cart items must use the same currency.",
+      );
+    }
+
+    for (const reservation of reservations) {
+      // Extend TTL on both reservation and book after all reads are complete.
+      transaction.update(reservation.bookRef, {
+        reservationExpiresAt: expiresAt,
+      });
+      transaction.update(reservation.reservationRef, {
+        expiresAt,
+      });
     }
 
     return {
@@ -1463,17 +1900,26 @@ async function finalizeCheckoutSession(
       ...parseReservationIds(checkoutData.reservationIds),
       ...metadataFallback.reservationIds,
     ]);
-
-    const now = Timestamp.now();
-    transaction.update(checkoutSessionRef, {
-      status: CHECKOUT_STATUS_COMPLETED,
-      completedAt: now,
-      updatedAt: now,
-      paymentStatus: session.payment_status ?? null,
-      paymentIntentId: extractPaymentIntentId(session),
-    });
-
     const purchasedBookIds = new Set<string>();
+    const reservationsToConfirm: DocumentReference[] = [];
+    const booksToMarkSold: DocumentReference[] = [];
+    type SellerCreditDraft = {
+      sellerUid: string;
+      amountMinor: number;
+      currency: string;
+    };
+    const sellerCreditDrafts: SellerCreditDraft[] = [];
+    type ReservationReadResult = {
+      reservationId: string;
+      reservationRef: DocumentReference;
+      reservationStatus: string;
+      bookId: string | null;
+      reservationBuyerUid: string | null;
+      sellerUid: string | null;
+      reservationUnitAmount: number | null;
+      reservationCurrency: string | null;
+    };
+    const reservationReadResults: ReservationReadResult[] = [];
 
     for (const reservationId of reservationIds) {
       const reservationRef = db.collection("reservations").doc(reservationId);
@@ -1502,30 +1948,45 @@ async function finalizeCheckoutSession(
         continue;
       }
 
-      if (reservationStatus === RESERVATION_STATUS_PENDING) {
-        transaction.update(reservationRef, {
-          status: RESERVATION_STATUS_CONFIRMED,
-          confirmedAt: now,
-          updatedAt: now,
-        });
-      }
-
       const bookId = asString(reservationData.bookId);
       const reservationBuyerUid =
         asString(reservationData.buyerUid) ?? buyerUid;
-      if (!bookId) {
+      const sellerUid = asString(reservationData.sellerUid);
+      const reservationUnitAmount = asInteger(reservationData.unitAmount);
+      const reservationCurrency = asString(reservationData.currency)?.toLowerCase() ?? null;
+      reservationReadResults.push({
+        reservationId,
+        reservationRef,
+        reservationStatus,
+        bookId,
+        reservationBuyerUid,
+        sellerUid,
+        reservationUnitAmount,
+        reservationCurrency,
+      });
+
+      if (bookId) {
+        purchasedBookIds.add(bookId);
+      }
+    }
+
+    for (const reservationResult of reservationReadResults) {
+      if (reservationResult.reservationStatus === RESERVATION_STATUS_PENDING) {
+        reservationsToConfirm.push(reservationResult.reservationRef);
+      }
+
+      if (!reservationResult.bookId) {
         continue;
       }
 
-      purchasedBookIds.add(bookId);
-      const bookRef = db.collection("books").doc(bookId);
+      const bookRef = db.collection("books").doc(reservationResult.bookId);
       const bookSnapshot = await transaction.get(bookRef);
 
       if (!bookSnapshot.exists) {
         logger.warn("Book missing while finalizing checkout.", {
           sessionId,
-          reservationId,
-          bookId,
+          reservationId: reservationResult.reservationId,
+          bookId: reservationResult.bookId,
         });
         continue;
       }
@@ -1537,11 +1998,14 @@ async function finalizeCheckoutSession(
       }
 
       const activeReservationId = asString(bookData.reservationId);
-      if (activeReservationId && activeReservationId !== reservationId) {
+      if (
+        activeReservationId &&
+        activeReservationId !== reservationResult.reservationId
+      ) {
         logger.warn("Book reservation mismatch while finalizing checkout.", {
           sessionId,
-          reservationId,
-          bookId,
+          reservationId: reservationResult.reservationId,
+          bookId: reservationResult.bookId,
           activeReservationId,
         });
         continue;
@@ -1550,19 +2014,131 @@ async function finalizeCheckoutSession(
       const reservedByUid = asString(bookData.reservedByUid);
       if (
         reservedByUid &&
-        reservationBuyerUid &&
-        reservedByUid !== reservationBuyerUid
+        reservationResult.reservationBuyerUid &&
+        reservedByUid !== reservationResult.reservationBuyerUid
       ) {
         logger.warn("Book reservedByUid mismatch while finalizing checkout.", {
           sessionId,
-          reservationId,
-          bookId,
+          reservationId: reservationResult.reservationId,
+          bookId: reservationResult.bookId,
           reservedByUid,
-          reservationBuyerUid,
+          reservationBuyerUid: reservationResult.reservationBuyerUid,
         });
         continue;
       }
 
+      booksToMarkSold.push(bookRef);
+
+      const sellerUid = reservationResult.sellerUid ?? asString(bookData.userID);
+      if (!sellerUid) {
+        throw new Error(
+          `Cannot finalize checkout ${sessionId}: missing sellerUid for reservation ${reservationResult.reservationId}.`,
+        );
+      }
+
+      let amountMinor = reservationResult.reservationUnitAmount;
+      if (amountMinor === null || amountMinor <= 0) {
+        const price = asNumber(bookData.price);
+        if (price !== null && price > 0) {
+          amountMinor = Math.round(price * CENTS_MULTIPLIER);
+        }
+      }
+
+      let creditCurrency = reservationResult.reservationCurrency;
+      if (!creditCurrency) {
+        creditCurrency = (asString(bookData.priceCurrency) ?? "EUR").toLowerCase();
+      }
+
+      if (
+        amountMinor === null ||
+        amountMinor <= 0 ||
+        !creditCurrency ||
+        !/^[a-z]{3}$/.test(creditCurrency)
+      ) {
+        throw new Error(
+          `Cannot finalize checkout ${sessionId}: invalid seller credit data for reservation ${reservationResult.reservationId}.`,
+        );
+      }
+
+      sellerCreditDrafts.push({
+        sellerUid,
+        amountMinor,
+        currency: creditCurrency,
+      });
+    }
+
+    type SellerWalletCreditWrite = {
+      sellerUid: string;
+      walletRef: DocumentReference;
+      walletCurrency: string;
+      currentBalanceMinor: number;
+      creditMinor: number;
+    };
+    const sellerWalletCredits: SellerWalletCreditWrite[] = [];
+
+    if (sellerCreditDrafts.length > 0) {
+      const creditsBySeller = new Map<string, SellerCreditDraft[]>();
+      for (const draft of sellerCreditDrafts) {
+        const existing = creditsBySeller.get(draft.sellerUid) ?? [];
+        existing.push(draft);
+        creditsBySeller.set(draft.sellerUid, existing);
+      }
+
+      for (const [sellerUid, sellerCredits] of creditsBySeller.entries()) {
+        const walletRef = db.collection("wallets").doc(sellerUid);
+        const walletSnapshot = await transaction.get(walletRef);
+        const walletData = toRecord(walletSnapshot.data());
+        const walletCurrency =
+          asString(walletData.currency)?.toLowerCase() ?? WALLET_DEFAULT_CURRENCY;
+        const currentBalanceMinor = asInteger(walletData.balanceMinor) ?? 0;
+
+        let creditMinor = 0;
+        for (const sellerCredit of sellerCredits) {
+          const convertedAmountMinor = convertMinorBetweenCurrencies(
+            sellerCredit.amountMinor,
+            sellerCredit.currency,
+            walletCurrency,
+          );
+          if (convertedAmountMinor <= 0) {
+            throw new Error(
+              `Cannot finalize checkout ${sessionId}: unsupported currency conversion for seller ${sellerUid} (${sellerCredit.currency} -> ${walletCurrency}).`,
+            );
+          }
+          creditMinor += convertedAmountMinor;
+        }
+
+        if (creditMinor <= 0) {
+          continue;
+        }
+
+        sellerWalletCredits.push({
+          sellerUid,
+          walletRef,
+          walletCurrency,
+          currentBalanceMinor,
+          creditMinor,
+        });
+      }
+    }
+
+    const now = Timestamp.now();
+    transaction.update(checkoutSessionRef, {
+      status: CHECKOUT_STATUS_COMPLETED,
+      completedAt: now,
+      updatedAt: now,
+      paymentStatus: session.payment_status ?? null,
+      paymentIntentId: extractPaymentIntentId(session),
+    });
+
+    for (const reservationRef of reservationsToConfirm) {
+      transaction.update(reservationRef, {
+        status: RESERVATION_STATUS_CONFIRMED,
+        confirmedAt: now,
+        updatedAt: now,
+      });
+    }
+
+    for (const bookRef of booksToMarkSold) {
       transaction.update(bookRef, {
         status: "SOLD",
         soldAt: now,
@@ -1581,6 +2157,31 @@ async function finalizeCheckoutSession(
         .doc(bookId);
       transaction.delete(cartItemRef);
     }
+
+    for (const sellerWalletCredit of sellerWalletCredits) {
+      transaction.set(
+        sellerWalletCredit.walletRef,
+        {
+          currency: sellerWalletCredit.walletCurrency,
+          balanceMinor:
+            sellerWalletCredit.currentBalanceMinor +
+            sellerWalletCredit.creditMinor,
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true },
+      );
+
+      const walletLedgerRef = sellerWalletCredit.walletRef.collection("ledger").doc();
+      transaction.set(walletLedgerRef, {
+        type: "SALE_CREDIT",
+        amountMinor: sellerWalletCredit.creditMinor,
+        currency: sellerWalletCredit.walletCurrency,
+        referenceType: "CHECKOUT_SESSION",
+        referenceId: sessionId,
+        counterpartyUid: buyerUid,
+        createdAt: FieldValue.serverTimestamp(),
+      });
+    }
   });
 
   logger.info("Checkout session finalized.", { sessionId });
@@ -1589,14 +2190,49 @@ async function finalizeCheckoutSession(
 async function finalizeCheckoutPaymentIntent(
   paymentIntent: Stripe.PaymentIntent,
 ): Promise<void> {
-  await finalizeCheckoutSession(
-    {
-      id: paymentIntent.id,
-      metadata: paymentIntent.metadata,
-      payment_status: paymentIntent.status,
-      payment_intent: paymentIntent.id,
-    } as unknown as Stripe.Checkout.Session,
-  );
+  try {
+    await finalizeCheckoutSession(
+      {
+        id: paymentIntent.id,
+        metadata: paymentIntent.metadata,
+        payment_status: paymentIntent.status,
+        payment_intent: paymentIntent.id,
+      } as unknown as Stripe.Checkout.Session,
+    );
+  } catch (error) {
+    try {
+      await releaseCheckoutSession({
+        sessionId: paymentIntent.id,
+        releaseStatus: CHECKOUT_STATUS_CANCELED,
+        fallbackBuyerUid: asString(paymentIntent.metadata?.buyerUid),
+        fallbackReservationIds: parseReservationIds(
+          paymentIntent.metadata?.reservationIds,
+        ),
+      });
+    } catch (releaseError) {
+      logger.error(
+        "Failed to release checkout session after finalizeCheckoutPaymentIntent error.",
+        {
+          paymentIntentId: paymentIntent.id,
+          releaseError,
+        },
+      );
+    }
+
+    try {
+      const stripe = new Stripe(stripeSecretKey.value());
+      await refundStripePaymentIntentSafely(stripe, paymentIntent.id);
+    } catch (refundError) {
+      logger.error(
+        "Failed to refund payment intent after finalizeCheckoutPaymentIntent error.",
+        {
+          paymentIntentId: paymentIntent.id,
+          refundError,
+        },
+      );
+    }
+    throw error;
+  }
 }
 
 async function releaseCheckoutSession({
@@ -1627,11 +2263,6 @@ async function releaseCheckoutSession({
   const mergedFallbackBuyerUid =
     fallbackBuyerUid ?? metadataFallback.buyerUid ?? null;
 
-  const reservationReleaseStatus =
-    releaseStatus === CHECKOUT_STATUS_CANCELED
-      ? RESERVATION_STATUS_CANCELED
-      : RESERVATION_STATUS_EXPIRED;
-
   const releaseApplied = await db.runTransaction(async (transaction) => {
     const checkoutSessionRef = db.collection("checkoutSessions").doc(sessionId);
     const checkoutSessionSnapshot = await transaction.get(checkoutSessionRef);
@@ -1656,7 +2287,6 @@ async function releaseCheckoutSession({
     }
 
     const buyerUid = asString(checkoutData.buyerUid) ?? mergedFallbackBuyerUid;
-    const checkoutCurrency = asString(checkoutData.currency)?.toLowerCase();
     const walletContributionMinor = asInteger(checkoutData.walletContributionMinor) ?? 0;
     // walletDeductionMinor is the actual wallet-currency amount deducted. Falls back to
     // walletContributionMinor for older sessions where currencies always matched.
@@ -1666,27 +2296,7 @@ async function releaseCheckoutSession({
       ...mergedFallbackReservationIds,
     ]);
     const now = Timestamp.now();
-
-    transaction.update(checkoutSessionRef, {
-      status: releaseStatus,
-      releasedAt: now,
-      updatedAt: now,
-    });
-
-    if (walletContributionMinor > 0) {
-      if (!buyerUid) {
-        throw new Error(
-          `Cannot release checkout session ${sessionId}: missing buyerUid for wallet refund.`,
-        );
-      }
-      await applyWalletCheckoutRefundInTransaction({
-        transaction,
-        userId: buyerUid,
-        amountMinor: walletDeductionMinor,
-      });
-    }
-
-    const releasedBookIds = new Set<string>();
+    const reservationsToRelease: DocumentReference[] = [];
 
     for (const reservationId of reservationIds) {
       const reservationRef = db.collection("reservations").doc(reservationId);
@@ -1707,83 +2317,34 @@ async function releaseCheckoutSession({
         continue;
       }
 
-      const bookId = asString(reservationData.bookId);
-      const reservationBuyerUid =
-        asString(reservationData.buyerUid) ?? buyerUid;
+      reservationsToRelease.push(reservationRef);
+    }
 
-      transaction.update(reservationRef, {
-        status: reservationReleaseStatus,
-        releasedAt: now,
-        updatedAt: now,
-      });
-
-      if (!bookId) {
-        continue;
+    if (walletContributionMinor > 0) {
+      if (!buyerUid) {
+        throw new Error(
+          `Cannot release checkout session ${sessionId}: missing buyerUid for wallet refund.`,
+        );
       }
-
-      const bookRef = db.collection("books").doc(bookId);
-      const bookSnapshot = await transaction.get(bookRef);
-
-      if (!bookSnapshot.exists) {
-        logger.warn("Book missing while releasing checkout.", {
-          sessionId,
-          reservationId,
-          bookId,
-        });
-        continue;
-      }
-
-      const bookData = toRecord(bookSnapshot.data());
-      const bookStatus = asString(bookData.status);
-      if (bookStatus === "SOLD") {
-        continue;
-      }
-
-      const activeReservationId = asString(bookData.reservationId);
-      if (activeReservationId && activeReservationId !== reservationId) {
-        logger.warn("Book reservation mismatch while releasing checkout.", {
-          sessionId,
-          reservationId,
-          bookId,
-          activeReservationId,
-        });
-        continue;
-      }
-
-      const reservedByUid = asString(bookData.reservedByUid);
-      if (
-        reservedByUid &&
-        reservationBuyerUid &&
-        reservedByUid !== reservationBuyerUid
-      ) {
-        logger.warn("Book reservedByUid mismatch while releasing checkout.", {
-          sessionId,
-          reservationId,
-          bookId,
-          reservedByUid,
-          reservationBuyerUid,
-        });
-        continue;
-      }
-
-      releasedBookIds.add(bookId);
-      transaction.update(bookRef, {
-        status: "AVAILABLE",
-        reservedByUid: FieldValue.delete(),
-        reservationId: FieldValue.delete(),
-        reservationExpiresAt: FieldValue.delete(),
+      await applyWalletCheckoutRefundInTransaction({
+        transaction,
+        userId: buyerUid,
+        amountMinor: walletDeductionMinor,
       });
     }
 
-    if (buyerUid) {
-      for (const bookId of releasedBookIds) {
-        const cartItemRef = db
-          .collection("users")
-          .doc(buyerUid)
-          .collection("cart")
-          .doc(bookId);
-        transaction.delete(cartItemRef);
-      }
+    transaction.update(checkoutSessionRef, {
+      status: releaseStatus,
+      releasedAt: now,
+      updatedAt: now,
+    });
+
+    // Books stay RESERVED in cart — only clear checkout association on reservations.
+    for (const reservationRef of reservationsToRelease) {
+      transaction.update(reservationRef, {
+        checkoutSessionId: null,
+        updatedAt: now,
+      });
     }
 
     return true;
@@ -1873,6 +2434,34 @@ async function cancelStripePaymentIntentSafely(
       return;
     }
     logger.warn("Failed to cancel Stripe PaymentIntent.", {
+      paymentIntentId,
+      error,
+    });
+  }
+}
+
+async function refundStripePaymentIntentSafely(
+  stripe: Stripe,
+  paymentIntentId: string,
+): Promise<void> {
+  try {
+    await stripe.refunds.create(
+      {
+        payment_intent: paymentIntentId,
+      },
+      {
+        idempotencyKey: `checkout_finalize_fail_${paymentIntentId}`,
+      },
+    );
+  } catch (error) {
+    if (error instanceof Stripe.errors.StripeInvalidRequestError) {
+      logger.info("Stripe PaymentIntent refund skipped or already handled.", {
+        paymentIntentId,
+        code: error.code ?? null,
+      });
+      return;
+    }
+    logger.warn("Failed to refund Stripe PaymentIntent.", {
       paymentIntentId,
       error,
     });

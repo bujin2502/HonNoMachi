@@ -67,12 +67,15 @@ class BookRepositoryTest {
 
             every { mockDocument.get() } returns mockTask
             coEvery { mockTask.await() } returns mockSnapshot
+            every { mockSnapshot.id } returns "book123"
             every { mockSnapshot.toObject(BookModel::class.java) } returns expectedBook
 
             val result = repository.getBookDetails("book123")
 
             assertTrue(result is Result.Success)
-            assertEquals("Test Book", (result as Result.Success).data?.title)
+            val success = result as Result.Success
+            assertEquals("Test Book", success.data?.title)
+            assertEquals("book123", success.data?.bookId)
         }
 
     @Test

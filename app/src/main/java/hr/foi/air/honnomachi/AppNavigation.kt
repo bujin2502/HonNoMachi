@@ -35,6 +35,7 @@ import hr.foi.air.honnomachi.ui.cart.CheckoutSuccessScreen
 import hr.foi.air.honnomachi.ui.home.HomeScreen
 import hr.foi.air.honnomachi.ui.home.HomeViewModel
 import hr.foi.air.honnomachi.ui.policy.PrivacyPolicyScreen
+import hr.foi.air.honnomachi.ui.wallet.WalletScreen
 
 @Composable
 fun AppNavigation(
@@ -143,6 +144,12 @@ fun AppNavigation(
             )
         }
 
+        composable(route = ROUTE_WALLET) {
+            WalletScreen(
+                onNavigateBack = { navController.navigateUp() },
+            )
+        }
+
         composable(
             "bookDetail/{bookId}",
             arguments = listOf(navArgument("bookId") { type = NavType.StringType }),
@@ -240,3 +247,4 @@ private const val ROUTE_PRIVACY_POLICY = "privacyPolicy"
 private const val ROUTE_ADMIN = "admin"
 private const val ROUTE_CHECKOUT_SUCCESS = "checkout/success"
 private const val ROUTE_CHECKOUT_CANCEL = "checkout/cancel"
+private const val ROUTE_WALLET = "wallet"

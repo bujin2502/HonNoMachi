@@ -1,29 +1,38 @@
 package hr.foi.air.honnomachi.ui.home
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.LibraryBooks
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.ManageAccounts
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import hr.foi.air.honnomachi.R
@@ -68,6 +77,31 @@ fun HomeScreen(
     var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
 
     Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(text = navItemList[selectedIndex].label)
+                },
+                actions = {
+                    TextButton(
+                        onClick = {
+                            navController.navigate(ROUTE_WALLET) {
+                                launchSingleTop = true
+                            }
+                        },
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.AccountBalanceWallet,
+                                contentDescription = stringResource(R.string.wallet_title),
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(text = stringResource(R.string.wallet_title))
+                        }
+                    }
+                },
+            )
+        },
         bottomBar = {
             NavigationBar {
                 navItemList.forEachIndexed { index, navItem ->
@@ -192,3 +226,4 @@ data class NavItem(
 
 private const val ROUTE_CHECKOUT_SUCCESS = "checkout/success"
 private const val ROUTE_CHECKOUT_CANCEL = "checkout/cancel"
+private const val ROUTE_WALLET = "wallet"

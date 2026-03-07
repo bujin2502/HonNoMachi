@@ -45,6 +45,12 @@ class CartViewModel
         private val _isCheckoutInProgress = MutableStateFlow(false)
         val isCheckoutInProgress: StateFlow<Boolean> = _isCheckoutInProgress.asStateFlow()
 
+        private val _addingBookId = MutableStateFlow<String?>(null)
+        val addingBookId: StateFlow<String?> = _addingBookId.asStateFlow()
+
+        private val _pendingCheckout = MutableStateFlow<CheckoutPaymentIntentModel?>(null)
+        val pendingCheckout: StateFlow<CheckoutPaymentIntentModel?> = _pendingCheckout.asStateFlow()
+
         private val _paymentSheetRequests =
             MutableSharedFlow<CheckoutPaymentIntentModel>(extraBufferCapacity = 1)
         val paymentSheetRequests: SharedFlow<CheckoutPaymentIntentModel> =
@@ -110,13 +116,29 @@ class CartViewModel
         }
 
         fun addToCart(book: BookModel) {
+            val bookId = book.bookId
+            if (bookId.isNullOrBlank()) {
+                _actionMessage.value = "Greška: Nevažeći ID knjige."
+                return
+            }
+            if (_addingBookId.value != null) {
+                return
+            }
+
             viewModelScope.launch {
-                when (val result = cartRepository.addToCart(book)) {
-                    is Result.Success -> {
-                        _actionMessage.value = "Knjiga dodana u košaricu!"
+                _addingBookId.value = bookId
+                try {
+                    when (val result = cartRepository.addToCart(book)) {
+                        is Result.Success -> {
+                            _actionMessage.value = "Knjiga dodana u košaricu!"
+                        }
+                        is Result.Error -> {
+                            _actionMessage.value = "Greška: ${result.exception.message}"
+                        }
                     }
-                    is Result.Error -> {
-                        _actionMessage.value = "Greška: ${result.exception.message}"
+                } finally {
+                    if (_addingBookId.value == bookId) {
+                        _addingBookId.value = null
                     }
                 }
             }
@@ -144,27 +166,7 @@ class CartViewModel
                     is Result.Success -> {
                         val checkout = result.data
                         activeCheckoutId = checkout.checkoutId
-                        if (checkout.requiresPaymentSheet) {
-                            if (checkout.clientSecret.isNullOrBlank()) {
-                                _actionMessage.value = "Stripe client secret nedostaje."
-                            } else {
-                                _paymentSheetRequests.tryEmit(checkout)
-                                _actionMessage.value =
-                                    if (checkout.walletContributionMinor > 0) {
-                                        "Wallet je djelomično iskorišten. Otvaranje Stripe naplate..."
-                                    } else {
-                                        "Otvaranje Stripe naplate..."
-                                    }
-                            }
-                        } else {
-                            _actionMessage.value =
-                                if (checkout.walletContributionMinor > 0) {
-                                    "Plaćanje uspješno putem walleta."
-                                } else {
-                                    "Plaćanje uspješno."
-                                }
-                            _checkoutNavigation.tryEmit(CheckoutNavigationTarget.SUCCESS)
-                        }
+                        _pendingCheckout.value = checkout
                     }
                     is Result.Error -> {
                         val message = result.exception.message ?: "Nepoznata greška."
@@ -175,9 +177,50 @@ class CartViewModel
             }
         }
 
+        fun confirmCheckoutPayment() {
+            val checkout = _pendingCheckout.value ?: return
+            _pendingCheckout.value = null
+
+            if (checkout.requiresPaymentSheet) {
+                if (checkout.clientSecret.isNullOrBlank()) {
+                    _actionMessage.value = "Stripe client secret nedostaje."
+                    releaseActiveCheckout()
+                    return
+                }
+
+                _paymentSheetRequests.tryEmit(checkout)
+                _actionMessage.value =
+                    if (checkout.walletContributionMinor > 0) {
+                        "Wallet je djelomično iskorišten. Otvaranje Stripe naplate..."
+                    } else {
+                        "Otvaranje Stripe naplate..."
+                    }
+                return
+            }
+
+            activeCheckoutId = null
+            _actionMessage.value =
+                if (checkout.walletContributionMinor > 0) {
+                    "Plaćanje uspješno putem walleta."
+                } else {
+                    "Plaćanje uspješno."
+                }
+            _checkoutNavigation.tryEmit(CheckoutNavigationTarget.SUCCESS)
+        }
+
+        fun dismissCheckoutDialog() {
+            val checkout = _pendingCheckout.value ?: return
+            _pendingCheckout.value = null
+
+            if (checkout.requiresPaymentSheet) {
+                releaseActiveCheckout()
+            }
+        }
+
         fun onPaymentSheetResult(result: PaymentSheetResult) {
             when (result) {
                 PaymentSheetResult.Completed -> {
+                    activeCheckoutId = null
                     _actionMessage.value = "Plaćanje zaprimljeno."
                     _checkoutNavigation.tryEmit(CheckoutNavigationTarget.SUCCESS)
                 }
@@ -205,6 +248,7 @@ class CartViewModel
         fun onPaymentSheetPresentationFailed(throwable: Throwable) {
             val error = throwable.localizedMessage ?: "Nepoznata greška."
             _actionMessage.value = "Prikaz Stripe naplate nije uspio: $error"
+            releaseActiveCheckout()
         }
 
         fun removeFromCart(cartItemId: String) {

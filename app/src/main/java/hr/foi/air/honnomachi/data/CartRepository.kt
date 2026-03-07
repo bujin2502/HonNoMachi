@@ -2,11 +2,12 @@ package hr.foi.air.honnomachi.data
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.functions.FirebaseFunctionsException
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.functions.FirebaseFunctions
 import hr.foi.air.honnomachi.CrashlyticsManager
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.model.CartItemModel
-import hr.foi.air.honnomachi.model.ItemStatus
 import hr.foi.air.honnomachi.util.Result
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -27,40 +28,24 @@ class CartRepositoryImpl
     constructor(
         private val auth: FirebaseAuth,
         private val firestore: FirebaseFirestore,
+        private val functions: FirebaseFunctions,
     ) : CartRepository {
         override suspend fun addToCart(book: BookModel): Result<Unit> =
             try {
-                if (book.status != ItemStatus.AVAILABLE) {
-                    Result.Error(Exception("Knjiga trenutno nije dostupna."))
-                }
-
                 val currentUser = auth.currentUser
                 if (currentUser != null && book.bookId != null) {
-                    val cartItem =
-                        CartItemModel(
-                            bookId = book.bookId,
-                            title = book.title,
-                            author = book.authors.firstOrNull() ?: "Unknown Author",
-                            price = book.price,
-                            currency = book.priceCurrency.name,
-                            imageUrl = book.imageUrls?.firstOrNull(),
-                        )
-
-                    firestore
-                        .collection("users")
-                        .document(currentUser.uid)
-                        .collection("cart")
-                        .document(book.bookId)
-                        .set(cartItem)
+                    currentUser.getIdToken(true).await()
+                    functions
+                        .getHttpsCallable("addToCartAndReserve")
+                        .call(mapOf("bookId" to book.bookId))
                         .await()
-
                     Result.Success(Unit)
                 } else {
                     Result.Error(Exception("Korisnik nije prijavljen ili knjiga nema ID."))
                 }
             } catch (e: Exception) {
                 CrashlyticsManager.instance.logException(e)
-                Result.Error(e)
+                Result.Error(mapFunctionsAuthError(e))
             }
 
         override fun getCartItems(): Flow<Result<List<CartItemModel>>> =
@@ -146,12 +131,10 @@ class CartRepositoryImpl
             try {
                 val currentUser = auth.currentUser
                 if (currentUser != null) {
-                    firestore
-                        .collection("users")
-                        .document(currentUser.uid)
-                        .collection("cart")
-                        .document(cartItemId)
-                        .delete()
+                    currentUser.getIdToken(true).await()
+                    functions
+                        .getHttpsCallable("removeFromCartAndRelease")
+                        .call(mapOf("bookId" to cartItemId))
                         .await()
                     Result.Success(Unit)
                 } else {
@@ -159,6 +142,15 @@ class CartRepositoryImpl
                 }
             } catch (e: Exception) {
                 CrashlyticsManager.instance.logException(e)
-                Result.Error(e)
+                Result.Error(mapFunctionsAuthError(e))
             }
+
+        private fun mapFunctionsAuthError(exception: Exception): Exception {
+            val functionsException = exception as? FirebaseFunctionsException ?: return exception
+            return when (functionsException.code) {
+                FirebaseFunctionsException.Code.UNAUTHENTICATED ->
+                    Exception("Sesija je istekla. Prijavite se ponovno.")
+                else -> exception
+            }
+        }
     }

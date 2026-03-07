@@ -23,9 +23,11 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -61,8 +63,8 @@ fun CartPage(
     val uiState by viewModel.uiState.collectAsState()
     val actionMessage by viewModel.actionMessage.collectAsState()
     val isCheckoutInProgress by viewModel.isCheckoutInProgress.collectAsState()
-    @Suppress("UNUSED_VARIABLE")
     val secondsUntilExpiry by viewModel.secondsUntilExpiry.collectAsState()
+    val pendingCheckout by viewModel.pendingCheckout.collectAsState()
     val context = LocalContext.current
 
     val paymentSheet = rememberPaymentSheet { result ->
@@ -152,6 +154,14 @@ fun CartPage(
             }
         }
     }
+
+    pendingCheckout?.let { checkout ->
+        CheckoutConfirmationDialog(
+            checkout = checkout,
+            onConfirm = { viewModel.confirmCheckoutPayment() },
+            onDismiss = { viewModel.dismissCheckoutDialog() },
+        )
+    }
 }
 
 @Composable
@@ -165,12 +175,47 @@ fun CartContent(
     ticker: Long? = null,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
+        ticker?.let { seconds ->
+            if (seconds > 0) {
+                val minutes = seconds / 60
+                val secs = seconds % 60
+                val label = String.format(Locale.getDefault(), "%02d:%02d", minutes, secs)
+                val chipColor = when {
+                    seconds > 300 -> Color(0xFF4CAF50)
+                    seconds > 60  -> Color(0xFFFF9800)
+                    else          -> Color(0xFFF44336)
+                }
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = chipColor.copy(alpha = 0.15f),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = "Rezervacija istječe za $label",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = chipColor,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                }
+            }
+        }
+
         LazyColumn(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(items) { item ->
-                CartItemRow(item = item, onRemove = onRemoveItem, showImages = showImages, ticker = ticker)
+                CartItemRow(item = item, onRemove = onRemoveItem, showImages = showImages)
             }
         }
 
@@ -212,7 +257,7 @@ fun CartContent(
                     strokeWidth = 2.dp,
                 )
             } else {
-                Text(text = stringResource(R.string.button_pay_with_stripe))
+                Text(text = stringResource(R.string.button_pay))
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
@@ -220,11 +265,85 @@ fun CartContent(
 }
 
 @Composable
+private fun CheckoutConfirmationDialog(
+    checkout: hr.foi.air.honnomachi.data.CheckoutPaymentIntentModel,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val totalText = formatMinorAmount(checkout.totalAmountMinor, checkout.currency)
+    val walletText = formatMinorAmount(checkout.walletContributionMinor, checkout.currency)
+    val stripeText = formatMinorAmount(checkout.amountMinor, checkout.currency)
+
+    val infoMessage =
+        when {
+            checkout.checkoutCompleted && !checkout.requiresPaymentSheet ->
+                stringResource(R.string.checkout_dialog_message_wallet_complete)
+            checkout.walletContributionMinor > 0 && checkout.amountMinor > 0 ->
+                stringResource(
+                    R.string.checkout_dialog_message_split_payment,
+                    walletText,
+                    stripeText,
+                )
+            checkout.requiresPaymentSheet ->
+                stringResource(R.string.checkout_dialog_message_stripe_only, stripeText)
+            else ->
+                stringResource(R.string.checkout_dialog_message_wallet_only)
+        }
+
+    val confirmText =
+        when {
+            checkout.checkoutCompleted && !checkout.requiresPaymentSheet ->
+                stringResource(R.string.checkout_dialog_continue)
+            checkout.requiresPaymentSheet && checkout.walletContributionMinor > 0 ->
+                stringResource(R.string.checkout_dialog_confirm_split, stripeText)
+            checkout.requiresPaymentSheet ->
+                stringResource(R.string.checkout_dialog_confirm_stripe, stripeText)
+            else ->
+                stringResource(R.string.checkout_dialog_confirm_wallet)
+        }
+
+    AlertDialog(
+        onDismissRequest = {
+            if (checkout.requiresPaymentSheet && !checkout.checkoutCompleted) {
+                onDismiss()
+            }
+        },
+        title = { Text(text = stringResource(R.string.checkout_dialog_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(text = infoMessage)
+                Text(text = stringResource(R.string.checkout_dialog_total_line, totalText))
+                Text(text = stringResource(R.string.checkout_dialog_wallet_line, walletText))
+                if (checkout.amountMinor > 0) {
+                    Text(text = stringResource(R.string.checkout_dialog_stripe_line, stripeText))
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(text = confirmText)
+            }
+        },
+        dismissButton = {
+            if (checkout.requiresPaymentSheet && !checkout.checkoutCompleted) {
+                TextButton(onClick = onDismiss) {
+                    Text(text = stringResource(R.string.checkout_dialog_cancel))
+                }
+            }
+        },
+    )
+}
+
+private fun formatMinorAmount(amountMinor: Int, currency: String): String {
+    val majorAmount = amountMinor / 100.0
+    return String.format(Locale.getDefault(), "%.2f %s", majorAmount, currency.uppercase(Locale.getDefault()))
+}
+
+@Composable
 fun CartItemRow(
     item: CartItemModel,
     onRemove: (String) -> Unit,
     showImages: Boolean,
-    ticker: Long? = null,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -275,34 +394,6 @@ fun CartItemRow(
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                 )
-                item.reservationExpiresAt?.let { expiresAt ->
-                    val nowMs = if (ticker != null) System.currentTimeMillis() else System.currentTimeMillis()
-                    val remainingMs = expiresAt.toDate().time - nowMs
-                    if (remainingMs > 0) {
-                        val totalSeconds = remainingMs / 1000L
-                        val minutes = totalSeconds / 60
-                        val seconds = totalSeconds % 60
-                        val label = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
-                        val chipColor = when {
-                            totalSeconds > 300 -> Color(0xFF4CAF50)
-                            totalSeconds > 60  -> Color(0xFFFF9800)
-                            else               -> Color(0xFFF44336)
-                        }
-                        Surface(
-                            shape = RoundedCornerShape(4.dp),
-                            color = chipColor.copy(alpha = 0.15f),
-                            modifier = Modifier.padding(top = 2.dp),
-                        ) {
-                            Text(
-                                text = label,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = chipColor,
-                                fontWeight = FontWeight.SemiBold,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            )
-                        }
-                    }
-                }
             }
 
             IconButton(onClick = { onRemove(item.id) }) {

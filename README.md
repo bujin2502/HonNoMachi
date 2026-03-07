@@ -118,7 +118,7 @@ cd HonNoMachi
    `npx firebase-tools functions:secrets:set STRIPE_WEBHOOK_SECRET --project <firebase-project-id>`
    `npx firebase-tools functions:secrets:set STRIPE_WALLET_WEBHOOK_SECRET --project <firebase-project-id>`
 5. Deploy backend funkcija (PowerShell: navodnici oko `--only`):
-   `npx firebase-tools deploy --only "functions:createCheckoutPaymentIntent,functions:stripeWebhook,functions:releaseExpiredCheckoutSessions,functions:createWalletTopupIntent,functions:stripeWalletWebhook" --project <firebase-project-id>`
+   `npx firebase-tools deploy --only "functions:createCheckoutPaymentIntent,functions:addToCartAndReserve,functions:removeFromCartAndRelease,functions:cancelCheckout,functions:releaseExpiredCheckoutSessions,functions:releaseExpiredCartReservations,functions:createWalletTopupIntent,functions:stripeWebhook,functions:stripeWalletWebhook" --project <firebase-project-id>`
 6. U Stripe Dashboardu dodajte checkout webhook endpoint:
    `https://us-central1-<firebase-project-id>.cloudfunctions.net/stripeWebhook`
    i uključite evente:

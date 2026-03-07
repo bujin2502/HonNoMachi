@@ -2,10 +2,12 @@ package hr.foi.air.honnomachi.data
 
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GetTokenResult
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.firestore.CollectionReference
-import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.functions.FirebaseFunctions
+import com.google.firebase.functions.HttpsCallableReference
+import com.google.firebase.functions.HttpsCallableResult
 import hr.foi.air.honnomachi.CrashlyticsManager
 import hr.foi.air.honnomachi.CrashlyticsService
 import hr.foi.air.honnomachi.model.BookModel
@@ -28,28 +30,15 @@ import org.junit.Test
 class CartRepositoryTest {
     private lateinit var auth: FirebaseAuth
     private lateinit var firestore: FirebaseFirestore
+    private lateinit var functions: FirebaseFunctions
     private lateinit var repository: CartRepositoryImpl
-
-    private lateinit var mockUsersCollection: CollectionReference
-    private lateinit var mockUserDocument: DocumentReference
-    private lateinit var mockCartCollection: CollectionReference
-    private lateinit var mockCartDocument: DocumentReference
 
     @Before
     fun setup() {
         auth = mockk(relaxed = true)
         firestore = mockk(relaxed = true)
-        repository = CartRepositoryImpl(auth, firestore)
-
-        mockUsersCollection = mockk()
-        mockUserDocument = mockk()
-        mockCartCollection = mockk()
-        mockCartDocument = mockk()
-
-        every { firestore.collection("users") } returns mockUsersCollection
-        every { mockUsersCollection.document(any()) } returns mockUserDocument
-        every { mockUserDocument.collection("cart") } returns mockCartCollection
-        every { mockCartCollection.document(any()) } returns mockCartDocument
+        functions = mockk(relaxed = true)
+        repository = CartRepositoryImpl(auth, firestore, functions)
 
         mockkStatic("kotlinx.coroutines.tasks.TasksKt")
 
@@ -101,10 +90,15 @@ class CartRepositoryTest {
             val mockUser = mockk<FirebaseUser>()
             every { mockUser.uid } returns "user123"
             every { auth.currentUser } returns mockUser
+            val mockTokenTask = mockk<Task<GetTokenResult>>()
+            every { mockUser.getIdToken(true) } returns mockTokenTask
+            coEvery { mockTokenTask.await() } returns mockk()
 
-            val mockSetTask = mockk<Task<Void>>()
-            every { mockCartDocument.set(any()) } returns mockSetTask
-            coEvery { mockSetTask.await() } returns mockk()
+            val mockCallable = mockk<HttpsCallableReference>()
+            val mockCallTask = mockk<Task<HttpsCallableResult>>()
+            every { functions.getHttpsCallable("addToCartAndReserve") } returns mockCallable
+            every { mockCallable.call(any()) } returns mockCallTask
+            coEvery { mockCallTask.await() } returns mockk()
 
             val book = BookModel(bookId = "book1", title = "Test Book", price = 15.0)
             val result = repository.addToCart(book)
@@ -132,10 +126,15 @@ class CartRepositoryTest {
             val mockUser = mockk<FirebaseUser>()
             every { mockUser.uid } returns "user123"
             every { auth.currentUser } returns mockUser
+            val mockTokenTask = mockk<Task<GetTokenResult>>()
+            every { mockUser.getIdToken(true) } returns mockTokenTask
+            coEvery { mockTokenTask.await() } returns mockk()
 
-            val mockDeleteTask = mockk<Task<Void>>()
-            every { mockCartDocument.delete() } returns mockDeleteTask
-            coEvery { mockDeleteTask.await() } returns mockk()
+            val mockCallable = mockk<HttpsCallableReference>()
+            val mockCallTask = mockk<Task<HttpsCallableResult>>()
+            every { functions.getHttpsCallable("removeFromCartAndRelease") } returns mockCallable
+            every { mockCallable.call(any()) } returns mockCallTask
+            coEvery { mockCallTask.await() } returns mockk()
 
             val result = repository.removeFromCart("cart1")
 

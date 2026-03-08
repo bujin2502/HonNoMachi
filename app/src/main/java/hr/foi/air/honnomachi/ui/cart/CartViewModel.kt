@@ -63,6 +63,8 @@ class CartViewModel
 
         private var activeCheckoutId: String? = null
 
+        private val _expiredCartItemIds = mutableSetOf<String>()
+
         private val _secondsUntilExpiry = MutableStateFlow<Long?>(null)
         val secondsUntilExpiry: StateFlow<Long?> = _secondsUntilExpiry.asStateFlow()
 
@@ -77,13 +79,34 @@ class CartViewModel
                     val state = _uiState.value
                     if (state is CartUiState.Success) {
                         val nowMs = System.currentTimeMillis()
-                        val nearestExpiry = state.items
-                            .mapNotNull { it.reservationExpiresAt }
-                            .minOfOrNull { it.toDate().time }
-                        _secondsUntilExpiry.value = nearestExpiry?.let {
-                            val remainingMs = it - nowMs
-                            if (remainingMs > 0) remainingMs / 1000L else 0L
+
+                        val newlyExpired =
+                            state.items.filter { item ->
+                                val expiresAtMs = item.reservationExpiresAt?.toDate()?.time
+                                expiresAtMs != null && expiresAtMs <= nowMs && item.id !in _expiredCartItemIds
+                            }
+
+                        for (item in newlyExpired) {
+                            _expiredCartItemIds.add(item.id)
+                            viewModelScope.launch {
+                                cartRepository.removeFromCart(item.id)
+                            }
                         }
+
+                        if (newlyExpired.isNotEmpty()) {
+                            _actionMessage.value = "Rezervacija je istekla. Knjige su uklonjene iz košarice."
+                        }
+
+                        val nearestExpiry =
+                            state.items
+                                .filter { it.id !in _expiredCartItemIds }
+                                .mapNotNull { it.reservationExpiresAt }
+                                .minOfOrNull { it.toDate().time }
+                        _secondsUntilExpiry.value =
+                            nearestExpiry?.let {
+                                val remainingMs = it - nowMs
+                                if (remainingMs > 0) remainingMs / 1000L else 0L
+                            }
                     } else {
                         _secondsUntilExpiry.value = null
                     }

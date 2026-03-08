@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -23,7 +24,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -42,7 +42,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import java.util.Locale
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.stripe.android.paymentsheet.PaymentSheet
@@ -50,6 +49,7 @@ import com.stripe.android.paymentsheet.rememberPaymentSheet
 import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.model.CartItemModel
+import java.util.Locale
 
 @Composable
 fun CartPage(
@@ -66,9 +66,10 @@ fun CartPage(
     val pendingCheckout by viewModel.pendingCheckout.collectAsState()
     val context = LocalContext.current
 
-    val paymentSheet = rememberPaymentSheet { result ->
-        viewModel.onPaymentSheetResult(result)
-    }
+    val paymentSheet =
+        rememberPaymentSheet { result ->
+            viewModel.onPaymentSheetResult(result)
+        }
 
     LaunchedEffect(actionMessage) {
         actionMessage?.let {
@@ -179,22 +180,25 @@ fun CartContent(
                 val minutes = seconds / 60
                 val secs = seconds % 60
                 val label = String.format(Locale.getDefault(), "%02d:%02d", minutes, secs)
-                val chipColor = when {
-                    seconds > 300 -> Color(0xFF4CAF50)
-                    seconds > 60  -> Color(0xFFFF9800)
-                    else          -> Color(0xFFF44336)
-                }
+                val chipColor =
+                    when {
+                        seconds > 300 -> Color(0xFF4CAF50)
+                        seconds > 60 -> Color(0xFFFF9800)
+                        else -> Color(0xFFF44336)
+                    }
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = chipColor.copy(alpha = 0.15f),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -333,7 +337,10 @@ private fun CheckoutConfirmationDialog(
     )
 }
 
-private fun formatMinorAmount(amountMinor: Int, currency: String): String {
+private fun formatMinorAmount(
+    amountMinor: Int,
+    currency: String,
+): String {
     val majorAmount = amountMinor / 100.0
     return String.format(Locale.getDefault(), "%.2f %s", majorAmount, currency.uppercase(Locale.getDefault()))
 }

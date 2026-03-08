@@ -76,9 +76,7 @@ class FakeCheckoutRepository : CheckoutRepository {
             ),
         )
 
-    override suspend fun createCheckoutPaymentIntent(
-        reservationTtlMinutes: Int?,
-    ): Result<CheckoutPaymentIntentModel> {
+    override suspend fun createCheckoutPaymentIntent(reservationTtlMinutes: Int?): Result<CheckoutPaymentIntentModel> {
         createPaymentIntentCallCount++
         return resultToReturn
     }

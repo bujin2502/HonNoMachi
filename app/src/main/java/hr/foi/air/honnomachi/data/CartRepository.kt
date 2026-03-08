@@ -2,9 +2,9 @@ package hr.foi.air.honnomachi.data
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.functions.FirebaseFunctionsException
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.functions.FirebaseFunctions
+import com.google.firebase.functions.FirebaseFunctionsException
 import hr.foi.air.honnomachi.CrashlyticsManager
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.model.CartItemModel
@@ -63,17 +63,18 @@ class CartRepositoryImpl
                 var previousBookIds = emptySet<String>()
 
                 fun emitMerged() {
-                    val merged = latestCartItems.map { item ->
-                        val cached = bookExpiryCache[item.bookId]
-                        if (cached != null && cached.second == currentUser.uid) {
-                            item.copy(
-                                reservationExpiresAt = cached.first,
-                                reservedByUid = cached.second,
-                            )
-                        } else {
-                            item
+                    val merged =
+                        latestCartItems.map { item ->
+                            val cached = bookExpiryCache[item.bookId]
+                            if (cached != null && cached.second == currentUser.uid) {
+                                item.copy(
+                                    reservationExpiresAt = cached.first,
+                                    reservedByUid = cached.second,
+                                )
+                            } else {
+                                item
+                            }
                         }
-                    }
                     trySend(Result.Success(merged))
                 }
 
@@ -95,19 +96,21 @@ class CartRepositoryImpl
                                 val newBookIds = latestCartItems.map { it.bookId }.toSet()
 
                                 (newBookIds - previousBookIds).forEach { bookId ->
-                                    val bookListener = firestore
-                                        .collection("books")
-                                        .document(bookId)
-                                        .addSnapshotListener { bookSnap, bookErr ->
-                                            if (bookErr != null) return@addSnapshotListener
-                                            if (bookSnap != null) {
-                                                bookExpiryCache[bookId] = Pair(
-                                                    bookSnap.getTimestamp("reservationExpiresAt"),
-                                                    bookSnap.getString("reservedByUid"),
-                                                )
-                                                emitMerged()
+                                    val bookListener =
+                                        firestore
+                                            .collection("books")
+                                            .document(bookId)
+                                            .addSnapshotListener { bookSnap, bookErr ->
+                                                if (bookErr != null) return@addSnapshotListener
+                                                if (bookSnap != null) {
+                                                    bookExpiryCache[bookId] =
+                                                        Pair(
+                                                            bookSnap.getTimestamp("reservationExpiresAt"),
+                                                            bookSnap.getString("reservedByUid"),
+                                                        )
+                                                    emitMerged()
+                                                }
                                             }
-                                        }
                                     bookListeners[bookId] = bookListener
                                 }
 

@@ -42,15 +42,12 @@ class FakeCartRepository : CartRepository {
         _cartItems.value = _cartItems.value.filter { it.id != cartItemId }
         return Result.Success(Unit)
     }
-
 }
 
 class FakeCheckoutRepository : CheckoutRepository {
     var createPaymentIntentCallCount = 0
 
-    override suspend fun createCheckoutPaymentIntent(
-        reservationTtlMinutes: Int?,
-    ): Result<CheckoutPaymentIntentModel> {
+    override suspend fun createCheckoutPaymentIntent(reservationTtlMinutes: Int?): Result<CheckoutPaymentIntentModel> {
         createPaymentIntentCallCount++
         return Result.Success(
             CheckoutPaymentIntentModel(

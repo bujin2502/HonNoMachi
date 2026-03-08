@@ -1,8 +1,8 @@
 package hr.foi.air.honnomachi.data
 
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.functions.FirebaseFunctionsException
 import hr.foi.air.honnomachi.CrashlyticsManager
@@ -249,8 +249,7 @@ class WalletRepositoryImpl
                                 compareByDescending<WalletHistoryItemModel> {
                                     it.createdAtEpochMillis ?: Long.MIN_VALUE
                                 }.thenByDescending { it.id },
-                            )
-                            .take(MAX_HISTORY_ITEMS)
+                            ).take(MAX_HISTORY_ITEMS)
                     trySend(Result.Success(combined))
                 }
 
@@ -269,30 +268,32 @@ class WalletRepositoryImpl
                             }
 
                             ledgerHistory =
-                                snapshot?.documents?.mapNotNull { doc ->
-                                    val data = doc.data.orEmpty()
-                                    val typeRaw = (data["type"] as? String).orEmpty()
-                                    val type =
-                                        when (typeRaw.uppercase(Locale.ROOT)) {
-                                            "TOPUP_CREDIT" -> WalletHistoryType.TOPUP
-                                            "TOPUP_REFUND_DEBIT" -> WalletHistoryType.REFUND
-                                            "SALE_CREDIT" -> WalletHistoryType.SALE
-                                            else -> null
-                                        } ?: return@mapNotNull null
+                                snapshot
+                                    ?.documents
+                                    ?.mapNotNull { doc ->
+                                        val data = doc.data.orEmpty()
+                                        val typeRaw = (data["type"] as? String).orEmpty()
+                                        val type =
+                                            when (typeRaw.uppercase(Locale.ROOT)) {
+                                                "TOPUP_CREDIT" -> WalletHistoryType.TOPUP
+                                                "TOPUP_REFUND_DEBIT" -> WalletHistoryType.REFUND
+                                                "SALE_CREDIT" -> WalletHistoryType.SALE
+                                                else -> null
+                                            } ?: return@mapNotNull null
 
-                                    val amountMinor = (data["amountMinor"] as? Number)?.toInt() ?: 0
-                                    val currency =
-                                        (data["currency"] as? String)
-                                            ?.lowercase(Locale.ROOT)
-                                            ?: DEFAULT_CURRENCY
-                                    WalletHistoryItemModel(
-                                        id = "ledger_${doc.id}",
-                                        type = type,
-                                        amountMinor = amountMinor,
-                                        currency = currency,
-                                        createdAtEpochMillis = doc.getTimestamp("createdAt")?.toDate()?.time,
-                                    )
-                                }.orEmpty()
+                                        val amountMinor = (data["amountMinor"] as? Number)?.toInt() ?: 0
+                                        val currency =
+                                            (data["currency"] as? String)
+                                                ?.lowercase(Locale.ROOT)
+                                                ?: DEFAULT_CURRENCY
+                                        WalletHistoryItemModel(
+                                            id = "ledger_${doc.id}",
+                                            type = type,
+                                            amountMinor = amountMinor,
+                                            currency = currency,
+                                            createdAtEpochMillis = doc.getTimestamp("createdAt")?.toDate()?.time,
+                                        )
+                                    }.orEmpty()
                             emitCombined()
                         }
 
@@ -308,34 +309,36 @@ class WalletRepositoryImpl
                             }
 
                             purchaseHistory =
-                                snapshot?.documents?.mapNotNull { doc ->
-                                    val data = doc.data.orEmpty()
-                                    val status = (data["status"] as? String).orEmpty()
-                                    if (status != CHECKOUT_STATUS_COMPLETED) {
-                                        return@mapNotNull null
-                                    }
+                                snapshot
+                                    ?.documents
+                                    ?.mapNotNull { doc ->
+                                        val data = doc.data.orEmpty()
+                                        val status = (data["status"] as? String).orEmpty()
+                                        if (status != CHECKOUT_STATUS_COMPLETED) {
+                                            return@mapNotNull null
+                                        }
 
-                                    val walletContributionMinor =
-                                        (data["walletContributionMinor"] as? Number)?.toInt() ?: 0
-                                    val walletDeductionMinor =
-                                        (data["walletDeductionMinor"] as? Number)?.toInt()
-                                            ?: walletContributionMinor
-                                    if (walletDeductionMinor <= 0) {
-                                        return@mapNotNull null
-                                    }
+                                        val walletContributionMinor =
+                                            (data["walletContributionMinor"] as? Number)?.toInt() ?: 0
+                                        val walletDeductionMinor =
+                                            (data["walletDeductionMinor"] as? Number)?.toInt()
+                                                ?: walletContributionMinor
+                                        if (walletDeductionMinor <= 0) {
+                                            return@mapNotNull null
+                                        }
 
-                                    val currency =
-                                        (data["currency"] as? String)
-                                            ?.lowercase(Locale.ROOT)
-                                            ?: DEFAULT_CURRENCY
-                                    WalletHistoryItemModel(
-                                        id = "purchase_${doc.id}",
-                                        type = WalletHistoryType.PURCHASE,
-                                        amountMinor = -walletDeductionMinor,
-                                        currency = currency,
-                                        createdAtEpochMillis = doc.getTimestamp("createdAt")?.toDate()?.time,
-                                    )
-                                }.orEmpty()
+                                        val currency =
+                                            (data["currency"] as? String)
+                                                ?.lowercase(Locale.ROOT)
+                                                ?: DEFAULT_CURRENCY
+                                        WalletHistoryItemModel(
+                                            id = "purchase_${doc.id}",
+                                            type = WalletHistoryType.PURCHASE,
+                                            amountMinor = -walletDeductionMinor,
+                                            currency = currency,
+                                            createdAtEpochMillis = doc.getTimestamp("createdAt")?.toDate()?.time,
+                                        )
+                                    }.orEmpty()
                             emitCombined()
                         }
 

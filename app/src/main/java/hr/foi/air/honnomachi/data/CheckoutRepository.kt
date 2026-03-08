@@ -21,9 +21,7 @@ data class CheckoutPaymentIntentModel(
 )
 
 interface CheckoutRepository {
-    suspend fun createCheckoutPaymentIntent(
-        reservationTtlMinutes: Int? = null,
-    ): Result<CheckoutPaymentIntentModel>
+    suspend fun createCheckoutPaymentIntent(reservationTtlMinutes: Int? = null): Result<CheckoutPaymentIntentModel>
 
     suspend fun cancelCheckout(checkoutId: String): Result<Unit>
 }
@@ -33,10 +31,8 @@ class CheckoutRepositoryImpl
     constructor(
         private val functions: FirebaseFunctions,
     ) : CheckoutRepository {
-        override suspend fun createCheckoutPaymentIntent(
-            reservationTtlMinutes: Int?,
-        ): Result<CheckoutPaymentIntentModel> {
-            return try {
+        override suspend fun createCheckoutPaymentIntent(reservationTtlMinutes: Int?): Result<CheckoutPaymentIntentModel> =
+            try {
                 val payload =
                     buildMap<String, Any> {
                         if (reservationTtlMinutes != null) {
@@ -112,7 +108,6 @@ class CheckoutRepositoryImpl
                 CrashlyticsManager.instance.logException(e)
                 Result.Error(e)
             }
-        }
 
         override suspend fun cancelCheckout(checkoutId: String): Result<Unit> =
             try {

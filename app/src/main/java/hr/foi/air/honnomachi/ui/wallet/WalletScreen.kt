@@ -17,8 +17,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -39,8 +39,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.stripe.android.paymentsheet.PaymentSheet
@@ -73,9 +73,10 @@ fun WalletScreen(
     var customAmountInput by rememberSaveable { mutableStateOf("") }
     var customAmountError by rememberSaveable { mutableStateOf<String?>(null) }
 
-    val paymentSheet = rememberPaymentSheet { result ->
-        viewModel.onPaymentSheetResult(result)
-    }
+    val paymentSheet =
+        rememberPaymentSheet { result ->
+            viewModel.onPaymentSheetResult(result)
+        }
 
     LaunchedEffect(viewModel) {
         viewModel.paymentSheetRequests.collect { request ->

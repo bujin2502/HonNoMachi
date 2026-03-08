@@ -150,7 +150,7 @@ dependencies {
     implementation(project(":image_uploader"))
     implementation(libs.accompanist.permissions)
     implementation(libs.stripe.android)
-    implementation("androidx.multidex:multidex:2.0.1")
+    implementation(libs.androidx.multidex)
 }
 
 tasks.withType<JavaCompile>().configureEach {

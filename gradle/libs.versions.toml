@@ -33,6 +33,7 @@ appcompat = "1.7.1"
 material = "1.13.0"
 accompanist-permissions = "0.32.0"
 stripeAndroid = "20.48.6"
+multidex = "2.0.1"
 
 [libraries]
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
@@ -88,6 +89,7 @@ androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanist-permissions" }
 stripe-android = { module = "com.stripe:stripe-android", version.ref = "stripeAndroid" }
+androidx-multidex = { group = "androidx.multidex", name = "multidex", version.ref = "multidex" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

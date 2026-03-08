@@ -18,6 +18,6 @@ class BookModelReservationTest {
 
     @Test
     fun `reserved status is available for books`() {
-        assertTrue(ItemStatus.values().contains(ItemStatus.RESERVED))
+        assertTrue(ItemStatus.entries.contains(ItemStatus.RESERVED))
     }
 }

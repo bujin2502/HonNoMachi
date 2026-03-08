@@ -17,7 +17,6 @@
     <string name="sign_in_your_account">Prijavite se na svoj račun</string>
     <string name="creating_account">Kreiranje računa</string>
     <string name="logging_in">Prijavljivanje</string>
-    <string name="something_went_wrong">Nešto nije u redu</string>
     <string name="cart">Košarica</string>
     <string name="profile">Profil</string>
     <string name="add">Dodaj</string>
@@ -35,10 +34,8 @@
     <string name="field_publisher">Izdavač</string>
     <string name="field_publication_year">Godina izdanja</string>
     <string name="field_isbn">ISBN-13</string>
-    <string name="field_image_urls">URL-ovi slika</string>
     <string name="field_description">Opis</string>
     <string name="hint_authors">Odvojite više autora zarezima</string>
-    <string name="hint_image_urls">Opcionalno, odvojite više URL-ova zarezima</string>
     <string name="button_publish_offer">Objavi ponudu</string>
     <string name="adding_offer">Objavljivanje…</string>
     <string name="message_offer_created">Ponuda je objavljena.</string>
@@ -47,7 +44,6 @@
     <string name="error_price_required">Cijena je obavezna</string>
     <string name="error_price_invalid">Unesite ispravnu cijenu</string>
     <string name="error_year_invalid">Unesite ispravnu godinu</string>
-    <string name="cart_page">Stranica košarice</string>
     <string name="profile_page">Stranica profila</string>
     <string name="verification_email_sent">Verifikacijski email je poslan. Molimo provjerite svoj sandučić.</string>
     <string name="forgot_password">Zaboravljena lozinka</string>
@@ -137,8 +133,7 @@
     <string name="label_condition">Stanje:</string>
     <string name="label_price">Cijena:</string>
     <string name="button_add_to_cart">Dodaj u košaricu</string>
-    <string name="button_adding_to_cart">Dodavanje...</string>
-    <string name="button_pay_with_stripe">Plati putem Stripea</string>
+    <string name="button_adding_to_cart">Dodavanje…</string>
     <string name="button_pay">Plati</string>
     <string name="checkout_dialog_title">Potvrda plaćanja</string>
     <string name="checkout_dialog_cancel">Odustani</string>
@@ -153,7 +148,6 @@
     <string name="checkout_dialog_confirm_wallet">Plati walletom</string>
     <string name="checkout_dialog_confirm_split">Plati %1$s putem Stripea</string>
     <string name="checkout_dialog_confirm_stripe">Plati %1$s putem Stripea</string>
-    <string name="checkout_payment_sheet_unavailable">Stripe forma za plaćanje trenutno nije dostupna.</string>
     <string name="checkout_success_title">Plaćanje uspješno</string>
     <string name="checkout_success_message">Vaše plaćanje je uspješno završeno.</string>
     <string name="checkout_cancel_title">Plaćanje je otkazano</string>
@@ -163,7 +157,6 @@
     <string name="wallet_topup_select_amount">Odaberi iznos nadoplate</string>
     <string name="wallet_topup_pending_status">Nadoplata čeka potvrdu…</string>
     <string name="wallet_add_funds_cta">Nadoplati (%1$s)</string>
-    <string name="wallet_payment_sheet_unavailable">Stripe forma za plaćanje trenutno nije dostupna.</string>
     <string name="wallet_custom_amount_label">Prilagođeni iznos (EUR)</string>
     <string name="wallet_custom_amount_placeholder">npr. 12,50</string>
     <string name="wallet_custom_amount_invalid">Unesite valjani iznos.</string>
@@ -180,16 +173,9 @@
     <string name="no_books_found">Nema knjiga koje odgovaraju pretrazi.</string>
     <string name="no_books_available">Trenutno nema dostupnih knjiga.</string>
     <string name="error_occurred">Došlo je do pogreške prilikom učitavanja knjiga.</string>
-    <string name="profile_information">Podaci o profilu</string>
-    <string name="phone_number">Broj mobitela</string>
-    <string name="address">Adresa</string>
-    <string name="city">Grad</string>
-    <string name="zip_code">Poštanski broj</string>
-    <string name="street">Ulica</string>
     <string name="label_name">Ime:</string>
     <string name="label_email">Email:</string>
     <string name="label_phone">Broj mobitela:</string>
-    <string name="label_address">Adresa:</string>
     <string name="label_city">Grad:</string>
     <string name="label_zip">Poštanski broj:</string>
     <string name="label_street">Ulica:</string>
@@ -199,9 +185,6 @@
     <string name="label_my_data">Moji podaci</string>
     <string name="button_reset_password">Promijeni lozinku</string>
     <string name="button_save">Spremi promjene</string>
-    <string name="button_edit">Uredi profil</string>
-    <string name="label_birth_date">Datum rođenja:</string>
-    <string name="label_surname">Prezime:</string>
     <string name="value_admin">Administrator</string>
     <string name="value_user">Korisnik</string>
     <string name="value_active">Aktivan</string>
@@ -217,9 +200,7 @@
     <string name="content_user_id">Ako ste prijavljeni, Vaš jedinstveni korisnički ID prilaže se izvješću o pogrešci kako bismo lakše riješili problem. U tu svrhu ne prikupljamo Vašu e-poštu, ime ili druge osobne podatke.</string>
     <string name="title_data_management">Upravljanje podacima</string>
     <string name="content_data_management">Svoj pristanak za prikupljanje ovih podataka možete povući u bilo kojem trenutku u postavkama Vašeg profila.</string>
-    <string name="add_images">Dodaj slike</string>
     <string name="error_offer_save_failed">Greška prilikom spremanja ponude. Molimo pokušajte ponovno.</string>
-    <string name="error_image_upload_failed">Upload slika nije uspio. Molimo pokušajte ponovno.</string>
     <string name="error_user_not_authenticated">Morate biti prijavljeni da biste dodali knjigu.</string>
     <string name="profile_update_success">Profil uspješno ažuriran!</string>
     <string name="profile_update_error">Greška: %1$s</string>
@@ -227,7 +208,6 @@
     <string name="title_admin_user_detail">Detalji korisnika</string>
     <string name="button_admin_panel">Admin panel</string>
     <string name="error_admin_access_denied">Nemate administratorski pristup.</string>
-    <string name="admin_coming_soon">Dolazi uskoro</string>
     <string name="admin_no_users">Nema pronađenih korisnika</string>
     <string name="admin_error_loading_users">Greška prilikom učitavanja korisnika</string>
     <string name="admin_retry">Pokušaj ponovno</string>
@@ -243,6 +223,5 @@
     <string name="admin_label_verified">Verificiran:</string>
     <string name="admin_value_yes">Da</string>
     <string name="admin_value_no">Ne</string>
-    <string name="admin_user_not_found">Korisnik nije pronađen</string>
     <string name="admin_error_loading_user">Greška prilikom učitavanja podataka korisnika</string>
 </resources>

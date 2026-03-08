@@ -22,7 +22,7 @@ class ReservationModelTest {
 
     @Test
     fun `reservation status enum contains terminal states`() {
-        val statuses = ReservationStatus.values().toSet()
+        val statuses = ReservationStatus.entries.toSet()
 
         assertTrue(ReservationStatus.CONFIRMED in statuses)
         assertTrue(ReservationStatus.EXPIRED in statuses)

@@ -21,6 +21,8 @@ interface BookRepository {
     suspend fun addBook(book: BookModel): Result<String>
 
     fun getSoldBooks(userId: String): Flow<Result<List<BookModel>>>
+
+    fun getPurchasedBooks(userId: String): Flow<Result<List<BookModel>>>
 }
 
 class BookRepositoryImpl
@@ -114,4 +116,18 @@ class BookRepositoryImpl
                         }
                 awaitClose { listener.remove() }
             }
+        override fun getPurchasedBooks(userId: String): Flow<Result<List<BookModel>>> = callbackFlow {
+            val query = firestore.collection("books")
+                .whereEqualTo("soldToUid", userId)
+
+            val listener = query.addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(Result.Error(error))
+                    return@addSnapshotListener
+                }
+                val books = snapshot?.toObjects(BookModel::class.java) ?: emptyList()
+                trySend(Result.Success(books))
+            }
+            awaitClose { listener.remove() }
+        }
     }

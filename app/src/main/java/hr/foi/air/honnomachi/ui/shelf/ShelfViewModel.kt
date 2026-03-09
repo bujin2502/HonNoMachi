@@ -56,8 +56,28 @@ class ShelfViewModel @Inject constructor(
                     }
                 }
             } else {
-                // Za Purchased tab (ako još nemaš repo metodu)
-                _uiState.update { it.copy(books = emptyList(), isLoading = false, errorMessage = null) }
+                bookRepository.getPurchasedBooks(currentUser.uid).collectLatest { result ->
+                    when (result) {
+                        is Result.Success -> {
+                            _uiState.update {
+                                it.copy(
+                                    books = result.data,
+                                    isLoading = false,
+                                    errorMessage = null
+                                )
+                            }
+                        }
+
+                        is Result.Error -> {
+                            _uiState.update {
+                                it.copy(
+                                    errorMessage = result.exception.message,
+                                    isLoading = false
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }

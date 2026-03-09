@@ -1,17 +1,25 @@
 package hr.foi.air.honnomachi.ui.shelf
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.Tab
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.ui.components.BookItemView
 
@@ -19,14 +27,15 @@ import hr.foi.air.honnomachi.ui.components.BookItemView
 fun ShelfPage(
     paddingValues: PaddingValues,
     @Suppress("DEPRECATION")
-    viewModel: ShelfViewModel = hiltViewModel()
+    viewModel: ShelfViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
     ) {
         PrimaryTabRow(selectedTabIndex = state.selectedTab.ordinal) {
             ShelfTab.entries.forEach { tab ->
@@ -34,11 +43,14 @@ fun ShelfPage(
                     selected = state.selectedTab == tab,
                     onClick = { viewModel.selectTab(tab) },
                     text = {
-                        Text(text = when (tab) {
-                            ShelfTab.PURCHASED -> stringResource(R.string.shelf_purchased)
-                            ShelfTab.SOLD -> stringResource(R.string.shelf_sold)
-                        })
-                    }
+                        Text(
+                            text =
+                                when (tab) {
+                                    ShelfTab.PURCHASED -> stringResource(R.string.shelf_purchased)
+                                    ShelfTab.SOLD -> stringResource(R.string.shelf_sold)
+                                },
+                        )
+                    },
                 )
             }
         }
@@ -50,13 +62,16 @@ fun ShelfPage(
                 Text(
                     text = state.errorMessage!!,
                     color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.align(Alignment.Center).padding(16.dp)
+                    modifier = Modifier.align(Alignment.Center).padding(16.dp),
                 )
             } else {
                 if (state.books.isEmpty()) {
-                    val emptyMsg = if (state.selectedTab == ShelfTab.PURCHASED)
-                        stringResource(R.string.shelf_no_purchased)
-                    else stringResource(R.string.shelf_no_sold)
+                    val emptyMsg =
+                        if (state.selectedTab == ShelfTab.PURCHASED) {
+                            stringResource(R.string.shelf_no_purchased)
+                        } else {
+                            stringResource(R.string.shelf_no_sold)
+                        }
 
                     Text(text = emptyMsg, modifier = Modifier.align(Alignment.Center))
                 } else {

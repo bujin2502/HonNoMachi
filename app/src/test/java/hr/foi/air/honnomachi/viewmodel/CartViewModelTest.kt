@@ -16,8 +16,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -80,6 +81,8 @@ class FakeCheckoutRepository : CheckoutRepository {
         createPaymentIntentCallCount++
         return resultToReturn
     }
+
+    override suspend fun cancelCheckout(checkoutId: String): Result<Unit> = Result.Success(Unit)
 }
 
 @ExperimentalCoroutinesApi
@@ -108,7 +111,8 @@ class CartViewModelTest {
             val book = BookModel(bookId = "1", title = "Test Book", price = 10.0, priceCurrency = Currency.EUR)
             fakeCartRepository.addToCart(book)
 
-            advanceUntilIdle()
+            advanceTimeBy(2_000)
+            runCurrent()
 
             val state = viewModel.uiState.value
             assertTrue(state is CartUiState.Success)
@@ -126,7 +130,8 @@ class CartViewModelTest {
             fakeCartRepository.addToCart(bookEur)
             fakeCartRepository.addToCart(bookUsd)
 
-            advanceUntilIdle()
+            advanceTimeBy(2_000)
+            runCurrent()
 
             val state = viewModel.uiState.value
             assertTrue(state is CartUiState.Success)
@@ -139,7 +144,8 @@ class CartViewModelTest {
     fun `checkoutWithStripe empty cart does not call backend`() =
         runTest(testDispatcher) {
             viewModel.checkoutWithStripe()
-            advanceUntilIdle()
+            advanceTimeBy(2_000)
+            runCurrent()
 
             assertEquals(0, fakeCheckoutRepository.createPaymentIntentCallCount)
             assertEquals("Košarica je prazna.", viewModel.actionMessage.value)
@@ -156,10 +162,12 @@ class CartViewModelTest {
 
             val book = BookModel(bookId = "4", title = "Checkout Book", price = 12.0, priceCurrency = Currency.EUR)
             fakeCartRepository.addToCart(book)
-            advanceUntilIdle()
+            advanceTimeBy(2_000)
+            runCurrent()
 
             viewModel.checkoutWithStripe()
-            advanceUntilIdle()
+            advanceTimeBy(2_000)
+            runCurrent()
 
             assertEquals(1, fakeCheckoutRepository.createPaymentIntentCallCount)
             assertEquals(1, emittedRequests.size)
@@ -203,10 +211,12 @@ class CartViewModelTest {
 
             val book = BookModel(bookId = "4", title = "Checkout Book", price = 12.0, priceCurrency = Currency.EUR)
             fakeCartRepository.addToCart(book)
-            advanceUntilIdle()
+            advanceTimeBy(2_000)
+            runCurrent()
 
             viewModel.checkoutWithStripe()
-            advanceUntilIdle()
+            advanceTimeBy(2_000)
+            runCurrent()
 
             assertEquals(0, emittedRequests.size)
             assertEquals(1, emittedNavigation.size)
@@ -221,7 +231,8 @@ class CartViewModelTest {
         runTest(testDispatcher) {
             val book = BookModel(bookId = "2", title = "New Book")
             viewModel.addToCart(book)
-            advanceUntilIdle()
+            advanceTimeBy(2_000)
+            runCurrent()
 
             val message = viewModel.actionMessage.value
             assertEquals("Knjiga dodana u košaricu!", message)
@@ -232,10 +243,12 @@ class CartViewModelTest {
         runTest(testDispatcher) {
             val book = BookModel(bookId = "3", title = "Delete Me")
             fakeCartRepository.addToCart(book)
-            advanceUntilIdle()
+            advanceTimeBy(2_000)
+            runCurrent()
 
             viewModel.removeFromCart("3")
-            advanceUntilIdle()
+            advanceTimeBy(2_000)
+            runCurrent()
 
             val message = viewModel.actionMessage.value
             assertEquals("Knjiga uklonjena iz košarice.", message)

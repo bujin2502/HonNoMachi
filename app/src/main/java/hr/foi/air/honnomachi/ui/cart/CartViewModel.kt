@@ -63,7 +63,7 @@ class CartViewModel
 
         private var activeCheckoutId: String? = null
 
-        private val _expiredCartItemIds = mutableSetOf<String>()
+        private val expiredCartItemIds = mutableSetOf<String>()
 
         private val _secondsUntilExpiry = MutableStateFlow<Long?>(null)
         val secondsUntilExpiry: StateFlow<Long?> = _secondsUntilExpiry.asStateFlow()
@@ -83,11 +83,11 @@ class CartViewModel
                         val newlyExpired =
                             state.items.filter { item ->
                                 val expiresAtMs = item.reservationExpiresAt?.toDate()?.time
-                                expiresAtMs != null && expiresAtMs <= nowMs && item.id !in _expiredCartItemIds
+                                expiresAtMs != null && expiresAtMs <= nowMs && item.id !in expiredCartItemIds
                             }
 
                         for (item in newlyExpired) {
-                            _expiredCartItemIds.add(item.id)
+                            expiredCartItemIds.add(item.id)
                             viewModelScope.launch {
                                 cartRepository.removeFromCart(item.id)
                             }
@@ -99,7 +99,7 @@ class CartViewModel
 
                         val nearestExpiry =
                             state.items
-                                .filter { it.id !in _expiredCartItemIds }
+                                .filter { it.id !in expiredCartItemIds }
                                 .mapNotNull { it.reservationExpiresAt }
                                 .minOfOrNull { it.toDate().time }
                         _secondsUntilExpiry.value =

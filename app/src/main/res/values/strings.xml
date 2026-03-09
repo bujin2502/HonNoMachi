@@ -227,4 +227,8 @@
     <string name="suspended_contact_message">If you believe this is a mistake, please contact support.</string>
     <string name="suspended_sign_out">Sign Out</string>
     <string name="error_suspended_cannot_add_book">Suspended accounts cannot create new offers.</string>
+    <string name="shelf_purchased">Purchased</string>
+    <string name="shelf_sold">Sold</string>
+    <string name="shelf_no_purchased">No purchased books yet.</string>
+    <string name="shelf_no_sold">No sold books yet.</string>
 </resources>

@@ -44,6 +44,10 @@ class HomeTestBookRepository(
     }
 
     override suspend fun addBook(book: BookModel): Result<String> = Result.Success("testId")
+
+    override fun getSoldBooks(userId: String): Flow<Result<List<BookModel>>> = flowOf(Result.Success(emptyList()))
+
+    override fun getPurchasedBooks(userId: String): Flow<Result<List<BookModel>>> = flowOf(Result.Success(emptyList()))
 }
 
 @ExperimentalCoroutinesApi

@@ -54,23 +54,29 @@ fun ProfileScreen(
     onNavigateToChangePassword: () -> Unit,
     onNavigateToPrivacyPolicy: () -> Unit,
     onNavigateToAdmin: () -> Unit,
+    @Suppress("DEPRECATION")
     profileViewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
     val uiState by profileViewModel.uiState.collectAsState()
     val formState by profileViewModel.formState.collectAsState()
 
-    val hasChanges =
-        if (uiState is ProfileUiState.Success) {
-            val user = (uiState as ProfileUiState.Success).user
-            formState.name != user.name ||
-                formState.phone != (user.phoneNumber ?: "") ||
-                formState.street != (user.street ?: "") ||
-                formState.zip != (user.postNumber ?: "") ||
-                formState.city != (user.city ?: "")
-        } else {
-            false
+    val successState = uiState as? ProfileUiState.Success
+    val isAdmin = successState?.user?.admin == true
+    val hasChanges = computeHasChanges(uiState, formState)
+    val icon = if (isAdmin) Icons.Default.ManageAccounts else Icons.Default.Person
+
+    val successMessage = stringResource(R.string.profile_update_success)
+    val errorMessageFormat = stringResource(R.string.profile_update_error)
+    val onSaveClick: () -> Unit = {
+        profileViewModel.saveProfile { success, message ->
+            if (success) {
+                AppUtil.showToast(context, successMessage)
+            } else {
+                AppUtil.showToast(context, String.format(errorMessageFormat, message))
+            }
         }
+    }
 
     Column(
         modifier =
@@ -79,58 +85,7 @@ fun ProfileScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState()),
     ) {
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            if (uiState is ProfileUiState.Success) {
-                val user = (uiState as ProfileUiState.Success).user
-                val isSuspended = user.suspended == true
-                val statusText = if (isSuspended) stringResource(R.string.value_suspended) else stringResource(R.string.value_active)
-                val statusColor = if (isSuspended) StatusSuspended else StatusActive
-
-                Column {
-                    Text(
-                        text = stringResource(R.string.label_status),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = LabelGray,
-                    )
-                    Text(
-                        text = statusText,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = statusColor,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-            } else {
-                Spacer(modifier = Modifier.width(1.dp))
-            }
-
-            Button(
-                onClick = onLogout,
-                colors = ButtonDefaults.buttonColors(containerColor = LogoutButtonBackground),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                shape = RoundedCornerShape(12.dp),
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                        contentDescription = stringResource(R.string.label_logout),
-                        tint = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Spacer(modifier = Modifier.size(4.dp))
-                    Text(
-                        text = stringResource(R.string.label_logout),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    )
-                }
-            }
-        }
+        ProfileHeaderRow(uiState = uiState, onLogout = onLogout)
 
         Column(
             modifier =
@@ -139,12 +94,6 @@ fun ProfileScreen(
                     .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            val icon =
-                if (uiState is ProfileUiState.Success && (uiState as ProfileUiState.Success).user.admin == true) {
-                    Icons.Default.ManageAccounts
-                } else {
-                    Icons.Default.Person
-                }
             Icon(
                 imageVector = icon,
                 contentDescription = null,
@@ -171,16 +120,19 @@ fun ProfileScreen(
                     ProfileEditForm(
                         formState = formState,
                         userEmail = user.email,
-                        onNameChange = profileViewModel::onNameChange,
-                        onPhoneChange = profileViewModel::onPhoneChange,
-                        onStreetChange = profileViewModel::onStreetChange,
-                        onZipChange = profileViewModel::onZipChange,
-                        onCityChange = profileViewModel::onCityChange,
-                        onValidateName = profileViewModel::validateName,
-                        onValidatePhone = profileViewModel::validatePhone,
-                        onValidateStreet = profileViewModel::validateStreet,
-                        onValidateZip = profileViewModel::validateZip,
-                        onValidateCity = profileViewModel::validateCity,
+                        callbacks =
+                            ProfileEditFormCallbacks(
+                                onNameChange = profileViewModel::onNameChange,
+                                onPhoneChange = profileViewModel::onPhoneChange,
+                                onStreetChange = profileViewModel::onStreetChange,
+                                onZipChange = profileViewModel::onZipChange,
+                                onCityChange = profileViewModel::onCityChange,
+                                onValidateName = profileViewModel::validateName,
+                                onValidatePhone = profileViewModel::validatePhone,
+                                onValidateStreet = profileViewModel::validateStreet,
+                                onValidateZip = profileViewModel::validateZip,
+                                onValidateCity = profileViewModel::validateCity,
+                            ),
                     )
                 }
 
@@ -193,6 +145,8 @@ fun ProfileScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(24.dp))
+            HorizontalDivider()
             Spacer(modifier = Modifier.height(24.dp))
             Text(
                 text = stringResource(R.string.label_privacy_settings),
@@ -232,7 +186,7 @@ fun ProfileScreen(
             HorizontalDivider()
             Spacer(modifier = Modifier.height(16.dp))
 
-            if (uiState is ProfileUiState.Success && (uiState as ProfileUiState.Success).user.admin == true) {
+            if (isAdmin) {
                 Button(
                     onClick = onNavigateToAdmin,
                     modifier = Modifier.fillMaxWidth(),
@@ -261,30 +215,110 @@ fun ProfileScreen(
                     Text(text = stringResource(R.string.button_reset_password))
                 }
 
-                val successMessage = stringResource(R.string.profile_update_success)
-                val errorMessageFormat = stringResource(R.string.profile_update_error)
-                Button(
-                    enabled = hasChanges && !formState.isSaving,
-                    onClick = {
-                        profileViewModel.saveProfile { success, message ->
-                            if (success) {
-                                AppUtil.showToast(context, successMessage)
-                            } else {
-                                AppUtil.showToast(context, String.format(errorMessageFormat, message))
-                            }
-                        }
-                    },
-                    shape = RoundedCornerShape(24.dp),
+                SaveButton(
+                    hasChanges = hasChanges,
+                    isSaving = formState.isSaving,
                     modifier = Modifier.weight(1f).padding(start = 8.dp),
-                ) {
-                    if (formState.isSaving) {
-                        CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
-                    } else {
-                        Text(text = stringResource(R.string.button_save))
-                    }
-                }
+                    onClick = onSaveClick,
+                )
             }
+
             Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+private fun computeHasChanges(
+    uiState: ProfileUiState,
+    formState: ProfileFormState,
+): Boolean {
+    if (uiState !is ProfileUiState.Success) return false
+    val user = uiState.user
+    return formState.name != user.name ||
+        formState.phone != (user.phoneNumber ?: "") ||
+        formState.street != (user.street ?: "") ||
+        formState.zip != (user.postNumber ?: "") ||
+        formState.city != (user.city ?: "")
+}
+
+@Composable
+private fun ProfileHeaderRow(
+    uiState: ProfileUiState,
+    onLogout: () -> Unit,
+) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (uiState is ProfileUiState.Success) {
+            val isSuspended = uiState.user.suspended == true
+            val statusText =
+                if (isSuspended) stringResource(R.string.value_suspended) else stringResource(R.string.value_active)
+            val statusColor = if (isSuspended) StatusSuspended else StatusActive
+            Column {
+                Text(
+                    text = stringResource(R.string.label_status),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = LabelGray,
+                )
+                Text(
+                    text = statusText,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = statusColor,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+        } else {
+            Spacer(modifier = Modifier.width(1.dp))
+        }
+
+        Button(
+            onClick = onLogout,
+            colors = ButtonDefaults.buttonColors(containerColor = LogoutButtonBackground),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            shape = RoundedCornerShape(12.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                    contentDescription = stringResource(R.string.label_logout),
+                    tint = MaterialTheme.colorScheme.onSurface,
+                )
+                Spacer(modifier = Modifier.size(4.dp))
+                Text(
+                    text = stringResource(R.string.label_logout),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SaveButton(
+    hasChanges: Boolean,
+    isSaving: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    Button(
+        enabled = hasChanges && !isSaving,
+        onClick = onClick,
+        shape = RoundedCornerShape(24.dp),
+        modifier = modifier,
+    ) {
+        if (isSaving) {
+            CircularProgressIndicator(
+                color = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.size(24.dp),
+            )
+        } else {
+            Text(text = stringResource(R.string.button_save))
         }
     }
 }

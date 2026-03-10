@@ -8,6 +8,7 @@ import com.google.firebase.functions.FirebaseFunctionsException
 import hr.foi.air.honnomachi.CrashlyticsManager
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.model.CartItemModel
+import hr.foi.air.honnomachi.model.ItemStatus
 import hr.foi.air.honnomachi.util.Result
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -30,8 +31,11 @@ class CartRepositoryImpl
         private val firestore: FirebaseFirestore,
         private val functions: FirebaseFunctions,
     ) : CartRepository {
-        override suspend fun addToCart(book: BookModel): Result<Unit> =
-            try {
+        override suspend fun addToCart(book: BookModel): Result<Unit> {
+            if (book.status != ItemStatus.AVAILABLE) {
+                return Result.Error(Exception("Knjiga trenutno nije dostupna."))
+            }
+            return try {
                 val currentUser = auth.currentUser
                 if (currentUser != null && book.bookId != null) {
                     currentUser.getIdToken(true).await()
@@ -47,6 +51,7 @@ class CartRepositoryImpl
                 CrashlyticsManager.instance.logException(e)
                 Result.Error(mapFunctionsAuthError(e))
             }
+        }
 
         override fun getCartItems(): Flow<Result<List<CartItemModel>>> =
             callbackFlow {

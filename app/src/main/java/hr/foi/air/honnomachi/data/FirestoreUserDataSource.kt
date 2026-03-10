@@ -4,6 +4,9 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.toObject
 import hr.foi.air.honnomachi.model.UserModel
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -26,6 +29,8 @@ interface FirestoreUserDataSource {
         uid: String,
         isVerified: Boolean,
     )
+
+    fun observeUser(uid: String): Flow<UserModel?>
 }
 
 class FirestoreUserDataSourceImpl
@@ -60,4 +65,20 @@ class FirestoreUserDataSourceImpl
                 .update(FirestoreFields.IS_VERIFIED, isVerified)
                 .await()
         }
+
+        override fun observeUser(uid: String): Flow<UserModel?> =
+            callbackFlow {
+                val listener =
+                    firestore
+                        .collection(FirestoreCollections.USERS)
+                        .document(uid)
+                        .addSnapshotListener { snapshot, error ->
+                            if (error != null) {
+                                close(error)
+                                return@addSnapshotListener
+                            }
+                            trySend(snapshot?.toObject<UserModel>())
+                        }
+                awaitClose { listener.remove() }
+            }
     }

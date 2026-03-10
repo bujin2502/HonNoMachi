@@ -5,8 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import dagger.hilt.android.lifecycle.HiltViewModel
+import hr.foi.air.honnomachi.CrashlyticsManager
 import hr.foi.air.honnomachi.data.AuthRepository
+import hr.foi.air.honnomachi.data.FirestoreUserDataSource
 import hr.foi.air.honnomachi.util.Result
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -20,7 +23,9 @@ open class AuthViewModel
     constructor(
         private val authRepository: AuthRepository,
         private val firebaseAuth: FirebaseAuth,
+        private val userDataSource: FirestoreUserDataSource,
     ) : ViewModel() {
+        private var suspensionMonitorJob: Job? = null
         private val _uiState = MutableStateFlow(AuthUiState())
         open val uiState = _uiState.asStateFlow()
 
@@ -34,7 +39,10 @@ open class AuthViewModel
 
         private suspend fun handleAuthStateChange(user: FirebaseUser?) {
             if (user == null) {
-                _uiState.update { it.copy(isUserLoggedIn = false, needsVerification = false) }
+                suspensionMonitorJob?.cancel()
+                _uiState.update {
+                    it.copy(isUserLoggedIn = false, needsVerification = false)
+                }
                 return
             }
 
@@ -43,6 +51,22 @@ open class AuthViewModel
                 val freshUser = firebaseAuth.currentUser
                 if (freshUser != null) {
                     val isVerified = freshUser.isEmailVerified
+                    if (isVerified) {
+                        val userData = userDataSource.getUser(freshUser.uid)
+                        if (userData?.suspended == true) {
+                            authRepository.signOut()
+                            _uiState.update {
+                                it.copy(
+                                    isUserLoggedIn = false,
+                                    needsVerification = false,
+                                    isSuspended = true,
+                                    suspendedReason = userData.suspendedReason,
+                                )
+                            }
+                            return
+                        }
+                        startSuspensionMonitor(freshUser.uid)
+                    }
                     _uiState.update {
                         it.copy(
                             isUserLoggedIn = isVerified,
@@ -50,10 +74,15 @@ open class AuthViewModel
                         )
                     }
                 } else {
-                    _uiState.update { it.copy(isUserLoggedIn = false, needsVerification = false) }
+                    _uiState.update {
+                        it.copy(isUserLoggedIn = false, needsVerification = false)
+                    }
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isUserLoggedIn = false, needsVerification = false) }
+                CrashlyticsManager.instance.logException(e)
+                _uiState.update {
+                    it.copy(isUserLoggedIn = false, needsVerification = false)
+                }
             }
         }
 
@@ -99,6 +128,21 @@ open class AuthViewModel
                 when (result) {
                     is Result.Success -> {
                         val isVerified = result.data.isVerified
+                        if (isVerified && result.data.suspended == true) {
+                            authRepository.signOut()
+                            _uiState.update {
+                                it.copy(
+                                    isLoading = false,
+                                    isSuspended = true,
+                                    suspendedReason = result.data.suspendedReason,
+                                    isUserLoggedIn = false,
+                                )
+                            }
+                            return@launch
+                        }
+                        if (isVerified) {
+                            startSuspensionMonitor(result.data.uid)
+                        }
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
@@ -123,6 +167,7 @@ open class AuthViewModel
         }
 
         open fun signOut() {
+            suspensionMonitorJob?.cancel()
             viewModelScope.launch {
                 authRepository.signOut()
                 _uiState.update { AuthUiState() }
@@ -160,6 +205,19 @@ open class AuthViewModel
                 val result = authRepository.checkSession()
                 when (result) {
                     is Result.Success -> {
+                        if (result.data.suspended == true) {
+                            authRepository.signOut()
+                            _uiState.update {
+                                it.copy(
+                                    isLoading = false,
+                                    isSuspended = true,
+                                    suspendedReason = result.data.suspendedReason,
+                                    isUserLoggedIn = false,
+                                )
+                            }
+                            return@launch
+                        }
+                        startSuspensionMonitor(result.data.uid)
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
@@ -215,6 +273,19 @@ open class AuthViewModel
                 when (result) {
                     is Result.Success -> {
                         val isVerified = result.data.isVerified
+                        if (result.data.suspended == true) {
+                            authRepository.signOut()
+                            _uiState.update {
+                                it.copy(
+                                    isLoading = false,
+                                    isSuspended = true,
+                                    suspendedReason = result.data.suspendedReason,
+                                    isUserLoggedIn = false,
+                                )
+                            }
+                            return@launch
+                        }
+                        startSuspensionMonitor(result.data.uid)
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
@@ -318,6 +389,30 @@ open class AuthViewModel
 
         fun consumeVerificationStatusResult() {
             _uiState.update { it.copy(verificationStatusResult = null) }
+        }
+
+        fun consumeSuspendedState() {
+            _uiState.update { it.copy(isSuspended = false, suspendedReason = null) }
+        }
+
+        private fun startSuspensionMonitor(userId: String) {
+            suspensionMonitorJob?.cancel()
+            suspensionMonitorJob =
+                viewModelScope.launch {
+                    userDataSource.observeUser(userId).collect { userData ->
+                        if (userData?.suspended == true) {
+                            authRepository.signOut()
+                            _uiState.update {
+                                it.copy(
+                                    isSuspended = true,
+                                    suspendedReason = userData.suspendedReason,
+                                    isUserLoggedIn = false,
+                                )
+                            }
+                            suspensionMonitorJob?.cancel()
+                        }
+                    }
+                }
         }
 
         object ErrorMessages {

@@ -144,11 +144,12 @@ class ProfileRepositoryImpl
         ): Result<Unit> {
             return try {
                 val user = auth.currentUser
-                if (user == null || user.email == null) {
+                val email = user?.email
+                if (user == null || email == null) {
                     return Result.Error(Exception(ERROR_NO_USER))
                 }
 
-                val credential = EmailAuthProvider.getCredential(user.email!!, oldPassword)
+                val credential = EmailAuthProvider.getCredential(email, oldPassword)
 
                 user.reauthenticate(credential).await()
 

@@ -26,4 +26,5 @@ data class BookModel(
     val status: ItemStatus = ItemStatus.AVAILABLE,
     val title: String = "",
     val userID: String = "",
+    val sellerSuspended: Boolean? = null,
 )

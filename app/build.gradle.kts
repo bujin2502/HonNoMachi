@@ -1,6 +1,30 @@
 import org.gradle.api.tasks.compile.JavaCompile
 import java.util.Properties
 
+fun gitVersionName(): String =
+    try {
+        val tag =
+            ProcessBuilder("git", "describe", "--tags", "--abbrev=0")
+                .directory(rootDir)
+                .start()
+                .inputStream
+                .bufferedReader()
+                .readLine()
+                ?.trim()
+                ?: "v1.0.0"
+        if (tag.startsWith("v")) tag.substring(1) else tag
+    } catch (_: Exception) {
+        "1.0.0"
+    }
+
+fun gitVersionCode(): Int {
+    val parts = gitVersionName().split(".")
+    val major = parts.getOrNull(0)?.toIntOrNull() ?: 1
+    val minor = parts.getOrNull(1)?.toIntOrNull() ?: 0
+    val patch = parts.getOrNull(2)?.toIntOrNull() ?: 0
+    return major * 10000 + minor * 100 + patch
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -41,12 +65,31 @@ android {
     namespace = "hr.foi.air.honnomachi"
     compileSdk = 36
 
+    signingConfigs {
+        create("release") {
+            val keystorePath = System.getenv("KEYSTORE_PATH")
+            val keystorePassword = System.getenv("KEYSTORE_PASSWORD")
+            val keyAliasValue = System.getenv("KEY_ALIAS")
+            val keyPasswordValue = System.getenv("KEY_PASSWORD")
+            if (keystorePath != null &&
+                keystorePassword != null &&
+                keyAliasValue != null &&
+                keyPasswordValue != null
+            ) {
+                storeFile = file(keystorePath)
+                storePassword = keystorePassword
+                keyAlias = keyAliasValue
+                keyPassword = keyPasswordValue
+            }
+        }
+    }
+
     defaultConfig {
         applicationId = "hr.foi.air.honnomachi"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = gitVersionCode()
+        versionName = gitVersionName()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         manifestPlaceholders["imageUploaderAuthority"] = "hr.foi.air.honnomachi.provider"
@@ -61,7 +104,11 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            val releaseSigningConfig = signingConfigs.getByName("release")
+            if (releaseSigningConfig.storeFile != null) {
+                signingConfig = releaseSigningConfig
+            }
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
@@ -100,25 +147,54 @@ configurations.all {
 }
 
 dependencies {
-
-    implementation(platform(libs.firebase.bom))
+    // Core
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.multidex)
+    implementation(project(":image_uploader"))
+
+    // Compose
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.firebase.auth)
-    implementation(libs.firebase.firestore)
-    implementation(libs.firebase.functions)
-    implementation(libs.ads.mobile.sdk)
     implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.compose.foundation.layout)
     implementation(libs.androidx.compose.foundation)
+
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
+
+    // Auth
+    implementation(libs.credentials)
+    implementation(libs.credentials.play.services.auth)
+    implementation(libs.googleid)
+    implementation(libs.play.services.auth)
+    implementation(libs.kotlinx.coroutines.play.services)
+
+    // Hilt
+    implementation(libs.hilt.android)
+    implementation(libs.hilt.navigation.compose)
+
+    // Other
+    implementation(libs.firebase.functions)
+    implementation(libs.ads.mobile.sdk)
+    implementation(libs.coil.compose)
+    implementation(libs.accompanist.permissions)
+
+    // Annotation processors
+    ksp(libs.hilt.compiler)
+
+    // Unit tests
     testImplementation(libs.junit)
     testImplementation(platform(libs.androidx.compose.bom))
     testImplementation(libs.androidx.compose.ui.test.junit4)
@@ -126,6 +202,8 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.androidx.navigation.testing)
     testImplementation(libs.mockk)
+
+    // Instrumented tests
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
@@ -133,6 +211,8 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test)
     androidTestImplementation(libs.androidx.navigation.testing)
     androidTestImplementation(libs.mockk.android)
+
+    // Debug
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     implementation(libs.firebase.analytics)
@@ -160,6 +240,8 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 tasks.register<JacocoReport>("jacocoTestReport") {
+    group = "verification"
+    description = "Generates Jacoco code coverage report for debug unit tests."
     dependsOn("testDebugUnitTest")
 
     reports {

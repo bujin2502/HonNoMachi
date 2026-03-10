@@ -52,7 +52,9 @@ fun HomeScreen(
     navController: NavController,
     authViewModel: AuthViewModel,
     homeViewModel: HomeViewModel,
+    @Suppress("DEPRECATION")
     profileViewModel: ProfileViewModel = hiltViewModel(),
+    @Suppress("DEPRECATION")
     cartViewModel: CartViewModel = hiltViewModel(),
 ) {
     val profileUiState by profileViewModel.uiState.collectAsState()

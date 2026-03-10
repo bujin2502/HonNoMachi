@@ -1,89 +1,45 @@
 package hr.foi.air.honnomachi.data
 
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import hr.foi.air.honnomachi.CrashlyticsManager
+import hr.foi.air.honnomachi.model.AuditLog
 import hr.foi.air.honnomachi.model.UserModel
 import hr.foi.air.honnomachi.util.Result
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
-/**
- * Stranica korisnika s referencom na zadnji dokument za straničenje.
- *
- * @param users Lista korisnika na stranici.
- * @param lastDocSnapshot Zadnji dokument stranice, koristi se za dohvat sljedeće stranice.
- */
 data class UserPage(
     val users: List<UserModel>,
     val lastDocSnapshot: DocumentSnapshot?,
 )
 
-/**
- * Sučelje repozitorija za administratorske operacije nad korisnicima.
- *
- * Definira metode za dohvat, pretragu i filtriranje korisnika
- * koje su dostupne isključivo administratorima.
- */
 interface AdminRepository {
-    /**
-     * Provjerava ima li trenutno prijavljeni korisnik administratorske ovlasti.
-     *
-     * @return [Result.Success] s `true` ako je korisnik admin, `false` ako nije,
-     *         ili [Result.Error] ako korisnik nije prijavljen ili dođe do greške.
-     */
     suspend fun isCurrentUserAdmin(): Result<Boolean>
 
-    /**
-     * Dohvaća stranicu korisnika s "cursor-based" straničenjem.
-     *
-     * Korisnici su sortirani po imenu. Za sljedeću stranicu,
-     * proslijediti [lastDocSnapshot] zadnjeg korisnika s prethodne stranice.
-     *
-     * @param pageSize Broj korisnika po stranici.
-     * @param lastDocSnapshot Zadnji dokument prethodne stranice za nastavak, ili `null` za prvu stranicu.
-     * @return [UserPage] s listom korisnika i referencom na zadnji dokument.
-     */
     suspend fun getAllUsers(
         pageSize: Int = 20,
         lastDocSnapshot: DocumentSnapshot? = null,
     ): Result<UserPage>
 
-    /**
-     * Dohvaća podatke o korisniku prema jedinstvenom identifikatoru.
-     *
-     * @param userId Firestore UID korisnika.
-     */
     suspend fun getUserById(userId: String): Result<UserModel>
 
-    /**
-     * Pretražuje korisnike po imenu ili email adresi (case-insensitive).
-     *
-     * Dohvaća sve korisnike i filtrira lokalno jer Firestore
-     * ne podržava case-insensitive pretragu.
-     *
-     * @param query Tekst za pretragu.
-     */
     suspend fun searchUsers(query: String): Result<List<UserModel>>
 
-    /**
-     * Filtrira korisnike prema statusu računa.
-     *
-     * @param isSuspended `true` za suspendirane, `false` za aktivne korisnike.
-     */
     suspend fun getUsersByStatus(isSuspended: Boolean): Result<List<UserModel>>
+
+    suspend fun suspendUser(
+        userId: String,
+        reason: String,
+    ): Result<Unit>
+
+    suspend fun reactivateUser(userId: String): Result<Unit>
 }
 
-/**
- * Implementacija [AdminRepository] koja koristi Firebase Firestore.
- *
- * Sve greške se logiraju putem [CrashlyticsManager].
- *
- * @param auth Firebase Authentication instanca za dohvat trenutnog korisnika.
- * @param firestore Firebase Firestore instanca za pristup bazi podataka.
- */
 class AdminRepositoryImpl
     @Inject
     constructor(
@@ -210,4 +166,126 @@ class AdminRepositoryImpl
                 CrashlyticsManager.instance.logException(e)
                 Result.Error(e)
             }
+
+        override suspend fun suspendUser(
+            userId: String,
+            reason: String,
+        ): Result<Unit> {
+            val adminUid =
+                auth.currentUser?.uid
+                    ?: return Result.Error(Exception("Administrator nije prijavljen."))
+
+            val user =
+                when (val userResult = getUserById(userId)) {
+                    is Result.Success -> userResult.data
+                    is Result.Error -> return Result.Error(userResult.exception)
+                }
+            if (user.suspended == true) {
+                return Result.Error(Exception("Korisnik je već suspendiran."))
+            }
+
+            return try {
+                val now = Timestamp.now()
+                val batch = firestore.batch()
+
+                val userRef = firestore.collection("users").document(userId)
+                batch.update(
+                    userRef,
+                    mapOf(
+                        "suspended" to true,
+                        "suspendedAt" to now,
+                        "suspendedReason" to reason,
+                        "suspendedBy" to adminUid,
+                    ),
+                )
+
+                val auditLog =
+                    AuditLog(
+                        action = "USER_SUSPENDED",
+                        targetUserId = userId,
+                        adminUserId = adminUid,
+                        reason = reason,
+                        timestamp = now,
+                    )
+                val auditRef = firestore.collection("audit_logs").document()
+                batch.set(auditRef, auditLog) // NOSONAR
+
+                val booksSnapshot =
+                    firestore
+                        .collection("books")
+                        .whereEqualTo("userID", userId)
+                        .get()
+                        .await()
+
+                for (bookDoc in booksSnapshot.documents) {
+                    batch.update(bookDoc.reference, "sellerSuspended", true)
+                }
+
+                batch.commit().await()
+
+                Result.Success(Unit)
+            } catch (e: Exception) {
+                CrashlyticsManager.instance.logException(e)
+                Result.Error(e)
+            }
+        }
+
+        override suspend fun reactivateUser(userId: String): Result<Unit> {
+            val adminUid =
+                auth.currentUser?.uid
+                    ?: return Result.Error(Exception("Administrator nije prijavljen."))
+
+            val user =
+                when (val userResult = getUserById(userId)) {
+                    is Result.Success -> userResult.data
+                    is Result.Error -> return Result.Error(userResult.exception)
+                }
+            if (user.suspended != true) {
+                return Result.Error(Exception("Korisnik nije suspendiran."))
+            }
+
+            return try {
+                val now = Timestamp.now()
+                val batch = firestore.batch()
+
+                val userRef = firestore.collection("users").document(userId)
+                batch.update(
+                    userRef,
+                    mapOf(
+                        "suspended" to false,
+                        "reactivatedAt" to now,
+                        "reactivatedBy" to adminUid,
+                        "suspendedReason" to FieldValue.delete(),
+                    ),
+                )
+
+                val auditLog =
+                    AuditLog(
+                        action = "USER_REACTIVATED",
+                        targetUserId = userId,
+                        adminUserId = adminUid,
+                        timestamp = now,
+                    )
+                val auditRef = firestore.collection("audit_logs").document()
+                batch.set(auditRef, auditLog) // NOSONAR
+
+                val booksSnapshot =
+                    firestore
+                        .collection("books")
+                        .whereEqualTo("userID", userId)
+                        .get()
+                        .await()
+
+                for (bookDoc in booksSnapshot.documents) {
+                    batch.update(bookDoc.reference, "sellerSuspended", FieldValue.delete())
+                }
+
+                batch.commit().await()
+
+                Result.Success(Unit)
+            } catch (e: Exception) {
+                CrashlyticsManager.instance.logException(e)
+                Result.Error(e)
+            }
+        }
     }

@@ -4,10 +4,12 @@ import android.app.Application
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import hr.foi.air.honnomachi.data.BookRepository
+import hr.foi.air.honnomachi.data.FirestoreUserDataSource
 import hr.foi.air.honnomachi.model.BookCondition
 import hr.foi.air.honnomachi.model.BookGenre
 import hr.foi.air.honnomachi.model.Currency
 import hr.foi.air.honnomachi.model.Language
+import hr.foi.air.honnomachi.model.UserModel
 import hr.foi.air.honnomachi.ui.add.AddBookUiState
 import hr.foi.air.honnomachi.ui.add.AddBookViewModel
 import hr.foi.air.honnomachi.util.Result
@@ -37,6 +39,7 @@ class AddBookViewModelTest {
     private lateinit var mockBookRepository: BookRepository
     private lateinit var mockAuth: FirebaseAuth
     private lateinit var mockImageUploader: ImageUploader
+    private lateinit var mockUserDataSource: FirestoreUserDataSource
     private lateinit var viewModel: AddBookViewModel
 
     @Before
@@ -46,12 +49,14 @@ class AddBookViewModelTest {
         mockBookRepository = mockk(relaxed = true)
         mockAuth = mockk(relaxed = true)
         mockImageUploader = mockk(relaxed = true)
+        mockUserDataSource = mockk(relaxed = true)
 
         every { mockApplication.getString(any()) } returns "Mock string"
         every { mockAuth.currentUser } returns mockk<FirebaseUser>(relaxed = true)
         coEvery { mockBookRepository.addBook(any()) } returns Result.Success("new-book-id")
+        coEvery { mockUserDataSource.getUser(any()) } returns UserModel(suspended = false)
 
-        viewModel = AddBookViewModel(mockApplication, mockBookRepository, mockAuth, mockImageUploader)
+        viewModel = AddBookViewModel(mockApplication, mockBookRepository, mockAuth, mockImageUploader, mockUserDataSource)
     }
 
     @After
@@ -307,5 +312,20 @@ class AddBookViewModelTest {
             viewModel.resetState()
 
             assertTrue(viewModel.uiState.value is AddBookUiState.Idle)
+        }
+
+    @Test
+    fun `submitForm with suspended user transitions to Error`() =
+        runTest(testDispatcher) {
+            coEvery { mockUserDataSource.getUser(any()) } returns UserModel(suspended = true)
+
+            viewModel.onTitleChange("Valid Title")
+            viewModel.onAuthorsChange("Valid Author")
+            viewModel.onPriceChange("10.0")
+
+            viewModel.submitForm()
+            advanceUntilIdle()
+
+            assertTrue(viewModel.uiState.value is AddBookUiState.Error)
         }
 }

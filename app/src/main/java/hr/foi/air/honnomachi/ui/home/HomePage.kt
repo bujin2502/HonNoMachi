@@ -73,65 +73,66 @@ fun HomePage(
                 ),
         )
 
-        // Ovo bi se kasnije trebalo obrisat (sa definiranom konstantnom varijablom...) Mrtav kod ??!! @Zlatko
         if (SHOW_DEBUG_BUTTON) {
             Button(onClick = { throw RuntimeException("Testni crash") }) {
                 Text("CRASH TEST")
             }
         }
 
-        if (uiState.isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                CircularProgressIndicator()
-            }
-        } else if (uiState.errorMessage != null) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(stringResource(R.string.error_occurred) + ": ${uiState.errorMessage}")
-            }
-        } else if (uiState.books.none { it.status == ItemStatus.AVAILABLE }) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(stringResource(R.string.no_books_available))
-            }
-        } else {
-            val filteredBookList =
-                uiState.books
-                    .filter { it.status == ItemStatus.AVAILABLE }
-                    .filter { it.title.contains(uiState.searchQuery, ignoreCase = true) }
-
-            if (filteredBookList.isEmpty()) {
+        when {
+            uiState.isLoading ->
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(stringResource(R.string.no_books_found))
+                    CircularProgressIndicator()
                 }
-            } else {
-                LazyColumn(
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .padding(top = 8.dp)
-                            .testTag("book_list"),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+            uiState.errorMessage != null ->
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    items(filteredBookList) { item ->
-                        BookItemView(
-                            book = item,
-                            onBookClick = { bookId ->
-                                bookId?.let {
-                                    navController.navigate("bookDetail/$it")
-                                }
-                            },
-                        )
+                    Text(stringResource(R.string.error_occurred) + ": ${uiState.errorMessage}")
+                }
+            uiState.books.none { it.status == ItemStatus.AVAILABLE } ->
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(stringResource(R.string.no_books_available))
+                }
+            else -> {
+                val filteredBookList =
+                    uiState.books
+                        .filter { it.status == ItemStatus.AVAILABLE }
+                        .filter { it.title.contains(uiState.searchQuery, ignoreCase = true) }
+
+                if (filteredBookList.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(stringResource(R.string.no_books_found))
+                    }
+                } else {
+                    LazyColumn(
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .padding(top = 8.dp)
+                                .testTag("book_list"),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        items(filteredBookList) { item ->
+                            BookItemView(
+                                book = item,
+                                onBookClick = { bookId ->
+                                    bookId?.let {
+                                        navController.navigate("bookDetail/$it")
+                                    }
+                                },
+                            )
+                        }
                     }
                 }
             }

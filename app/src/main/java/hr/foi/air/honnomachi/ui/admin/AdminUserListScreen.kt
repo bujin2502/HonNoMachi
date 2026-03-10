@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -37,9 +38,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,49 +49,46 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.model.UserModel
 
-/**
- * Ekran za prikaz liste korisnika u admin panel sekciji.
- *
- * Prikazuje korisnike u LazyColumn listi s podrškom za
- * infinite scroll straničenje, pull-to-refresh osvježavanje,
- * pretragu po imenu/emailu s debounce logikom i
- * filtriranje prema statusu računa (svi/aktivni/suspendirani).
- *
- * @param onNavigateBack Callback za povratak na prethodni ekran.
- * @param onNavigateToUserDetail Callback za navigaciju na detalje korisnika.
- * @param viewModel ViewModel za upravljanje listom korisnika.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminUserListScreen(
     onNavigateBack: () -> Unit,
     onNavigateToUserDetail: (String) -> Unit,
+    @Suppress("DEPRECATION")
     viewModel: AdminUserListViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
 
+    LifecycleResumeEffect(Unit) {
+        viewModel.refreshUsers()
+        onPauseOrDispose {}
+    }
+
     val isSearchOrFilterActive =
         uiState.searchQuery.isNotBlank() || uiState.selectedFilter != UserFilter.ALL
 
-    val shouldLoadMore by remember {
-        derivedStateOf {
-            val lastVisible =
-                listState.layoutInfo.visibleItemsInfo
-                    .lastOrNull()
-                    ?.index ?: 0
-            lastVisible >= listState.layoutInfo.totalItemsCount - 3
-        }
+    LaunchedEffect(uiState.scrollToTopTrigger) {
+        listState.scrollToItem(0)
     }
 
-    LaunchedEffect(shouldLoadMore) {
-        if (shouldLoadMore) {
-            viewModel.loadMoreUsers()
+    LaunchedEffect(listState) {
+        snapshotFlow {
+            val layoutInfo = listState.layoutInfo
+            val totalItems = layoutInfo.totalItemsCount
+            val lastVisibleIndex =
+                layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1
+            lastVisibleIndex to totalItems
+        }.collect { (lastVisible, total) ->
+            if (total > 0 && lastVisible >= total - 3) {
+                viewModel.loadMoreUsers()
+            }
         }
     }
 
@@ -129,89 +126,116 @@ fun AdminUserListScreen(
                 onRefresh = { viewModel.refreshUsers() },
                 modifier = Modifier.fillMaxSize(),
             ) {
-                when {
-                    uiState.isLoading && uiState.users.isEmpty() -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            CircularProgressIndicator()
-                        }
-                    }
-                    uiState.errorMessage != null && uiState.users.isEmpty() -> {
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center,
-                        ) {
-                            Text(
-                                text = stringResource(R.string.admin_error_loading_users),
-                                style = MaterialTheme.typography.bodyLarge,
-                                textAlign = TextAlign.Center,
-                            )
-                            Spacer(modifier = Modifier.size(16.dp))
-                            Button(onClick = { viewModel.loadUsers() }) {
-                                Text(stringResource(R.string.admin_retry))
-                            }
-                        }
-                    }
-                    !uiState.isLoading && uiState.users.isEmpty() -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                text = stringResource(R.string.admin_no_users),
-                                style = MaterialTheme.typography.bodyLarge,
-                            )
-                        }
-                    }
-                    else -> {
-                        LazyColumn(
-                            state = listState,
-                            modifier =
-                                Modifier
-                                    .fillMaxSize()
-                                    .padding(horizontal = 12.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            contentPadding = PaddingValues(vertical = 8.dp),
-                        ) {
-                            items(uiState.users, key = { it.uid }) { user ->
-                                UserListItem(
-                                    user = user,
-                                    onClick = { onNavigateToUserDetail(user.uid) },
-                                )
-                            }
-                            if (uiState.isLoadingMore) {
-                                item {
-                                    Box(
-                                        modifier =
-                                            Modifier
-                                                .fillMaxWidth()
-                                                .padding(16.dp),
-                                        contentAlignment = Alignment.Center,
-                                    ) {
-                                        CircularProgressIndicator(modifier = Modifier.size(32.dp))
-                                    }
-                                }
-                            }
-                        }
-                    }
+                UserListContent(
+                    uiState = uiState,
+                    listState = listState,
+                    onNavigateToUserDetail = onNavigateToUserDetail,
+                    onRetry = viewModel::loadUsers,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun UserListContent(
+    uiState: AdminUserListUiState,
+    listState: LazyListState,
+    onNavigateToUserDetail: (String) -> Unit,
+    onRetry: () -> Unit,
+) {
+    when {
+        uiState.isLoading && uiState.users.isEmpty() -> LoadingContent()
+        uiState.errorMessage != null && uiState.users.isEmpty() -> ErrorContent(onRetry = onRetry)
+        !uiState.isLoading && uiState.users.isEmpty() -> EmptyUsersContent()
+        else ->
+            UserListWithPagination(
+                uiState = uiState,
+                listState = listState,
+                onNavigateToUserDetail = onNavigateToUserDetail,
+            )
+    }
+}
+
+@Composable
+private fun LoadingContent() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
+    ) {
+        CircularProgressIndicator()
+    }
+}
+
+@Composable
+private fun ErrorContent(onRetry: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            text = stringResource(R.string.admin_error_loading_users),
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(modifier = Modifier.size(16.dp))
+        Button(onClick = onRetry) {
+            Text(stringResource(R.string.admin_retry))
+        }
+    }
+}
+
+@Composable
+private fun EmptyUsersContent() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = stringResource(R.string.admin_no_users),
+            style = MaterialTheme.typography.bodyLarge,
+        )
+    }
+}
+
+@Composable
+private fun UserListWithPagination(
+    uiState: AdminUserListUiState,
+    listState: LazyListState,
+    onNavigateToUserDetail: (String) -> Unit,
+) {
+    LazyColumn(
+        state = listState,
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(horizontal = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(vertical = 8.dp),
+    ) {
+        items(uiState.users, key = { it.uid }) { user ->
+            UserListItem(
+                user = user,
+                onClick = { onNavigateToUserDetail(user.uid) },
+            )
+        }
+        if (uiState.isLoadingMore) {
+            item {
+                Box(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(32.dp))
                 }
             }
         }
     }
 }
 
-/**
- * Sekcija s poljem za pretragu, filterima i brojem rezultata.
- *
- * @param searchQuery Trenutni tekst pretrage.
- * @param selectedFilter Odabrani filter statusa.
- * @param resultCount Broj rezultata za prikaz, ili null ako nije aktivan search/filter.
- * @param onSearchQueryChanged Callback pri promjeni teksta pretrage.
- * @param onFilterSelected Callback pri odabiru filtera.
- */
 @Composable
 private fun SearchAndFilterSection(
     searchQuery: String,
@@ -286,14 +310,6 @@ private fun SearchAndFilterSection(
     }
 }
 
-/**
- * Stavka liste koja prikazuje osnovne podatke o korisniku.
- *
- * Sadrži krug s inicijalima, ime, email i statusnu oznaku.
- *
- * @param user Model korisnika za prikaz.
- * @param onClick Callback pri kliku na stavku.
- */
 @Composable
 private fun UserListItem(
     user: UserModel,
@@ -355,14 +371,6 @@ private fun UserListItem(
     }
 }
 
-/**
- * Oznaka statusa korisničkog računa.
- *
- * Prikazuje obojenu točku i tekst statusa
- * (zelena za aktivne, crvena za suspendirane).
- *
- * @param isSuspended Je li korisnik suspendiran.
- */
 @Composable
 private fun StatusBadge(isSuspended: Boolean) {
     val color = if (isSuspended) Color(0xFFE53935) else Color(0xFF43A047)

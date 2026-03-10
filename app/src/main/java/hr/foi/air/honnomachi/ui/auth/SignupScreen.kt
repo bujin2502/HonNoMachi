@@ -1,5 +1,6 @@
 package hr.foi.air.honnomachi.ui.auth
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -37,6 +38,7 @@ import hr.foi.air.honnomachi.FormValidator
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.ValidationErrorType
 import hr.foi.air.honnomachi.ui.components.EmailInputField
+import hr.foi.air.honnomachi.ui.components.InputFieldError
 import hr.foi.air.honnomachi.ui.components.NameInputField
 import hr.foi.air.honnomachi.ui.components.PasswordInputField
 
@@ -44,6 +46,7 @@ import hr.foi.air.honnomachi.ui.components.PasswordInputField
 fun SignupScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
+    @Suppress("DEPRECATION")
     authViewModel: AuthViewModel = hiltViewModel(),
 ) {
     var email by remember { mutableStateOf("") }
@@ -52,25 +55,17 @@ fun SignupScreen(
     var emailError by remember { mutableStateOf<ValidationErrorType?>(null) }
     var nameError by remember { mutableStateOf<ValidationErrorType?>(null) }
     var passwordError by remember { mutableStateOf<ValidationErrorType?>(null) }
-    val context = LocalContext.current
     val uiState by authViewModel.uiState.collectAsState()
 
     val nameFocusRequester = remember { FocusRequester() }
     val passwordFocusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
 
-    LaunchedEffect(key1 = uiState.needsVerification) {
-        if (uiState.needsVerification) {
-            AppUtil.showToast(context, R.string.verification_email_sent)
-            navController.navigate("verification") {
-                popUpTo("auth") { inclusive = true }
-            }
-        }
-        uiState.errorMessage?.let {
-            AppUtil.showToast(context, it)
-            authViewModel.consumeErrorMessage()
-        }
-    }
+    SignupAuthEffect(
+        uiState = uiState,
+        navController = navController,
+        onConsumeError = authViewModel::consumeErrorMessage,
+    )
 
     Column(
         modifier =
@@ -125,10 +120,9 @@ fun SignupScreen(
                 Modifier
                     .fillMaxWidth()
                     .testTag("signup_email"),
-            error = emailError,
+            error = emailError?.let { InputFieldError(it, "signup_email_error") },
             imeAction = ImeAction.Next,
             onImeAction = { nameFocusRequester.requestFocus() },
-            errorTestTag = "signup_email_error",
         )
 
         Spacer(modifier = Modifier.height(AuthDimensions.SmallSpacing))
@@ -144,10 +138,9 @@ fun SignupScreen(
                     .fillMaxWidth()
                     .focusRequester(nameFocusRequester)
                     .testTag("signup_name"),
-            error = nameError,
+            error = nameError?.let { InputFieldError(it, "signup_name_error") },
             imeAction = ImeAction.Next,
             onImeAction = { passwordFocusRequester.requestFocus() },
-            errorTestTag = "signup_name_error",
         )
 
         Spacer(modifier = Modifier.height(AuthDimensions.SmallSpacing))
@@ -163,15 +156,15 @@ fun SignupScreen(
                     .fillMaxWidth()
                     .focusRequester(passwordFocusRequester)
                     .testTag("signup_password"),
-            error = passwordError,
+            error = passwordError?.let { InputFieldError(it, "signup_password_error") },
             imeAction = ImeAction.Done,
             onImeAction = { focusManager.clearFocus() },
-            errorTestTag = "signup_password_error",
         )
 
         Spacer(modifier = Modifier.height(AuthDimensions.LargeSpacing))
 
-        Button(
+        SignupButton(
+            isLoading = uiState.isLoading,
             onClick = {
                 val validation = FormValidator.validateSignupForm(email, name, password)
                 emailError = validation.email.error
@@ -181,22 +174,59 @@ fun SignupScreen(
                     authViewModel.signup(name, email, password)
                 }
             },
-            enabled = !uiState.isLoading,
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .height(AuthDimensions.ButtonHeight)
-                    .testTag("signup_button"),
-        ) {
-            Text(
-                text =
-                    if (uiState.isLoading) {
-                        stringResource(R.string.creating_account)
-                    } else {
-                        stringResource(R.string.signup)
-                    },
-                fontSize = AuthDimensions.ButtonFontSize,
-            )
+        )
+    }
+}
+
+@Composable
+private fun SignupAuthEffect(
+    uiState: AuthUiState,
+    navController: NavController,
+    onConsumeError: () -> Unit,
+) {
+    val context = LocalContext.current
+    LaunchedEffect(key1 = uiState.needsVerification) {
+        handleSignupNavigation(uiState, navController, context, onConsumeError)
+    }
+}
+
+private fun handleSignupNavigation(
+    uiState: AuthUiState,
+    navController: NavController,
+    context: Context,
+    onConsumeError: () -> Unit,
+) {
+    if (uiState.needsVerification) {
+        AppUtil.showToast(context, R.string.verification_email_sent)
+        navController.navigate("verification") {
+            popUpTo("auth") { inclusive = true }
         }
+    }
+    uiState.errorMessage?.let {
+        AppUtil.showToast(context, it)
+        onConsumeError()
+    }
+}
+
+@Composable
+private fun SignupButton(
+    isLoading: Boolean,
+    onClick: () -> Unit,
+) {
+    val buttonText =
+        if (isLoading) stringResource(R.string.creating_account) else stringResource(R.string.signup)
+    Button(
+        onClick = onClick,
+        enabled = !isLoading,
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(AuthDimensions.ButtonHeight)
+                .testTag("signup_button"),
+    ) {
+        Text(
+            text = buttonText,
+            fontSize = AuthDimensions.ButtonFontSize,
+        )
     }
 }

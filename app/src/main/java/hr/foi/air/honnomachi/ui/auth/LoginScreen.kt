@@ -1,5 +1,6 @@
 package hr.foi.air.honnomachi.ui.auth
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -38,12 +39,14 @@ import hr.foi.air.honnomachi.FormValidator
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.ValidationErrorType
 import hr.foi.air.honnomachi.ui.components.EmailInputField
+import hr.foi.air.honnomachi.ui.components.InputFieldError
 import hr.foi.air.honnomachi.ui.components.PasswordInputField
 
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
+    @Suppress("DEPRECATION")
     authViewModel: AuthViewModel = hiltViewModel(),
 ) {
     var email by remember { mutableStateOf("") }
@@ -52,29 +55,13 @@ fun LoginScreen(
     var passwordError by remember { mutableStateOf<ValidationErrorType?>(null) }
     val passwordFocusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
-    val context = LocalContext.current
     val uiState by authViewModel.uiState.collectAsState()
 
-    LaunchedEffect(key1 = uiState) {
-        if (uiState.isUserLoggedIn) {
-            navController.navigate("home") {
-                popUpTo("auth") { inclusive = true }
-            }
-        }
-        uiState.errorMessage?.let {
-            // @Zlatko ispravnije bi bilo
-            // if (errorType == AuthError.EMAIL_NOT_VERIFIED) { ... }
-            //
-            if (it == "Please verify your email before logging in.") {
-                navController.navigate("verification") {
-                    popUpTo("auth") { inclusive = true }
-                }
-            } else {
-                AppUtil.showToast(context, it)
-            }
-            authViewModel.consumeErrorMessage()
-        }
-    }
+    LoginAuthEffect(
+        uiState = uiState,
+        navController = navController,
+        onConsumeError = authViewModel::consumeErrorMessage,
+    )
 
     Column(
         modifier =
@@ -129,10 +116,9 @@ fun LoginScreen(
                 Modifier
                     .fillMaxWidth()
                     .testTag("email_field"),
-            error = emailError,
+            error = emailError?.let { InputFieldError(it, "login_email_error") },
             imeAction = ImeAction.Next,
             onImeAction = { passwordFocusRequester.requestFocus() },
-            errorTestTag = "login_email_error",
         )
 
         Spacer(modifier = Modifier.height(AuthDimensions.SmallSpacing))
@@ -148,15 +134,15 @@ fun LoginScreen(
                     .fillMaxWidth()
                     .focusRequester(passwordFocusRequester)
                     .testTag("password_field"),
-            error = passwordError,
+            error = passwordError?.let { InputFieldError(it, "login_password_error") },
             imeAction = ImeAction.Done,
             onImeAction = { focusManager.clearFocus() },
-            errorTestTag = "login_password_error",
         )
 
         Spacer(modifier = Modifier.height(AuthDimensions.LargeSpacing))
 
-        Button(
+        LoginButton(
+            isLoading = uiState.isLoading,
             onClick = {
                 val validation = FormValidator.validateLoginForm(email, password)
                 emailError = validation.email.error
@@ -165,28 +151,71 @@ fun LoginScreen(
                     authViewModel.login(email, password)
                 }
             },
-            enabled = !uiState.isLoading,
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .height(AuthDimensions.ButtonHeight)
-                    .testTag("login_button"),
-        ) {
-            Text(
-                text =
-                    if (uiState.isLoading) {
-                        stringResource(R.string.logging_in)
-                    } else {
-                        stringResource(R.string.login)
-                    },
-                fontSize = AuthDimensions.ButtonFontSize,
-            )
-        }
+        )
 
         Spacer(modifier = Modifier.height(AuthDimensions.SmallSpacing))
 
         TextButton(onClick = { navController.navigate("forgotPassword") }) {
             Text(text = stringResource(R.string.forgot_password_question))
         }
+    }
+}
+
+@Composable
+private fun LoginAuthEffect(
+    uiState: AuthUiState,
+    navController: NavController,
+    onConsumeError: () -> Unit,
+) {
+    val context = LocalContext.current
+    LaunchedEffect(key1 = uiState) {
+        handleLoginNavigation(uiState, navController, context, onConsumeError)
+    }
+}
+
+private fun handleLoginNavigation(
+    uiState: AuthUiState,
+    navController: NavController,
+    context: Context,
+    onConsumeError: () -> Unit,
+) {
+    if (uiState.isUserLoggedIn) {
+        navController.navigate("home") {
+            popUpTo("auth") { inclusive = true }
+        }
+    }
+
+    uiState.errorMessage?.let { error ->
+        if (error == "Please verify your email before logging in.") {
+            navController.navigate("verification") {
+                popUpTo("auth") { inclusive = true }
+            }
+        } else {
+            AppUtil.showToast(context, error)
+        }
+        onConsumeError()
+    }
+}
+
+@Composable
+private fun LoginButton(
+    isLoading: Boolean,
+    onClick: () -> Unit,
+) {
+    val buttonText =
+        if (isLoading) stringResource(R.string.logging_in) else stringResource(R.string.login)
+    Button(
+        onClick = onClick,
+        enabled = !isLoading,
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(AuthDimensions.ButtonHeight)
+                .testTag("login_button"),
+    ) {
+        Text(
+            text = buttonText,
+            fontSize = AuthDimensions.ButtonFontSize,
+        )
     }
 }

@@ -35,6 +35,7 @@ import hr.foi.air.honnomachi.ui.cart.CheckoutSuccessScreen
 import hr.foi.air.honnomachi.ui.home.HomeScreen
 import hr.foi.air.honnomachi.ui.home.HomeViewModel
 import hr.foi.air.honnomachi.ui.policy.PrivacyPolicyScreen
+import hr.foi.air.honnomachi.ui.suspended.SuspendedAccountScreen
 import hr.foi.air.honnomachi.ui.wallet.WalletScreen
 
 @Composable
@@ -42,14 +43,18 @@ fun AppNavigation(
     modifier: Modifier = Modifier,
     navController: NavHostController,
 ) {
+    @Suppress("DEPRECATION")
     val authViewModel: AuthViewModel = hiltViewModel()
+
+    @Suppress("DEPRECATION")
     val homeViewModel: HomeViewModel = hiltViewModel()
 
     val uiState by authViewModel.uiState.collectAsState()
 
-    LaunchedEffect(uiState.isUserLoggedIn, uiState.needsVerification) {
+    LaunchedEffect(uiState.isUserLoggedIn, uiState.needsVerification, uiState.isSuspended) {
         val route =
             when {
+                uiState.isSuspended -> ROUTE_SUSPENDED
                 uiState.isUserLoggedIn -> ROUTE_HOME
                 uiState.needsVerification -> ROUTE_VERIFICATION
                 else -> ROUTE_AUTH
@@ -157,15 +162,23 @@ fun AppNavigation(
             BookDetailScreen(bookId = backStackEntry.arguments?.getString("bookId"))
         }
 
-        // Admin ruta - lista korisnika (HNM-289)
-        // Guard logika: provjerava admin status prije prikaza ekrana
+        composable(ROUTE_SUSPENDED) {
+            SuspendedAccountScreen(
+                reason = uiState.suspendedReason,
+                onSignOut = {
+                    authViewModel.consumeSuspendedState()
+                    authViewModel.signOut()
+                },
+            )
+        }
+
         composable(ROUTE_ADMIN) {
+            @Suppress("DEPRECATION")
             val adminViewModel: AdminViewModel = hiltViewModel()
             val isAdmin by adminViewModel.isAdminChecked.collectAsState()
             val context = LocalContext.current
 
             when (isAdmin) {
-                // Provjera u tijeku - prikaži loading indikator
                 null -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -174,7 +187,6 @@ fun AppNavigation(
                         CircularProgressIndicator()
                     }
                 }
-                // Korisnik nije admin - preusmjeri na početni ekran
                 false -> {
                     val accessDeniedMsg = stringResource(R.string.error_admin_access_denied)
                     LaunchedEffect(Unit) {
@@ -185,7 +197,6 @@ fun AppNavigation(
                         }
                     }
                 }
-                // Korisnik je admin - prikaži admin ekran
                 true -> {
                     AdminUserListScreen(
                         onNavigateBack = { navController.navigateUp() },
@@ -197,12 +208,11 @@ fun AppNavigation(
             }
         }
 
-        // Admin ruta - detalji korisnika (HNM-289)
-        // Prima userId kao navigacijski argument
         composable(
             "admin/userDetail/{userId}",
             arguments = listOf(navArgument("userId") { type = NavType.StringType }),
-        ) { backStackEntry ->
+        ) {
+            @Suppress("DEPRECATION")
             val adminViewModel: AdminViewModel = hiltViewModel()
             val isAdmin by adminViewModel.isAdminChecked.collectAsState()
             val context = LocalContext.current
@@ -247,4 +257,5 @@ private const val ROUTE_PRIVACY_POLICY = "privacyPolicy"
 private const val ROUTE_ADMIN = "admin"
 private const val ROUTE_CHECKOUT_SUCCESS = "checkout/success"
 private const val ROUTE_CHECKOUT_CANCEL = "checkout/cancel"
+private const val ROUTE_SUSPENDED = "suspended"
 private const val ROUTE_WALLET = "wallet"

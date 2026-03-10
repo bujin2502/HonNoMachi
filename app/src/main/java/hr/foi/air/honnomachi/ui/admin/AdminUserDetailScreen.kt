@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,21 +19,28 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -45,23 +53,53 @@ import hr.foi.air.honnomachi.ui.theme.LabelGray
 import hr.foi.air.honnomachi.ui.theme.StatusActive
 import hr.foi.air.honnomachi.ui.theme.StatusSuspended
 
-/**
- * Ekran za detaljan prikaz podataka o korisniku.
- *
- * Prikazuje sve dostupne podatke korisnika podijeljene u sekcije:
- * header s inicijalima, račun (uloga, status, verifikacija),
- * kontakt (email, telefon) i adresa (ulica, grad, poštanski broj).
- *
- * @param onNavigateBack Callback za povratak na listu korisnika.
- * @param viewModel ViewModel za dohvat podataka korisnika.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminUserDetailScreen(
     onNavigateBack: () -> Unit,
+    @Suppress("DEPRECATION")
     viewModel: AdminUserDetailViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    val suspendSuccessMsg = stringResource(R.string.admin_suspend_success)
+    val suspendErrorMsg = stringResource(R.string.admin_suspend_error)
+    val reactivateSuccessMsg = stringResource(R.string.admin_reactivate_success)
+    val reactivateErrorMsg = stringResource(R.string.admin_reactivate_error)
+
+    if (uiState is AdminUserDetailUiState.Success) {
+        val successState = uiState as AdminUserDetailUiState.Success
+
+        successState.actionMessage?.let { message ->
+            LaunchedEffect(message) {
+                snackbarHostState.showSnackbar(message)
+                viewModel.consumeActionMessage()
+            }
+        }
+
+        if (successState.showSuspendDialog) {
+            SuspensionDialog(
+                userName = successState.user.name,
+                isLoading = successState.isActionLoading,
+                onConfirm = { reason ->
+                    viewModel.confirmSuspend(reason, suspendSuccessMsg, suspendErrorMsg)
+                },
+                onDismiss = viewModel::dismissDialog,
+            )
+        }
+
+        if (successState.showReactivateDialog) {
+            ReactivationDialog(
+                userName = successState.user.name,
+                isLoading = successState.isActionLoading,
+                onConfirm = {
+                    viewModel.confirmReactivate(reactivateSuccessMsg, reactivateErrorMsg)
+                },
+                onDismiss = viewModel::dismissDialog,
+            )
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -77,6 +115,7 @@ fun AdminUserDetailScreen(
                 },
             )
         },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { paddingValues ->
         Box(
             modifier =
@@ -106,23 +145,25 @@ fun AdminUserDetailScreen(
                     }
                 }
                 is AdminUserDetailUiState.Success -> {
-                    UserDetailContent(user = state.user)
+                    UserDetailContent(
+                        user = state.user,
+                        isActionLoading = state.isActionLoading,
+                        onSuspendClick = viewModel::onSuspendClick,
+                        onReactivateClick = viewModel::onReactivateClick,
+                    )
                 }
             }
         }
     }
 }
 
-/**
- * Sadržaj ekrana s detaljima korisnika.
- *
- * Scrollable column s header sekcijom i karticama za
- * račun, kontakt i adresu.
- *
- * @param user Model korisnika za prikaz.
- */
 @Composable
-private fun UserDetailContent(user: UserModel) {
+private fun UserDetailContent(
+    user: UserModel,
+    isActionLoading: Boolean,
+    onSuspendClick: () -> Unit,
+    onReactivateClick: () -> Unit,
+) {
     Column(
         modifier =
             Modifier
@@ -162,33 +203,9 @@ private fun UserDetailContent(user: UserModel) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DetailSection(title = stringResource(R.string.admin_section_account)) {
-            val roleText =
-                if (user.admin == true) {
-                    stringResource(R.string.value_admin)
-                } else {
-                    stringResource(R.string.value_user)
-                }
-            DetailRow(label = stringResource(R.string.label_role), value = roleText)
+        AccountInfoSection(user = user)
 
-            val isSuspended = user.suspended == true
-            val statusText =
-                if (isSuspended) stringResource(R.string.value_suspended) else stringResource(R.string.value_active)
-            val statusColor = if (isSuspended) StatusSuspended else StatusActive
-            DetailRow(
-                label = stringResource(R.string.label_status),
-                value = statusText,
-                valueColor = statusColor,
-            )
-
-            val verifiedText =
-                if (user.isVerified) {
-                    stringResource(R.string.admin_value_yes)
-                } else {
-                    stringResource(R.string.admin_value_no)
-                }
-            DetailRow(label = stringResource(R.string.admin_label_verified), value = verifiedText)
-        }
+        SuspensionInfoSection(user = user)
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -217,16 +234,110 @@ private fun UserDetailContent(user: UserModel) {
             )
         }
 
+        if (user.admin != true) {
+            Spacer(modifier = Modifier.height(24.dp))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
+            UserActionButton(
+                isSuspended = user.suspended == true,
+                isActionLoading = isActionLoading,
+                onSuspendClick = onSuspendClick,
+                onReactivateClick = onReactivateClick,
+            )
+        }
+
         Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
-/**
- * Sekcija s naslovom i sadržajem unutar kartice.
- *
- * @param title Naslov sekcije prikazan iznad kartice.
- * @param content Sadržaj sekcije unutar kartice.
- */
+@Composable
+private fun AccountInfoSection(user: UserModel) {
+    val roleText =
+        if (user.admin == true) {
+            stringResource(R.string.value_admin)
+        } else {
+            stringResource(R.string.value_user)
+        }
+    val isSuspended = user.suspended == true
+    val statusText = if (isSuspended) stringResource(R.string.value_suspended) else stringResource(R.string.value_active)
+    val statusColor = if (isSuspended) StatusSuspended else StatusActive
+    val verifiedText =
+        if (user.isVerified) {
+            stringResource(R.string.admin_value_yes)
+        } else {
+            stringResource(R.string.admin_value_no)
+        }
+    DetailSection(title = stringResource(R.string.admin_section_account)) {
+        DetailRow(label = stringResource(R.string.label_role), value = roleText)
+        DetailRow(
+            label = stringResource(R.string.label_status),
+            value = statusText,
+            valueColor = statusColor,
+        )
+        DetailRow(label = stringResource(R.string.admin_label_verified), value = verifiedText)
+    }
+}
+
+@Composable
+private fun SuspensionInfoSection(user: UserModel) {
+    if (user.suspended != true) return
+    Spacer(modifier = Modifier.height(12.dp))
+    DetailSection(title = stringResource(R.string.admin_section_suspension)) {
+        user.suspendedReason?.let { reason ->
+            DetailRow(
+                label = stringResource(R.string.admin_label_suspended_reason),
+                value = reason,
+            )
+        }
+        user.suspendedAt?.let { timestamp ->
+            DetailRow(
+                label = stringResource(R.string.admin_label_suspended_at),
+                value =
+                    java.text
+                        .SimpleDateFormat(
+                            "dd.MM.yyyy. HH:mm",
+                            java.util.Locale.getDefault(),
+                        ).format(timestamp.toDate()),
+            )
+        }
+    }
+}
+
+@Composable
+private fun UserActionButton(
+    isSuspended: Boolean,
+    isActionLoading: Boolean,
+    onSuspendClick: () -> Unit,
+    onReactivateClick: () -> Unit,
+) {
+    val containerColor = if (isSuspended) StatusActive else StatusSuspended
+    val labelRes = if (isSuspended) R.string.admin_reactivate_user else R.string.admin_suspend_user
+    val onClick = if (isSuspended) onReactivateClick else onSuspendClick
+    Button(
+        onClick = onClick,
+        enabled = !isActionLoading,
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = containerColor),
+    ) {
+        if (isActionLoading) {
+            CircularProgressIndicator(
+                color = Color.White,
+                modifier = Modifier.size(24.dp),
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+        Text(
+            text = stringResource(labelRes),
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+        )
+    }
+}
+
 @Composable
 private fun DetailSection(
     title: String,
@@ -252,18 +363,11 @@ private fun DetailSection(
     }
 }
 
-/**
- * Red s labelom i vrijednošću za prikaz pojedinog podatka.
- *
- * @param label Naziv podatka (npr. "Uloga:").
- * @param value Vrijednost podatka (npr. "Administrator").
- * @param valueColor Boja teksta vrijednosti, ili null za zadanu boju.
- */
 @Composable
 private fun DetailRow(
     label: String,
     value: String,
-    valueColor: androidx.compose.ui.graphics.Color? = null,
+    valueColor: Color? = null,
 ) {
     Row(
         modifier =

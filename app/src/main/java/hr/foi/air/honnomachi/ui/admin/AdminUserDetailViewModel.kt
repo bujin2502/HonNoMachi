@@ -12,15 +12,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * ViewModel za ekran s detaljima korisnika.
- *
- * Dohvaća podatke o korisniku prema [userId] iz navigacijskog argumenta
- * i izlaže ih putem [uiState] StateFlow-a.
- *
- * @param savedStateHandle Sadrži navigacijske argumente (userId).
- * @param adminRepository Repozitorij za administratorske operacije.
- */
 @HiltViewModel
 class AdminUserDetailViewModel
     @Inject
@@ -37,12 +28,6 @@ class AdminUserDetailViewModel
             loadUser()
         }
 
-        /**
-         * Dohvaća podatke o korisniku iz repozitorija.
-         *
-         * Postavlja stanje na [AdminUserDetailUiState.Loading] tijekom dohvata,
-         * zatim na [AdminUserDetailUiState.Success] ili [AdminUserDetailUiState.Error].
-         */
         fun loadUser() {
             viewModelScope.launch {
                 _uiState.value = AdminUserDetailUiState.Loading
@@ -58,6 +43,93 @@ class AdminUserDetailViewModel
                             )
                     }
                 }
+            }
+        }
+
+        fun onSuspendClick() {
+            updateSuccessState { it.copy(showSuspendDialog = true) }
+        }
+
+        fun onReactivateClick() {
+            updateSuccessState { it.copy(showReactivateDialog = true) }
+        }
+
+        fun dismissDialog() {
+            updateSuccessState { it.copy(showSuspendDialog = false, showReactivateDialog = false) }
+        }
+
+        fun confirmSuspend(
+            reason: String,
+            successMessage: String,
+            errorMessage: String,
+        ) {
+            viewModelScope.launch {
+                updateSuccessState { it.copy(isActionLoading = true, showSuspendDialog = false) }
+
+                when (val result = adminRepository.suspendUser(userId, reason)) {
+                    is Result.Success -> {
+                        refreshUserAfterAction(successMessage)
+                    }
+                    is Result.Error -> {
+                        updateSuccessState {
+                            it.copy(
+                                isActionLoading = false,
+                                actionMessage = "$errorMessage ${result.exception.message}",
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        fun confirmReactivate(
+            successMessage: String,
+            errorMessage: String,
+        ) {
+            viewModelScope.launch {
+                updateSuccessState { it.copy(isActionLoading = true, showReactivateDialog = false) }
+
+                when (val result = adminRepository.reactivateUser(userId)) {
+                    is Result.Success -> {
+                        refreshUserAfterAction(successMessage)
+                    }
+                    is Result.Error -> {
+                        updateSuccessState {
+                            it.copy(
+                                isActionLoading = false,
+                                actionMessage = "$errorMessage ${result.exception.message}",
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        fun consumeActionMessage() {
+            updateSuccessState { it.copy(actionMessage = null) }
+        }
+
+        private suspend fun refreshUserAfterAction(message: String) {
+            when (val result = adminRepository.getUserById(userId)) {
+                is Result.Success -> {
+                    _uiState.value =
+                        AdminUserDetailUiState.Success(
+                            user = result.data,
+                            actionMessage = message,
+                        )
+                }
+                is Result.Error -> {
+                    updateSuccessState {
+                        it.copy(isActionLoading = false, actionMessage = message)
+                    }
+                }
+            }
+        }
+
+        private fun updateSuccessState(transform: (AdminUserDetailUiState.Success) -> AdminUserDetailUiState.Success) {
+            val current = _uiState.value
+            if (current is AdminUserDetailUiState.Success) {
+                _uiState.value = transform(current)
             }
         }
     }

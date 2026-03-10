@@ -54,6 +54,7 @@ import java.util.Locale
 @Composable
 fun CartPage(
     paddingValues: PaddingValues,
+    @Suppress("DEPRECATION")
     viewModel: CartViewModel = hiltViewModel(),
     showImages: Boolean = true,
     onCheckoutSuccess: () -> Unit = {},

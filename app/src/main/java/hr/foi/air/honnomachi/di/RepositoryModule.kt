@@ -15,6 +15,8 @@ import hr.foi.air.honnomachi.data.CartRepositoryImpl
 import hr.foi.air.honnomachi.data.CheckoutRepository
 import hr.foi.air.honnomachi.data.CheckoutRepositoryImpl
 import hr.foi.air.honnomachi.data.FirestoreUserDataSource
+import hr.foi.air.honnomachi.data.OrderRepository
+import hr.foi.air.honnomachi.data.OrderRepositoryImpl
 import hr.foi.air.honnomachi.data.FirestoreUserDataSourceImpl
 import hr.foi.air.honnomachi.data.ProfileRepository
 import hr.foi.air.honnomachi.data.ProfileRepositoryImpl
@@ -23,28 +25,31 @@ import hr.foi.air.honnomachi.data.WalletRepositoryImpl
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class RepositoryModule {
+interface RepositoryModule {
     @Binds
-    abstract fun bindFirestoreUserDataSource(impl: FirestoreUserDataSourceImpl): FirestoreUserDataSource
+    fun bindFirestoreUserDataSource(impl: FirestoreUserDataSourceImpl): FirestoreUserDataSource
 
     @Binds
-    abstract fun bindAuthRepository(authRepositoryImpl: AuthRepositoryImpl): AuthRepository
+    fun bindAuthRepository(authRepositoryImpl: AuthRepositoryImpl): AuthRepository
 
     @Binds
-    abstract fun bindBookRepository(bookRepositoryImpl: BookRepositoryImpl): BookRepository
+    fun bindBookRepository(bookRepositoryImpl: BookRepositoryImpl): BookRepository
 
     @Binds
-    abstract fun bindCartRepository(cartRepositoryImpl: CartRepositoryImpl): CartRepository
+    fun bindCartRepository(cartRepositoryImpl: CartRepositoryImpl): CartRepository
 
     @Binds
-    abstract fun bindCheckoutRepository(checkoutRepositoryImpl: CheckoutRepositoryImpl): CheckoutRepository
+    fun bindCheckoutRepository(checkoutRepositoryImpl: CheckoutRepositoryImpl): CheckoutRepository
 
     @Binds
-    abstract fun bindProfileRepository(profileRepositoryImpl: ProfileRepositoryImpl): ProfileRepository
+    fun bindOrderRepository(orderRepositoryImpl: OrderRepositoryImpl): OrderRepository
 
     @Binds
-    abstract fun bindWalletRepository(walletRepositoryImpl: WalletRepositoryImpl): WalletRepository
+    fun bindProfileRepository(profileRepositoryImpl: ProfileRepositoryImpl): ProfileRepository
 
     @Binds
-    abstract fun bindAdminRepository(adminRepositoryImpl: AdminRepositoryImpl): AdminRepository
+    fun bindWalletRepository(walletRepositoryImpl: WalletRepositoryImpl): WalletRepository
+
+    @Binds
+    fun bindAdminRepository(adminRepositoryImpl: AdminRepositoryImpl): AdminRepository
 }

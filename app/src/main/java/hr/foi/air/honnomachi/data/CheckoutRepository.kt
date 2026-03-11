@@ -70,39 +70,38 @@ class CheckoutRepositoryImpl
                         ?.mapNotNull { it as? String }
                         .orEmpty()
 
-                if (checkoutId.isNullOrBlank() || currency.isNullOrBlank()) {
-                    Result.Error(Exception("Neispravan odgovor backend servisa za Stripe PaymentSheet."))
-                } else if (amountMinor == null || amountMinor < 0) {
-                    Result.Error(Exception("Neispravan odgovor backend servisa za Stripe PaymentSheet."))
-                } else if (totalAmountMinor == null || totalAmountMinor <= 0) {
-                    Result.Error(Exception("Neispravan odgovor backend servisa za Stripe PaymentSheet."))
-                } else if (walletContributionMinor < 0) {
-                    Result.Error(Exception("Neispravan odgovor backend servisa za Stripe PaymentSheet."))
-                } else if (
+                when {
+                    checkoutId.isNullOrBlank() || currency.isNullOrBlank() ->
+                        Result.Error(Exception(INVALID_PAYMENT_SHEET_RESPONSE))
+                    amountMinor == null || amountMinor < 0 ->
+                        Result.Error(Exception(INVALID_PAYMENT_SHEET_RESPONSE))
+                    totalAmountMinor == null || totalAmountMinor <= 0 ->
+                        Result.Error(Exception(INVALID_PAYMENT_SHEET_RESPONSE))
+                    walletContributionMinor < 0 ->
+                        Result.Error(Exception(INVALID_PAYMENT_SHEET_RESPONSE))
                     requiresPaymentSheet &&
-                    (
-                        paymentIntentId.isNullOrBlank() ||
-                            clientSecret.isNullOrBlank() ||
-                            amountMinor <= 0
-                    )
-                ) {
-                    Result.Error(Exception("Neispravan odgovor backend servisa za Stripe PaymentSheet."))
-                } else {
-                    Result.Success(
-                        CheckoutPaymentIntentModel(
-                            checkoutId = checkoutId,
-                            paymentIntentId = paymentIntentId,
-                            clientSecret = clientSecret,
-                            amountMinor = amountMinor,
-                            totalAmountMinor = totalAmountMinor,
-                            walletContributionMinor = walletContributionMinor,
-                            currency = currency,
-                            expiresAt = expiresAt,
-                            reservationIds = reservationIds,
-                            requiresPaymentSheet = requiresPaymentSheet,
-                            checkoutCompleted = checkoutCompleted,
-                        ),
-                    )
+                        (
+                            paymentIntentId.isNullOrBlank() ||
+                                clientSecret.isNullOrBlank() ||
+                                amountMinor <= 0
+                        ) ->
+                        Result.Error(Exception(INVALID_PAYMENT_SHEET_RESPONSE))
+                    else ->
+                        Result.Success(
+                            CheckoutPaymentIntentModel(
+                                checkoutId = checkoutId,
+                                paymentIntentId = paymentIntentId,
+                                clientSecret = clientSecret,
+                                amountMinor = amountMinor,
+                                totalAmountMinor = totalAmountMinor,
+                                walletContributionMinor = walletContributionMinor,
+                                currency = currency,
+                                expiresAt = expiresAt,
+                                reservationIds = reservationIds,
+                                requiresPaymentSheet = requiresPaymentSheet,
+                                checkoutCompleted = checkoutCompleted,
+                            ),
+                        )
                 }
             } catch (e: Exception) {
                 CrashlyticsManager.instance.logException(e)
@@ -124,5 +123,7 @@ class CheckoutRepositoryImpl
         companion object {
             private const val CREATE_CHECKOUT_PAYMENT_INTENT_FUNCTION = "createCheckoutPaymentIntent"
             private const val CANCEL_CHECKOUT_FUNCTION = "cancelCheckout"
+            private const val INVALID_PAYMENT_SHEET_RESPONSE =
+                "Neispravan odgovor backend servisa za Stripe PaymentSheet."
         }
     }

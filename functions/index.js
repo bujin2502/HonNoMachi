@@ -1,48 +1,61 @@
 const functions = require("firebase-functions/v1");
 const admin = require("firebase-admin");
-const { sendSellerEmail } = require("./emailService");
+const { sendSellerOrderEmail, sendBuyerOrderEmail } = require("./emailService");
 
 admin.initializeApp();
 
-exports.onBookSold = functions
+exports.onCheckoutCompleted = functions
   .runWith({ secrets: ["GMAIL_PASS"] })
-  .firestore.document("books/{bookId}")
+  .firestore.document("checkoutSessions/{sessionId}")
   .onUpdate(async (change, context) => {
     const before = change.before.data();
     const after = change.after.data();
 
-    // Promjena statusa knjige u SOLD
-    if (before.status !== "SOLD" && after.status === "SOLD") {
-      console.log("Book sold detected");
+    if (before.status !== "COMPLETED" && after.status === "COMPLETED") {
+      const buyerId = after.buyerUid;
+      const reservationIds = after.reservationIds;
 
-      const sellerId = after.userID;
+      if (!reservationIds || reservationIds.length === 0) return null;
 
-      if (!sellerId) {
-        console.log("No seller ID found");
-        return null;
+      const buyerDoc = await admin.firestore().collection("users").doc(buyerId).get();
+      const buyerEmail = buyerDoc.exists ? buyerDoc.data().email : null;
+
+      const bookDetails = [];
+      const sellerEmails = new Map();
+
+      for (const resId of reservationIds) {
+        const resDoc = await admin.firestore().collection("reservations").doc(resId).get();
+        if (resDoc.exists) {
+          const resData = resDoc.data();
+          const bookId = resData.bookId;
+          const sellerId = resData.sellerUid;
+
+          const bookDoc = await admin.firestore().collection("books").doc(bookId).get();
+          if (bookDoc.exists) {
+            const bookData = bookDoc.data();
+            bookDetails.push(bookData);
+
+            if (!sellerEmails.has(sellerId)) {
+              const sellerDoc = await admin.firestore().collection("users").doc(sellerId).get();
+              if (sellerDoc.exists) {
+                sellerEmails.set(sellerId, {
+                  email: sellerDoc.data().email,
+                  books: []
+                });
+              }
+            }
+            sellerEmails.get(sellerId)?.books.push(bookData);
+          }
+        }
       }
 
-      try {
-        const userDoc = await admin
-          .firestore()
-          .collection("users")
-          .doc(sellerId)
-          .get();
+      if (buyerEmail) {
+        await sendBuyerOrderEmail(buyerEmail, bookDetails);
+      }
 
-        if (!userDoc.exists) {
-          console.log("Seller not found");
-          return null;
-        }
-
-        const sellerEmail = userDoc.data().email;
-
-        console.log("Sending email to:", sellerEmail);
-
-        await sendSellerEmail(sellerEmail, after);
-      } catch (error) {
-        console.error("Error:", error);
+      for (const [sellerId, data] of sellerEmails) {
+        await sendSellerOrderEmail(data.email, data.books);
       }
     }
-
     return null;
   });

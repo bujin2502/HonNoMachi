@@ -23,6 +23,7 @@ import javax.inject.Inject
 
 private const val USD_TO_EUR_RATE = 1.18
 private const val DEFAULT_RESERVATION_TTL_MINUTES = 15
+private const val UNKNOWN_ERROR = "Nepoznata greška"
 
 enum class CheckoutNavigationTarget {
     SUCCESS,
@@ -192,7 +193,7 @@ class CartViewModel
                         _pendingCheckout.value = checkout
                     }
                     is Result.Error -> {
-                        val message = result.exception.message ?: "Nepoznata greška."
+                        val message = result.exception.message ?: UNKNOWN_ERROR
                         _actionMessage.value = "Plaćanje nije pokrenuto: $message"
                     }
                 }
@@ -253,7 +254,7 @@ class CartViewModel
                     releaseActiveCheckout()
                 }
                 is PaymentSheetResult.Failed -> {
-                    val error = result.error.localizedMessage ?: "Nepoznata greška."
+                    val error = result.error.localizedMessage ?: UNKNOWN_ERROR
                     _actionMessage.value = "Plaćanje nije uspjelo: $error"
                     releaseActiveCheckout()
                 }
@@ -269,7 +270,7 @@ class CartViewModel
         }
 
         fun onPaymentSheetPresentationFailed(throwable: Throwable) {
-            val error = throwable.localizedMessage ?: "Nepoznata greška."
+            val error = throwable.localizedMessage ?: UNKNOWN_ERROR
             _actionMessage.value = "Prikaz Stripe naplate nije uspio: $error"
             releaseActiveCheckout()
         }

@@ -21,6 +21,8 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
 
+private const val UNKNOWN_ERROR = "Nepoznata greška."
+
 data class WalletUiState(
     val balanceMinor: Int = 0,
     val currency: String = "eur",
@@ -97,7 +99,7 @@ class WalletViewModel
                                 activeTopupStatus = null,
                             )
                         }
-                        val message = result.exception.message ?: "Nepoznata greška."
+                        val message = result.exception.message ?: UNKNOWN_ERROR
                         _actionMessage.value = "Pokretanje wallet topup-a nije uspjelo: $message"
                     }
                 }
@@ -131,7 +133,7 @@ class WalletViewModel
                             activeTopupStatus = null,
                         )
                     }
-                    val error = result.error.localizedMessage ?: "Nepoznata greška."
+                    val error = result.error.localizedMessage ?: UNKNOWN_ERROR
                     _actionMessage.value = "Plaćanje nije uspjelo: $error"
                 }
             }
@@ -147,7 +149,7 @@ class WalletViewModel
                     activeTopupStatus = null,
                 )
             }
-            val error = throwable.localizedMessage ?: "Nepoznata greška."
+            val error = throwable.localizedMessage ?: UNKNOWN_ERROR
             _actionMessage.value = "Prikaz Stripe naplate nije uspio: $error"
         }
 
@@ -170,7 +172,7 @@ class WalletViewModel
                         }
                         is Result.Error -> {
                             _uiState.update { it.copy(isBalanceLoading = false) }
-                            val message = result.exception.message ?: "Nepoznata greška."
+                            val message = result.exception.message ?: UNKNOWN_ERROR
                             _actionMessage.value = "Wallet nije učitan: $message"
                         }
                     }
@@ -192,7 +194,7 @@ class WalletViewModel
                         }
                         is Result.Error -> {
                             _uiState.update { it.copy(isHistoryLoading = false) }
-                            val message = result.exception.message ?: "Nepoznata greška."
+                            val message = result.exception.message ?: UNKNOWN_ERROR
                             _actionMessage.value = "Povijest wallet transakcija nije učitana: $message"
                         }
                     }
@@ -246,7 +248,7 @@ class WalletViewModel
                                         activeTopupStatus = null,
                                     )
                                 }
-                                val message = result.exception.message ?: "Nepoznata greška."
+                                val message = result.exception.message ?: UNKNOWN_ERROR
                                 _actionMessage.value = "Praćenje wallet topup-a nije uspjelo: $message"
                                 activeTopupObservationJob = null
                             }

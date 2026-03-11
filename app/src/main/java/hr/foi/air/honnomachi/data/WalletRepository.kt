@@ -86,7 +86,7 @@ class WalletRepositoryImpl
             return try {
                 val currentUser = auth.currentUser
                 if (currentUser == null) {
-                    return Result.Error(Exception("Korisnik nije prijavljen."))
+                    return Result.Error(Exception(USER_NOT_LOGGED_IN))
                 }
                 currentUser.getIdToken(true).await()
 
@@ -140,7 +140,7 @@ class WalletRepositoryImpl
             callbackFlow {
                 val currentUser = auth.currentUser
                 if (currentUser == null) {
-                    trySend(Result.Error(Exception("Korisnik nije prijavljen.")))
+                    trySend(Result.Error(Exception(USER_NOT_LOGGED_IN)))
                     close()
                     return@callbackFlow
                 }
@@ -186,7 +186,7 @@ class WalletRepositoryImpl
 
                 val currentUser = auth.currentUser
                 if (currentUser == null) {
-                    trySend(Result.Error(Exception("Korisnik nije prijavljen.")))
+                    trySend(Result.Error(Exception(USER_NOT_LOGGED_IN)))
                     close()
                     return@callbackFlow
                 }
@@ -234,15 +234,18 @@ class WalletRepositoryImpl
             callbackFlow {
                 val currentUser = auth.currentUser
                 if (currentUser == null) {
-                    trySend(Result.Error(Exception("Korisnik nije prijavljen.")))
+                    trySend(Result.Error(Exception(USER_NOT_LOGGED_IN)))
                     close()
                     return@callbackFlow
                 }
 
                 var ledgerHistory: List<WalletHistoryItemModel> = emptyList()
                 var purchaseHistory: List<WalletHistoryItemModel> = emptyList()
+                var ledgerLoaded = false
+                var purchasesLoaded = false
 
                 fun emitCombined() {
+                    if (!ledgerLoaded || !purchasesLoaded) return
                     val combined =
                         (ledgerHistory + purchaseHistory)
                             .sortedWith(
@@ -294,6 +297,7 @@ class WalletRepositoryImpl
                                             createdAtEpochMillis = doc.getTimestamp("createdAt")?.toDate()?.time,
                                         )
                                     }.orEmpty()
+                            ledgerLoaded = true
                             emitCombined()
                         }
 
@@ -339,6 +343,7 @@ class WalletRepositoryImpl
                                             createdAtEpochMillis = doc.getTimestamp("createdAt")?.toDate()?.time,
                                         )
                                     }.orEmpty()
+                            purchasesLoaded = true
                             emitCombined()
                         }
 
@@ -353,6 +358,7 @@ class WalletRepositoryImpl
             private const val DEFAULT_CURRENCY = "eur"
             private const val CHECKOUT_STATUS_COMPLETED = "COMPLETED"
             private const val MAX_HISTORY_ITEMS = 50
+            private const val USER_NOT_LOGGED_IN = "Korisnik nije prijavljen."
         }
 
         private fun mapWalletTopupError(exception: Exception): Exception {

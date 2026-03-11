@@ -51,7 +51,7 @@ val stripePublishableKey =
     (
         localProperties.getProperty("STRIPE_PUBLISHABLE_KEY")
             ?: System.getenv("STRIPE_PUBLISHABLE_KEY")
-            ?: "pk_test_REPLACE_ME"
+            ?: error("STRIPE_PUBLISHABLE_KEY nije postavljen u local.properties ili environment varijablama")
     ).trim()
 
 ktlint {
@@ -153,6 +153,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.activity.compose)
     implementation(libs.multidex)
+    implementation(libs.androidx.multidex)
     implementation(project(":image_uploader"))
 
     // Compose
@@ -173,6 +174,7 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.functions)
 
     // Auth
     implementation(libs.credentials)
@@ -186,10 +188,10 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
 
     // Other
-    implementation(libs.firebase.functions)
     implementation(libs.ads.mobile.sdk)
     implementation(libs.coil.compose)
     implementation(libs.accompanist.permissions)
+    implementation(libs.stripe.android)
 
     // Annotation processors
     ksp(libs.hilt.compiler)
@@ -215,22 +217,6 @@ dependencies {
     // Debug
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-    implementation(libs.firebase.analytics)
-    implementation(libs.androidx.material.icons.extended)
-    implementation(libs.credentials)
-    implementation(libs.credentials.play.services.auth)
-    implementation(libs.googleid)
-    implementation(libs.play.services.auth)
-    implementation(libs.kotlinx.coroutines.play.services)
-    implementation(libs.coil.compose)
-    implementation(libs.firebase.crashlytics)
-    implementation(libs.hilt.android)
-    implementation(libs.hilt.navigation.compose)
-    ksp(libs.hilt.compiler)
-    implementation(project(":image_uploader"))
-    implementation(libs.accompanist.permissions)
-    implementation(libs.stripe.android)
-    implementation(libs.androidx.multidex)
 }
 
 tasks.withType<JavaCompile>().configureEach {

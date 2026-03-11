@@ -1,4 +1,5 @@
 import org.gradle.api.tasks.compile.JavaCompile
+import java.util.Properties
 
 fun gitVersionName(): String =
     try {
@@ -35,6 +36,23 @@ plugins {
     alias(libs.plugins.hilt.android)
     jacoco
 }
+
+private fun String.escapeForBuildConfig(): String = replace("\\", "\\\\").replace("\"", "\\\"")
+
+val localProperties =
+    Properties().apply {
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localPropertiesFile.inputStream().use(::load)
+        }
+    }
+
+val stripePublishableKey =
+    (
+        localProperties.getProperty("STRIPE_PUBLISHABLE_KEY")
+            ?: System.getenv("STRIPE_PUBLISHABLE_KEY")
+            ?: "pk_test_REPLACE_ME"
+    ).trim()
 
 ktlint {
     reporters {
@@ -75,6 +93,11 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         manifestPlaceholders["imageUploaderAuthority"] = "hr.foi.air.honnomachi.provider"
+        buildConfigField(
+            "String",
+            "STRIPE_PUBLISHABLE_KEY",
+            "\"${stripePublishableKey.escapeForBuildConfig()}\"",
+        )
 
         multiDexEnabled = true
     }
@@ -106,6 +129,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     packaging {
         resources {
@@ -162,6 +186,7 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
 
     // Other
+    implementation(libs.firebase.functions)
     implementation(libs.ads.mobile.sdk)
     implementation(libs.coil.compose)
     implementation(libs.accompanist.permissions)
@@ -190,6 +215,22 @@ dependencies {
     // Debug
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    implementation(libs.firebase.analytics)
+    implementation(libs.androidx.material.icons.extended)
+    implementation(libs.credentials)
+    implementation(libs.credentials.play.services.auth)
+    implementation(libs.googleid)
+    implementation(libs.play.services.auth)
+    implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.coil.compose)
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.hilt.android)
+    implementation(libs.hilt.navigation.compose)
+    ksp(libs.hilt.compiler)
+    implementation(project(":image_uploader"))
+    implementation(libs.accompanist.permissions)
+    implementation(libs.stripe.android)
+    implementation(libs.androidx.multidex)
 }
 
 tasks.withType<JavaCompile>().configureEach {

@@ -106,12 +106,46 @@ cd HonNoMachi
 4. Preuzmite `google-services.json`
 5. Premjestite datoteku u `app/` direktorij projekta
 
-### 3. Sinkronizacija i pokretanje
+### 3. Stripe konfiguracija (test okruženje)
+
+1. U `local.properties` dodajte:
+   `STRIPE_PUBLISHABLE_KEY=pk_test_...`
+2. U CI okruženju postavite varijablu:
+   `STRIPE_PUBLISHABLE_KEY=pk_test_...`
+3. Nikada ne stavljajte Stripe secret key (`sk_...`) u Android aplikaciju
+4. Backend secret-e za Cloud Functions postavite preko Firebase CLI:
+   `npx firebase-tools functions:secrets:set STRIPE_SECRET_KEY --project <firebase-project-id>`
+   `npx firebase-tools functions:secrets:set STRIPE_WEBHOOK_SECRET --project <firebase-project-id>`
+   `npx firebase-tools functions:secrets:set STRIPE_WALLET_WEBHOOK_SECRET --project <firebase-project-id>`
+5. Deploy backend funkcija (PowerShell: navodnici oko `--only`):
+   `npx firebase-tools deploy --only "functions:createCheckoutPaymentIntent,functions:addToCartAndReserve,functions:removeFromCartAndRelease,functions:cancelCheckout,functions:releaseExpiredCheckoutSessions,functions:releaseExpiredCartReservations,functions:createWalletTopupIntent,functions:stripeWebhook,functions:stripeWalletWebhook" --project <firebase-project-id>`
+6. U Stripe Dashboardu dodajte checkout webhook endpoint:
+   `https://us-central1-<firebase-project-id>.cloudfunctions.net/stripeWebhook`
+   i uključite evente:
+   `payment_intent.succeeded`, `payment_intent.payment_failed`, `payment_intent.canceled`
+7. U Stripe Dashboardu dodajte wallet webhook endpoint:
+   `https://us-central1-<firebase-project-id>.cloudfunctions.net/stripeWalletWebhook`
+   i uključite evente:
+   `payment_intent.succeeded`, `payment_intent.payment_failed`, `payment_intent.canceled`, `charge.refunded`
+
+### 4. Sinkronizacija i pokretanje
 
 1. Otvorite projekt u Android Studiju
 2. Kliknite **Sync Now** za sinkronizaciju Gradle datoteka
 3. Povežite Android uređaj ili pokrenite emulator
 4. Kliknite **Run 'app'** ili koristite `Shift + F10`
+
+Ako pokrećete Gradle iz terminala:
+
+```powershell
+# Windows PowerShell
+.\gradlew.bat :app:assembleDebug
+```
+
+```bash
+# Bash / Git Bash
+./gradlew :app:assembleDebug
+```
 
 ### Detaljne upute
 

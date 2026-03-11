@@ -40,6 +40,7 @@ class BookDetailScreenTest {
             BookDetailContent(
                 book = book,
                 isItemInCart = false,
+                isAddingToCart = false,
                 onAddToCart = {},
             )
         }

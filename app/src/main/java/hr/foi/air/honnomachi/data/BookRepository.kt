@@ -47,7 +47,9 @@ class BookRepositoryImpl
                                 val resultList =
                                     snapshot.documents
                                         .mapNotNull { doc ->
-                                            doc.toObject(BookModel::class.java)
+                                            doc
+                                                .toObject(BookModel::class.java)
+                                                ?.copy(bookId = doc.id)
                                         }.filter { it.sellerSuspended != true }
                                 trySend(Result.Success(resultList))
                             }
@@ -57,13 +59,16 @@ class BookRepositoryImpl
 
         override suspend fun getBookDetails(bookId: String): Result<BookModel?> =
             try {
-                val book =
+                val snapshot =
                     firestore
                         .collection("books")
                         .document(bookId)
                         .get()
                         .await()
+                val book =
+                    snapshot
                         .toObject(BookModel::class.java)
+                        ?.copy(bookId = snapshot.id)
                 Result.Success(book)
             } catch (e: Exception) {
                 CrashlyticsManager.instance.logException(e)

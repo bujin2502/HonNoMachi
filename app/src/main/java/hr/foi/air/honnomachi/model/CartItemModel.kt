@@ -13,4 +13,6 @@ data class CartItemModel(
     val currency: String = "EUR",
     val imageUrl: String? = null,
     val addedAt: Timestamp = Timestamp.now(),
+    val reservationExpiresAt: Timestamp? = null,
+    val reservedByUid: String? = null,
 )

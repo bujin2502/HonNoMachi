@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="choose_image_source">Odaberi izvor slike</string>
+    <string name="camera">Kamera</string>
+    <string name="gallery">Galerija</string>
+</resources>

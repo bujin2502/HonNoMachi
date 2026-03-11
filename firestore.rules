@@ -25,6 +25,13 @@ service cloud.firestore {
                     && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
                         'suspended', 'suspendedAt', 'suspendedBy', 'suspendedReason', 'admin'
                     ]));
+
+            // Košarica pripada isključivo vlasniku korisničkog računa.
+            match /cart/{cartItemId} {
+                allow read, write: if request.auth != null
+                    && request.auth.token.email_verified == true
+                    && request.auth.uid == userId;
+            }
         }
 
         match /books/{bookId} {
@@ -39,10 +46,68 @@ service cloud.firestore {
             allow write: if isAdmin();
         }
 
-        match /{document=**} {
-            allow read, write: if request.auth != null
+        // Rezervacije su vidljive samo kupcu, prodavaču i administratoru.
+        // Lifecycle promjene rezervacija obavlja backend (Cloud Functions).
+        match /reservations/{reservationId} {
+            allow read: if request.auth != null
                 && request.auth.token.email_verified == true
-                && isNotSuspended();
+                && (
+                    resource.data.buyerUid == request.auth.uid
+                    || resource.data.sellerUid == request.auth.uid
+                    || isAdmin()
+                );
+            allow write: if false;
+        }
+
+        // Checkout sesije su vidljive kupcu i administratoru.
+        // Upise obavlja backend (Cloud Functions).
+        match /checkoutSessions/{sessionId} {
+            allow read: if request.auth != null
+                && request.auth.token.email_verified == true
+                && (
+                    resource.data.buyerUid == request.auth.uid
+                    || isAdmin()
+                );
+            allow write: if false;
+        }
+
+        // Novčanik je vidljiv samo vlasniku i administratoru.
+        // Stanje i ledger zapise ažurira backend (Cloud Functions).
+        match /wallets/{userId} {
+            allow read: if request.auth != null
+                && request.auth.token.email_verified == true
+                && (
+                    request.auth.uid == userId
+                    || isAdmin()
+                );
+            allow write: if false;
+
+            match /ledger/{entryId} {
+                allow read: if request.auth != null
+                    && request.auth.token.email_verified == true
+                    && (
+                        request.auth.uid == userId
+                        || isAdmin()
+                    );
+                allow write: if false;
+            }
+        }
+
+        // Wallet topup evidencija je vidljiva vlasniku i administratoru.
+        // Upise i promjene statusa obavlja backend (Cloud Functions).
+        match /walletTopups/{topupId} {
+            allow read: if request.auth != null
+                && request.auth.token.email_verified == true
+                && (
+                    resource.data.userId == request.auth.uid
+                    || isAdmin()
+                );
+            allow write: if false;
+        }
+
+        // Sve ostalo je zatvoreno dok se eksplicitno ne doda pravilo za kolekciju.
+        match /{document=**} {
+            allow read, write: if false;
         }
     }
 }

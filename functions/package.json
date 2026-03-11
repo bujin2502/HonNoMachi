@@ -1,0 +1,25 @@
+{
+  "name": "functions",
+  "private": true,
+  "engines": {
+    "node": "20"
+  },
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "deploy": "firebase deploy --only functions",
+    "deploy:app": "firebase deploy --only \"functions:createCheckoutPaymentIntent,functions:addToCartAndReserve,functions:removeFromCartAndRelease,functions:cancelCheckout,functions:releaseExpiredCheckoutSessions,functions:releaseExpiredCartReservations,functions:createWalletTopupIntent,functions:stripeWebhook,functions:stripeWalletWebhook\"",
+    "logs": "firebase functions:log"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.7.0",
+    "firebase-functions": "^5.1.1",
+    "stripe": "^18.5.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}

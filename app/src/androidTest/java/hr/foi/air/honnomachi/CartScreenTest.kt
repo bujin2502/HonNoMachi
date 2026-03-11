@@ -10,7 +10,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import hr.foi.air.honnomachi.data.CartRepository
-import hr.foi.air.honnomachi.data.OrderRepository
+import hr.foi.air.honnomachi.data.CheckoutPaymentIntentModel
+import hr.foi.air.honnomachi.data.CheckoutRepository
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.model.CartItemModel
 import hr.foi.air.honnomachi.ui.cart.CartPage
@@ -41,18 +42,28 @@ class FakeCartRepository : CartRepository {
         _cartItems.value = _cartItems.value.filter { it.id != cartItemId }
         return Result.Success(Unit)
     }
-
-    fun clearCart() {
-        _cartItems.value = emptyList()
-    }
 }
 
-class FakeOrderRepository(
-    private val cartRepo: FakeCartRepository,
-) : OrderRepository {
-    override suspend fun placeOrder(): Result<Unit> {
-        cartRepo.clearCart()
-        return Result.Success(Unit)
+class FakeCheckoutRepository : CheckoutRepository {
+    var createPaymentIntentCallCount = 0
+
+    override suspend fun createCheckoutPaymentIntent(reservationTtlMinutes: Int?): Result<CheckoutPaymentIntentModel> {
+        createPaymentIntentCallCount++
+        return Result.Success(
+            CheckoutPaymentIntentModel(
+                checkoutId = "pi_test",
+                paymentIntentId = "pi_test",
+                clientSecret = "pi_test_secret_123",
+                amountMinor = 1200,
+                totalAmountMinor = 1200,
+                walletContributionMinor = 0,
+                currency = "eur",
+                expiresAt = null,
+                reservationIds = emptyList(),
+                requiresPaymentSheet = true,
+                checkoutCompleted = false,
+            ),
+        )
     }
 }
 
@@ -62,13 +73,13 @@ class CartScreenTest {
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
     private lateinit var fakeCartRepository: FakeCartRepository
-    private lateinit var fakeOrderRepository: FakeOrderRepository
+    private lateinit var fakeCheckoutRepository: FakeCheckoutRepository
     private lateinit var viewModel: CartViewModel
 
     @Before
     fun setup() {
         fakeCartRepository = FakeCartRepository()
-        fakeOrderRepository = FakeOrderRepository(fakeCartRepository)
+        fakeCheckoutRepository = FakeCheckoutRepository()
 
         val initialItems =
             listOf(
@@ -77,11 +88,11 @@ class CartScreenTest {
             )
         fakeCartRepository.addInitialItems(initialItems)
 
-        viewModel = CartViewModel(fakeCartRepository, fakeOrderRepository)
+        viewModel = CartViewModel(fakeCartRepository, fakeCheckoutRepository)
     }
 
     @Test
-    fun cartPage_displaysItemsAndCanPlaceOrder() {
+    fun cartPage_displaysItemsAndCanStartStripeCheckout() {
         composeTestRule.setContent {
             HonNoMachiTheme {
                 CartPage(paddingValues = PaddingValues(), viewModel = viewModel, showImages = false)
@@ -100,12 +111,10 @@ class CartScreenTest {
         composeTestRule.onNodeWithText("Ukupno:").assertIsDisplayed()
         composeTestRule.onNodeWithText(expectedPriceString).assertIsDisplayed()
 
-        composeTestRule.onNodeWithTag("confirm_order_button").performClick()
+        composeTestRule.onNodeWithTag("pay_with_stripe_button").performClick()
 
         composeTestRule.waitUntil(timeoutMillis = 5000) {
-            composeTestRule.onAllNodesWithText("Košarica je prazna.").fetchSemanticsNodes().isNotEmpty()
+            fakeCheckoutRepository.createPaymentIntentCallCount == 1
         }
-
-        composeTestRule.onNodeWithText("Košarica je prazna.").assertIsDisplayed()
     }
 }

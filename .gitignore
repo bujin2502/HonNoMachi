@@ -65,3 +65,4 @@ captures/
 output.json
 output-metadata.json
 *.hprof
+/.claude/settings.local.json

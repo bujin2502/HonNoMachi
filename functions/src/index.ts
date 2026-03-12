@@ -2593,10 +2593,12 @@ export const onCheckoutCompleted = onDocumentUpdated(
     if (reservationIds.length === 0) return null;
 
     const buyerDoc = await db.collection("users").doc(buyerId).get();
-    const buyerEmail: string | null = buyerDoc.exists ? (buyerDoc.data()?.email ?? null) : null;
+    const buyerData = buyerDoc.exists ? buyerDoc.data() : null;
+    const buyerEmail: string | null = buyerData?.email ?? null;
+    const buyerNotificationsEnabled = buyerData ? buyerData.notificationsEnabled !== false : true;
 
     const bookDetails: BookData[] = [];
-    const sellerEmails = new Map<string, { email: string; books: BookData[] }>();
+    const sellerEmails = new Map<string, { email: string; notificationsEnabled: boolean; books: BookData[] }>();
 
     for (const resId of reservationIds) {
       const resDoc = await db.collection("reservations").doc(resId).get();
@@ -2615,18 +2617,25 @@ export const onCheckoutCompleted = onDocumentUpdated(
       if (!sellerEmails.has(sellerId)) {
         const sellerDoc = await db.collection("users").doc(sellerId).get();
         if (sellerDoc.exists) {
-          sellerEmails.set(sellerId, { email: sellerDoc.data()?.email, books: [] });
+          const sData = sellerDoc.data();
+          sellerEmails.set(sellerId, {
+            email: sData?.email,
+            notificationsEnabled: sData?.notificationsEnabled !== false,
+            books: [],
+          });
         }
       }
       sellerEmails.get(sellerId)?.books.push(bookData);
     }
 
-    if (buyerEmail) {
+    if (buyerEmail && buyerNotificationsEnabled) {
       await sendBuyerOrderEmail(buyerEmail, bookDetails);
     }
 
     for (const [, data] of sellerEmails) {
-      await sendSellerOrderEmail(data.email, data.books);
+      if (data.email && data.notificationsEnabled) {
+        await sendSellerOrderEmail(data.email, data.books);
+      }
     }
 
     return null;

@@ -51,6 +51,9 @@ fun PrivacyPolicyScreen(onNavigateBack: () -> Unit) {
             SectionTitle(title = stringResource(id = R.string.title_user_id))
             SectionContent(content = stringResource(id = R.string.content_user_id))
 
+            SectionTitle(title = stringResource(id = R.string.title_email_notifications))
+            SectionContent(content = stringResource(id = R.string.content_email_notifications))
+
             SectionTitle(title = stringResource(id = R.string.title_data_management))
             SectionContent(content = stringResource(id = R.string.content_data_management))
         }

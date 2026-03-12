@@ -18,7 +18,9 @@ exports.onCheckoutCompleted = functions
       if (!reservationIds || reservationIds.length === 0) return null;
 
       const buyerDoc = await admin.firestore().collection("users").doc(buyerId).get();
-      const buyerEmail = buyerDoc.exists ? buyerDoc.data().email : null;
+      const buyerData = buyerDoc.exists ? buyerDoc.data() : null;
+      const buyerEmail = buyerData ? buyerData.email : null;
+      const buyerNotificationsEnabled = buyerData ? buyerData.notificationsEnabled !== false : true;
 
       const bookDetails = [];
       const sellerEmails = new Map();
@@ -38,8 +40,10 @@ exports.onCheckoutCompleted = functions
             if (!sellerEmails.has(sellerId)) {
               const sellerDoc = await admin.firestore().collection("users").doc(sellerId).get();
               if (sellerDoc.exists) {
+                const sData = sellerDoc.data();
                 sellerEmails.set(sellerId, {
-                  email: sellerDoc.data().email,
+                  email: sData.email,
+                  notificationsEnabled: sData.notificationsEnabled !== false,
                   books: []
                 });
               }
@@ -49,12 +53,14 @@ exports.onCheckoutCompleted = functions
         }
       }
 
-      if (buyerEmail) {
+      if (buyerEmail && buyerNotificationsEnabled) {
         await sendBuyerOrderEmail(buyerEmail, bookDetails);
       }
 
       for (const [sellerId, data] of sellerEmails) {
-        await sendSellerOrderEmail(data.email, data.books);
+        if (data.notificationsEnabled) {
+          await sendSellerOrderEmail(data.email, data.books);
+        }
       }
     }
     return null;

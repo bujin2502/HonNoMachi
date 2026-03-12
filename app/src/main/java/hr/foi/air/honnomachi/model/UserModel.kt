@@ -22,4 +22,5 @@ data class UserModel(
     @get:PropertyName("isVerified")
     val isVerified: Boolean = false,
     val analyticsEnabled: Boolean = true,
+    val notificationsEnabled: Boolean = true,
 )

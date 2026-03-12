@@ -47,6 +47,7 @@ open class ProfileViewModel
                                 city = user.city ?: "",
                                 zip = user.postNumber ?: "",
                                 analyticsEnabled = user.analyticsEnabled,
+                                notificationsEnabled = user.notificationsEnabled,
                                 nameError = null,
                                 phoneError = null,
                                 streetError = null,
@@ -100,6 +101,25 @@ open class ProfileViewModel
                     }
                     is Result.Error -> {
                         _formState.update { it.copy(analyticsEnabled = !isEnabled) }
+                    }
+                }
+            }
+        }
+
+        open fun onNotificationsToggled(isEnabled: Boolean) {
+            _formState.update { it.copy(notificationsEnabled = isEnabled) }
+
+            viewModelScope.launch {
+                when (val result = profileRepository.updateNotificationsSetting(isEnabled)) {
+                    is Result.Success -> {
+                        val uiStateValue = _uiState.value
+                        if (uiStateValue is ProfileUiState.Success) {
+                            val updatedUser = uiStateValue.user.copy(notificationsEnabled = isEnabled)
+                            _uiState.value = ProfileUiState.Success(updatedUser)
+                        }
+                    }
+                    is Result.Error -> {
+                        _formState.update { it.copy(notificationsEnabled = !isEnabled) }
                     }
                 }
             }

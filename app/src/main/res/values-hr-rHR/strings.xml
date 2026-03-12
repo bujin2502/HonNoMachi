@@ -227,4 +227,8 @@
     <string name="suspended_contact_message">Ako smatrate da je ovo greška, molimo kontaktirajte podršku.</string>
     <string name="suspended_sign_out">Odjava</string>
     <string name="error_suspended_cannot_add_book">Suspendirani računi ne mogu kreirati nove ponude.</string>
+    <string name="label_notifications_consent">E-mail notifikacija</string>
+    <string name="desc_notifications_consent">Primajte obavijesti putem e-maila iz aplikacije.</string>
+    <string name="title_email_notifications">E-mail obavijesti</string>
+    <string name="content_email_notifications">Vašu e-mail adresu koristimo za slanje potvrda o kupnji i prodaji knjiga kako biste imali evidenciju svojih transakcija. Ove obavijesti možete isključiti u bilo kojem trenutku u postavkama profila.</string>
 </resources>

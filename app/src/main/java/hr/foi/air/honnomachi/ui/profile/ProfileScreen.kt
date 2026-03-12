@@ -178,6 +178,34 @@ fun ProfileScreen(
                     },
                 )
             }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.label_notifications_consent),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Text(
+                        text = stringResource(R.string.desc_notifications_consent),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = LabelGray,
+                    )
+                }
+                Switch(
+                    checked = formState.notificationsEnabled,
+                    onCheckedChange = {
+                        profileViewModel.onNotificationsToggled(it)
+                    },
+                )
+            }
+            
             TextButton(onClick = onNavigateToPrivacyPolicy) {
                 Text(text = stringResource(id = R.string.title_privacy_policy))
             }

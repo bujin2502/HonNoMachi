@@ -97,15 +97,16 @@ class WalletRepositoryImplTest {
     fun `createWalletTopupIntent success returns model`() =
         runTest {
             every { auth.currentUser } returns mockUser
-            coEvery { mockCallTask.await() } returns createCallableResult(
-                mapOf(
-                    "topupId" to "topup_123",
-                    "paymentIntentId" to "pi_test",
-                    "clientSecret" to "pi_test_secret",
-                    "amountMinor" to 500,
-                    "currency" to "eur",
-                ),
-            )
+            coEvery { mockCallTask.await() } returns
+                createCallableResult(
+                    mapOf(
+                        "topupId" to "topup_123",
+                        "paymentIntentId" to "pi_test",
+                        "clientSecret" to "pi_test_secret",
+                        "amountMinor" to 500,
+                        "currency" to "eur",
+                    ),
+                )
 
             val result = repository.createWalletTopupIntent(500, "eur", "key_1")
 
@@ -120,15 +121,16 @@ class WalletRepositoryImplTest {
     fun `createWalletTopupIntent null topupId returns error`() =
         runTest {
             every { auth.currentUser } returns mockUser
-            coEvery { mockCallTask.await() } returns createCallableResult(
-                mapOf(
-                    "topupId" to null,
-                    "paymentIntentId" to "pi_test",
-                    "clientSecret" to "pi_test_secret",
-                    "amountMinor" to 500,
-                    "currency" to "eur",
-                ),
-            )
+            coEvery { mockCallTask.await() } returns
+                createCallableResult(
+                    mapOf(
+                        "topupId" to null,
+                        "paymentIntentId" to "pi_test",
+                        "clientSecret" to "pi_test_secret",
+                        "amountMinor" to 500,
+                        "currency" to "eur",
+                    ),
+                )
 
             val result = repository.createWalletTopupIntent(500, "eur", "key_1")
 
@@ -139,15 +141,16 @@ class WalletRepositoryImplTest {
     fun `createWalletTopupIntent zero amountMinor returns error`() =
         runTest {
             every { auth.currentUser } returns mockUser
-            coEvery { mockCallTask.await() } returns createCallableResult(
-                mapOf(
-                    "topupId" to "topup_123",
-                    "paymentIntentId" to "pi_test",
-                    "clientSecret" to "pi_test_secret",
-                    "amountMinor" to 0,
-                    "currency" to "eur",
-                ),
-            )
+            coEvery { mockCallTask.await() } returns
+                createCallableResult(
+                    mapOf(
+                        "topupId" to "topup_123",
+                        "paymentIntentId" to "pi_test",
+                        "clientSecret" to "pi_test_secret",
+                        "amountMinor" to 0,
+                        "currency" to "eur",
+                    ),
+                )
 
             val result = repository.createWalletTopupIntent(500, "eur", "key_1")
 
@@ -169,15 +172,16 @@ class WalletRepositoryImplTest {
     fun `createWalletTopupIntent null clientSecret returns error`() =
         runTest {
             every { auth.currentUser } returns mockUser
-            coEvery { mockCallTask.await() } returns createCallableResult(
-                mapOf(
-                    "topupId" to "topup_123",
-                    "paymentIntentId" to "pi_test",
-                    "clientSecret" to null,
-                    "amountMinor" to 500,
-                    "currency" to "eur",
-                ),
-            )
+            coEvery { mockCallTask.await() } returns
+                createCallableResult(
+                    mapOf(
+                        "topupId" to "topup_123",
+                        "paymentIntentId" to "pi_test",
+                        "clientSecret" to null,
+                        "amountMinor" to 500,
+                        "currency" to "eur",
+                    ),
+                )
 
             val result = repository.createWalletTopupIntent(500, "eur", "key_1")
 

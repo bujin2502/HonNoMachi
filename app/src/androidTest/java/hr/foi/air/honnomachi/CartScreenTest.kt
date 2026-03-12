@@ -65,6 +65,8 @@ class FakeCheckoutRepository : CheckoutRepository {
             ),
         )
     }
+
+    override suspend fun cancelCheckout(checkoutId: String): Result<Unit> = Result.Success(Unit)
 }
 
 @RunWith(AndroidJUnit4::class)

@@ -198,10 +198,18 @@ class ShelfViewModelTest {
 
             viewModel.selectTab(ShelfTab.SOLD)
             advanceUntilIdle()
-            assertEquals("Sold", viewModel.uiState.value.books[0].title)
+            assertEquals(
+                "Sold",
+                viewModel.uiState.value.books[0]
+                    .title,
+            )
 
             viewModel.selectTab(ShelfTab.PURCHASED)
             advanceUntilIdle()
-            assertEquals("Purchased", viewModel.uiState.value.books[0].title)
+            assertEquals(
+                "Purchased",
+                viewModel.uiState.value.books[0]
+                    .title,
+            )
         }
 }

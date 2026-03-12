@@ -11,6 +11,7 @@ import hr.foi.air.honnomachi.ui.cart.CartViewModel
 import hr.foi.air.honnomachi.util.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -57,6 +58,10 @@ class FakeCartRepository : CartRepository {
     fun clearCart() {
         _cartItems.value = emptyList()
     }
+
+    fun setItems(items: List<CartItemModel>) {
+        _cartItems.value = items
+    }
 }
 
 class FakeCheckoutRepository : CheckoutRepository {
@@ -79,11 +84,16 @@ class FakeCheckoutRepository : CheckoutRepository {
         )
 
     override suspend fun createCheckoutPaymentIntent(reservationTtlMinutes: Int?): Result<CheckoutPaymentIntentModel> {
+        if (createPaymentIntentDelayMs > 0) delay(createPaymentIntentDelayMs)
         createPaymentIntentCallCount++
         return resultToReturn
     }
 
-    override suspend fun cancelCheckout(checkoutId: String): Result<Unit> = Result.Success(Unit)
+    var createPaymentIntentDelayMs: Long = 0
+
+    var cancelCheckoutResult: Result<Unit> = Result.Success(Unit)
+
+    override suspend fun cancelCheckout(checkoutId: String): Result<Unit> = cancelCheckoutResult
 }
 
 @Ignore("Ticker coroutine causes infinite loop with runTest – needs refactor")

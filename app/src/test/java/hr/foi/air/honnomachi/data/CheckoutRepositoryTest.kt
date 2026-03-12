@@ -59,7 +59,6 @@ class CheckoutRepositoryTest {
         coEvery { mockCallTask.await() } returns createCallableResult(data)
     }
 
-
     @Test
     fun `createCheckoutPaymentIntent success with payment sheet`() =
         runTest {
@@ -241,7 +240,6 @@ class CheckoutRepositoryTest {
 
             assertTrue(result is Result.Success)
         }
-
 
     @Test
     fun `cancelCheckout success`() =

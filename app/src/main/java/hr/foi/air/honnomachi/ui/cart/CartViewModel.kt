@@ -10,6 +10,10 @@ import hr.foi.air.honnomachi.data.CheckoutRepository
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.model.Currency
 import hr.foi.air.honnomachi.util.Result
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -19,7 +23,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -66,6 +69,8 @@ class CartViewModel
 
         private var activeCheckoutId: String? = null
 
+        private val cleanupScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
         private val expiredCartItemIds = mutableSetOf<String>()
 
         private val _secondsUntilExpiry = MutableStateFlow<Long?>(null)
@@ -74,6 +79,16 @@ class CartViewModel
         init {
             loadCartItems()
             startExpiryTicker()
+        }
+
+        override fun onCleared() {
+            super.onCleared()
+            val checkoutId = activeCheckoutId ?: return
+            activeCheckoutId = null
+            cleanupScope.launch {
+                checkoutRepository.cancelCheckout(checkoutId)
+                cleanupScope.cancel()
+            }
         }
 
         private fun startExpiryTicker() {
@@ -92,9 +107,9 @@ class CartViewModel
                         if (newlyExpired.isNotEmpty()) {
                             newlyExpired.forEach { expiredCartItemIds.add(it.id) }
                             coroutineScope {
-                                newlyExpired.map { item ->
+                                newlyExpired.forEach { item ->
                                     launch { cartRepository.removeFromCart(item.id) }
-                                }.joinAll()
+                                }
                             }
                             _actionMessage.value = "Rezervacija je istekla. Knjige su uklonjene iz košarice."
                         }

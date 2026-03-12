@@ -1,9 +1,11 @@
 package hr.foi.air.honnomachi.viewmodel
 
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.Timestamp
 import com.stripe.android.paymentsheet.PaymentSheetResult
 import hr.foi.air.honnomachi.data.CheckoutPaymentIntentModel
 import hr.foi.air.honnomachi.model.BookModel
+import hr.foi.air.honnomachi.model.CartItemModel
 import hr.foi.air.honnomachi.model.Currency
 import hr.foi.air.honnomachi.ui.cart.CartUiState
 import hr.foi.air.honnomachi.ui.cart.CartViewModel
@@ -132,9 +134,10 @@ class CartViewModelNewTest {
             runCurrent()
 
             val emitted = mutableListOf<CheckoutPaymentIntentModel>()
-            val job = backgroundScope.launch {
-                viewModel.paymentSheetRequests.collect { emitted += it }
-            }
+            val job =
+                backgroundScope.launch {
+                    viewModel.paymentSheetRequests.collect { emitted += it }
+                }
             advanceTimeBy(100)
             runCurrent()
 
@@ -179,9 +182,10 @@ class CartViewModelNewTest {
             runCurrent()
 
             val navigations = mutableListOf<CheckoutNavigationTarget>()
-            val job = backgroundScope.launch {
-                viewModel.checkoutNavigation.collect { navigations += it }
-            }
+            val job =
+                backgroundScope.launch {
+                    viewModel.checkoutNavigation.collect { navigations += it }
+                }
             advanceTimeBy(100)
             runCurrent()
 
@@ -230,9 +234,10 @@ class CartViewModelNewTest {
     fun `onPaymentSheetResult Completed sets message and navigates to success`() =
         runTest(testDispatcher) {
             val navigations = mutableListOf<CheckoutNavigationTarget>()
-            val job = backgroundScope.launch {
-                viewModel.checkoutNavigation.collect { navigations += it }
-            }
+            val job =
+                backgroundScope.launch {
+                    viewModel.checkoutNavigation.collect { navigations += it }
+                }
             advanceTimeBy(100)
             runCurrent()
 
@@ -316,6 +321,83 @@ class CartViewModelNewTest {
     @Test
     fun `isCheckoutInProgress is false initially`() =
         runTest(testDispatcher) {
+            assertFalse(viewModel.isCheckoutInProgress.value)
+            viewModel.viewModelScope.cancel()
+        }
+
+    @Test
+    fun `reservation expires during active checkout - expiry message shown and checkout still completes`() =
+        runTest(testDispatcher) {
+            val pastTimestamp = Timestamp(System.currentTimeMillis() / 1000 - 10, 0)
+            fakeCartRepository.setItems(
+                listOf(
+                    CartItemModel(
+                        id = "book1",
+                        bookId = "book1",
+                        title = "Expired Book",
+                        price = 10.0,
+                        currency = "EUR",
+                        reservationExpiresAt = pastTimestamp,
+                    ),
+                ),
+            )
+            advanceTimeBy(500)
+            runCurrent()
+
+            viewModel.checkoutWithStripe()
+            advanceTimeBy(500)
+            runCurrent()
+
+            assertEquals(1, fakeCheckoutRepository.createPaymentIntentCallCount)
+
+            val navigations = mutableListOf<CheckoutNavigationTarget>()
+            val navJob =
+                backgroundScope.launch {
+                    viewModel.checkoutNavigation.collect { navigations += it }
+                }
+            advanceTimeBy(100)
+            runCurrent()
+
+            // Ticker fires, detects expired reservation
+            advanceTimeBy(1_500)
+            runCurrent()
+
+            assertEquals(
+                "Rezervacija je istekla. Knjige su uklonjene iz košarice.",
+                viewModel.actionMessage.value,
+            )
+
+            // Checkout completes despite expired reservation — no compensation flow exists
+            viewModel.onPaymentSheetResult(PaymentSheetResult.Completed)
+            advanceTimeBy(100)
+            runCurrent()
+
+            assertEquals(1, navigations.size)
+            assertEquals(CheckoutNavigationTarget.SUCCESS, navigations[0])
+
+            navJob.cancel()
+            viewModel.viewModelScope.cancel()
+        }
+
+    @Test
+    fun `checkoutWithStripe shows loading state during slow network and clears it after response`() =
+        runTest(testDispatcher) {
+            fakeCheckoutRepository.createPaymentIntentDelayMs = 5_000L
+
+            val book = BookModel(bookId = "1", title = "Test", price = 10.0, priceCurrency = Currency.EUR)
+            fakeCartRepository.addToCart(book)
+            advanceTimeBy(500)
+            runCurrent()
+
+            viewModel.checkoutWithStripe()
+            advanceTimeBy(100)
+            runCurrent()
+
+            assertTrue(viewModel.isCheckoutInProgress.value)
+
+            advanceTimeBy(5_000)
+            runCurrent()
+
             assertFalse(viewModel.isCheckoutInProgress.value)
             viewModel.viewModelScope.cancel()
         }

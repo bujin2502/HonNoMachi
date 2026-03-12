@@ -159,9 +159,10 @@ class WalletViewModelTest {
     fun `startTopup success emits payment sheet request and updates state`() =
         runTest(testDispatcher) {
             val emittedRequests = mutableListOf<WalletTopupIntentModel>()
-            val job = backgroundScope.launch {
-                viewModel.paymentSheetRequests.collect { emittedRequests += it }
-            }
+            val job =
+                backgroundScope.launch {
+                    viewModel.paymentSheetRequests.collect { emittedRequests += it }
+                }
             advanceTimeBy(1_000)
             runCurrent()
 

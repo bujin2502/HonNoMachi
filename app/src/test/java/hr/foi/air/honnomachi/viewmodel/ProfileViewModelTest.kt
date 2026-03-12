@@ -175,13 +175,15 @@ class ProfileViewModelTest {
                     postNumber = "10000",
                 )
             coEvery { profileRepository.getUserProfile() } returns
-                hr.foi.air.honnomachi.util.Result.Success(initialUser)
+                hr.foi.air.honnomachi.util.Result
+                    .Success(initialUser)
 
             val viewModel = ProfileViewModel(profileRepository)
             advanceUntilIdle()
 
             coEvery { profileRepository.updateUserProfile(any(), any(), any(), any(), any()) } returns
-                hr.foi.air.honnomachi.util.Result.Error(Exception("Save failed"))
+                hr.foi.air.honnomachi.util.Result
+                    .Error(Exception("Save failed"))
 
             var successCalled = true
             var errorMessage: String? = null
@@ -200,9 +202,11 @@ class ProfileViewModelTest {
         runTest(testDispatcher) {
             val user = UserModel(uid = "test-uid", analyticsEnabled = false)
             coEvery { profileRepository.getUserProfile() } returns
-                hr.foi.air.honnomachi.util.Result.Success(user)
+                hr.foi.air.honnomachi.util.Result
+                    .Success(user)
             coEvery { profileRepository.updateAnalyticsSetting(true) } returns
-                hr.foi.air.honnomachi.util.Result.Success(Unit)
+                hr.foi.air.honnomachi.util.Result
+                    .Success(Unit)
 
             val viewModel = ProfileViewModel(profileRepository)
             advanceUntilIdle()
@@ -220,9 +224,11 @@ class ProfileViewModelTest {
         runTest(testDispatcher) {
             val user = UserModel(uid = "test-uid", analyticsEnabled = false)
             coEvery { profileRepository.getUserProfile() } returns
-                hr.foi.air.honnomachi.util.Result.Success(user)
+                hr.foi.air.honnomachi.util.Result
+                    .Success(user)
             coEvery { profileRepository.updateAnalyticsSetting(true) } returns
-                hr.foi.air.honnomachi.util.Result.Error(Exception("Update failed"))
+                hr.foi.air.honnomachi.util.Result
+                    .Error(Exception("Update failed"))
 
             val viewModel = ProfileViewModel(profileRepository)
             advanceUntilIdle()
@@ -238,7 +244,8 @@ class ProfileViewModelTest {
         runTest(testDispatcher) {
             val user = UserModel(uid = "test-uid")
             coEvery { profileRepository.getUserProfile() } returns
-                hr.foi.air.honnomachi.util.Result.Success(user)
+                hr.foi.air.honnomachi.util.Result
+                    .Success(user)
 
             val viewModel = ProfileViewModel(profileRepository)
             advanceUntilIdle()
@@ -265,9 +272,11 @@ class ProfileViewModelTest {
         runTest(testDispatcher) {
             val user = UserModel(uid = "test-uid")
             coEvery { profileRepository.getUserProfile() } returns
-                hr.foi.air.honnomachi.util.Result.Success(user)
+                hr.foi.air.honnomachi.util.Result
+                    .Success(user)
             coEvery { profileRepository.changePassword(any(), any()) } returns
-                hr.foi.air.honnomachi.util.Result.Success(Unit)
+                hr.foi.air.honnomachi.util.Result
+                    .Success(Unit)
 
             val viewModel = ProfileViewModel(profileRepository)
             advanceUntilIdle()
@@ -289,9 +298,11 @@ class ProfileViewModelTest {
         runTest(testDispatcher) {
             val user = UserModel(uid = "test-uid")
             coEvery { profileRepository.getUserProfile() } returns
-                hr.foi.air.honnomachi.util.Result.Success(user)
+                hr.foi.air.honnomachi.util.Result
+                    .Success(user)
             coEvery { profileRepository.changePassword(any(), any()) } returns
-                hr.foi.air.honnomachi.util.Result.Error(Exception("Wrong password"))
+                hr.foi.air.honnomachi.util.Result
+                    .Error(Exception("Wrong password"))
 
             val viewModel = ProfileViewModel(profileRepository)
             advanceUntilIdle()

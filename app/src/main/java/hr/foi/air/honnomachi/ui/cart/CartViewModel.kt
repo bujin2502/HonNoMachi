@@ -10,6 +10,11 @@ import hr.foi.air.honnomachi.data.CheckoutRepository
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.model.Currency
 import hr.foi.air.honnomachi.util.Result
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -64,6 +69,8 @@ class CartViewModel
 
         private var activeCheckoutId: String? = null
 
+        private val cleanupScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
         private val expiredCartItemIds = mutableSetOf<String>()
 
         private val _secondsUntilExpiry = MutableStateFlow<Long?>(null)
@@ -72,6 +79,16 @@ class CartViewModel
         init {
             loadCartItems()
             startExpiryTicker()
+        }
+
+        override fun onCleared() {
+            super.onCleared()
+            val checkoutId = activeCheckoutId ?: return
+            activeCheckoutId = null
+            cleanupScope.launch {
+                checkoutRepository.cancelCheckout(checkoutId)
+                cleanupScope.cancel()
+            }
         }
 
         private fun startExpiryTicker() {
@@ -87,14 +104,13 @@ class CartViewModel
                                 expiresAtMs != null && expiresAtMs <= nowMs && item.id !in expiredCartItemIds
                             }
 
-                        for (item in newlyExpired) {
-                            expiredCartItemIds.add(item.id)
-                            viewModelScope.launch {
-                                cartRepository.removeFromCart(item.id)
-                            }
-                        }
-
                         if (newlyExpired.isNotEmpty()) {
+                            newlyExpired.forEach { expiredCartItemIds.add(it.id) }
+                            coroutineScope {
+                                newlyExpired.forEach { item ->
+                                    launch { cartRepository.removeFromCart(item.id) }
+                                }
+                            }
                             _actionMessage.value = "Rezervacija je istekla. Knjige su uklonjene iz košarice."
                         }
 

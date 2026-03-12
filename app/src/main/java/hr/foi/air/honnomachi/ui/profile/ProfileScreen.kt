@@ -178,7 +178,7 @@ fun ProfileScreen(
                     },
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
 
             Row(
@@ -205,7 +205,7 @@ fun ProfileScreen(
                     },
                 )
             }
-            
+
             TextButton(onClick = onNavigateToPrivacyPolicy) {
                 Text(text = stringResource(id = R.string.title_privacy_policy))
             }

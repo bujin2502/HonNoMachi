@@ -27,6 +27,7 @@ data class ProfileFormState(
     val zip: String = "",
     val zipError: ValidationErrorType? = null,
     val analyticsEnabled: Boolean = true,
+    val notificationsEnabled: Boolean = true,
     val isSaving: Boolean = false,
     val isFormValid: Boolean = true,
 )

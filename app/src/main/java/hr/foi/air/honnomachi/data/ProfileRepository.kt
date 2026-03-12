@@ -25,6 +25,8 @@ interface ProfileRepository {
 
     suspend fun updateAnalyticsSetting(isEnabled: Boolean): Result<Unit>
 
+    suspend fun updateNotificationsSetting(isEnabled: Boolean): Result<Unit>
+
     suspend fun changePassword(
         oldPassword: String,
         newPassword: String,
@@ -127,6 +129,25 @@ class ProfileRepositoryImpl
                         .collection("users")
                         .document(currentUser.uid)
                         .update("analyticsEnabled", isEnabled)
+                        .await()
+
+                    Result.Success(Unit)
+                } else {
+                    Result.Error(Exception(ERROR_NO_USER))
+                }
+            } catch (e: Exception) {
+                CrashlyticsManager.instance.logException(e)
+                Result.Error(e)
+            }
+
+        override suspend fun updateNotificationsSetting(isEnabled: Boolean): Result<Unit> =
+            try {
+                val currentUser = auth.currentUser
+                if (currentUser != null) {
+                    firestore
+                        .collection("users")
+                        .document(currentUser.uid)
+                        .update("notificationsEnabled", isEnabled)
                         .await()
 
                     Result.Success(Unit)

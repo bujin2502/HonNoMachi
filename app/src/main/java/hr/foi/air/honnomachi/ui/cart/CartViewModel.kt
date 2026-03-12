@@ -10,6 +10,7 @@ import hr.foi.air.honnomachi.data.CheckoutRepository
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.model.Currency
 import hr.foi.air.honnomachi.util.Result
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -87,14 +89,13 @@ class CartViewModel
                                 expiresAtMs != null && expiresAtMs <= nowMs && item.id !in expiredCartItemIds
                             }
 
-                        for (item in newlyExpired) {
-                            expiredCartItemIds.add(item.id)
-                            viewModelScope.launch {
-                                cartRepository.removeFromCart(item.id)
-                            }
-                        }
-
                         if (newlyExpired.isNotEmpty()) {
+                            newlyExpired.forEach { expiredCartItemIds.add(it.id) }
+                            coroutineScope {
+                                newlyExpired.map { item ->
+                                    launch { cartRepository.removeFromCart(item.id) }
+                                }.joinAll()
+                            }
                             _actionMessage.value = "Rezervacija je istekla. Knjige su uklonjene iz košarice."
                         }
 

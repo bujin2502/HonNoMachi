@@ -5,6 +5,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import hr.foi.air.honnomachi.CrashlyticsManager
 import hr.foi.air.honnomachi.model.BookModel
+import hr.foi.air.honnomachi.model.ItemStatus
 import hr.foi.air.honnomachi.util.Result
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -18,6 +19,10 @@ interface BookRepository {
     suspend fun getBookDetails(bookId: String): Result<BookModel?>
 
     suspend fun addBook(book: BookModel): Result<String>
+
+    fun getSoldBooks(userId: String): Flow<Result<List<BookModel>>>
+
+    fun getPurchasedBooks(userId: String): Flow<Result<List<BookModel>>>
 }
 
 class BookRepositoryImpl
@@ -42,7 +47,9 @@ class BookRepositoryImpl
                                 val resultList =
                                     snapshot.documents
                                         .mapNotNull { doc ->
-                                            doc.toObject(BookModel::class.java)
+                                            doc
+                                                .toObject(BookModel::class.java)
+                                                ?.copy(bookId = doc.id)
                                         }.filter { it.sellerSuspended != true }
                                 trySend(Result.Success(resultList))
                             }
@@ -52,13 +59,16 @@ class BookRepositoryImpl
 
         override suspend fun getBookDetails(bookId: String): Result<BookModel?> =
             try {
-                val book =
+                val snapshot =
                     firestore
                         .collection("books")
                         .document(bookId)
                         .get()
                         .await()
+                val book =
+                    snapshot
                         .toObject(BookModel::class.java)
+                        ?.copy(bookId = snapshot.id)
                 Result.Success(book)
             } catch (e: Exception) {
                 CrashlyticsManager.instance.logException(e)
@@ -84,5 +94,50 @@ class BookRepositoryImpl
             } catch (e: Exception) {
                 CrashlyticsManager.instance.logException(e)
                 Result.Error(e)
+            }
+
+        override fun getSoldBooks(userId: String): Flow<Result<List<BookModel>>> =
+            callbackFlow {
+                val listener =
+                    firestore
+                        .collection("books")
+                        .whereEqualTo("userID", userId)
+                        .whereEqualTo("status", ItemStatus.SOLD.name)
+                        .addSnapshotListener { snapshot, error ->
+                            if (error != null) {
+                                CrashlyticsManager.instance.logException(error)
+                                trySend(Result.Error(error))
+                                return@addSnapshotListener
+                            }
+
+                            if (snapshot != null) {
+                                val resultList =
+                                    snapshot.documents
+                                        .mapNotNull { doc ->
+                                            doc.toObject(BookModel::class.java)
+                                        }
+                                trySend(Result.Success(resultList))
+                            }
+                        }
+                awaitClose { listener.remove() }
+            }
+
+        override fun getPurchasedBooks(userId: String): Flow<Result<List<BookModel>>> =
+            callbackFlow {
+                val query =
+                    firestore
+                        .collection("books")
+                        .whereEqualTo("soldToUid", userId)
+
+                val listener =
+                    query.addSnapshotListener { snapshot, error ->
+                        if (error != null) {
+                            trySend(Result.Error(error))
+                            return@addSnapshotListener
+                        }
+                        val books = snapshot?.toObjects(BookModel::class.java) ?: emptyList()
+                        trySend(Result.Success(books))
+                    }
+                awaitClose { listener.remove() }
             }
     }

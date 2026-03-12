@@ -32,6 +32,10 @@ class FakeBookRepository : BookRepository {
         books[bookId]?.let { Result.Success(it) } ?: Result.Success(null)
 
     override suspend fun addBook(book: BookModel): Result<String> = Result.Success("test-id")
+
+    override fun getSoldBooks(userId: String): Flow<Result<List<BookModel>>> = flowOf(Result.Success(emptyList()))
+
+    override fun getPurchasedBooks(userId: String): Flow<Result<List<BookModel>>> = flowOf(Result.Success(emptyList()))
 }
 
 @ExperimentalCoroutinesApi

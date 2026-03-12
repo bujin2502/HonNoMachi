@@ -106,12 +106,46 @@ cd HonNoMachi
 4. Preuzmite `google-services.json`
 5. Premjestite datoteku u `app/` direktorij projekta
 
-### 3. Sinkronizacija i pokretanje
+### 3. Stripe konfiguracija (test okruženje)
+
+1. U `local.properties` dodajte:
+   `STRIPE_PUBLISHABLE_KEY=pk_test_...`
+2. U CI okruženju postavite varijablu:
+   `STRIPE_PUBLISHABLE_KEY=pk_test_...`
+3. Nikada ne stavljajte Stripe secret key (`sk_...`) u Android aplikaciju
+4. Backend secret-e za Cloud Functions postavite preko Firebase CLI:
+   `npx firebase-tools functions:secrets:set STRIPE_SECRET_KEY --project <firebase-project-id>`
+   `npx firebase-tools functions:secrets:set STRIPE_WEBHOOK_SECRET --project <firebase-project-id>`
+   `npx firebase-tools functions:secrets:set STRIPE_WALLET_WEBHOOK_SECRET --project <firebase-project-id>`
+5. Deploy backend funkcija (PowerShell: navodnici oko `--only`):
+   `npx firebase-tools deploy --only "functions:createCheckoutPaymentIntent,functions:addToCartAndReserve,functions:removeFromCartAndRelease,functions:cancelCheckout,functions:releaseExpiredCheckoutSessions,functions:releaseExpiredCartReservations,functions:createWalletTopupIntent,functions:stripeWebhook,functions:stripeWalletWebhook" --project <firebase-project-id>`
+6. U Stripe Dashboardu dodajte checkout webhook endpoint:
+   `https://us-central1-<firebase-project-id>.cloudfunctions.net/stripeWebhook`
+   i uključite evente:
+   `payment_intent.succeeded`, `payment_intent.payment_failed`, `payment_intent.canceled`
+7. U Stripe Dashboardu dodajte wallet webhook endpoint:
+   `https://us-central1-<firebase-project-id>.cloudfunctions.net/stripeWalletWebhook`
+   i uključite evente:
+   `payment_intent.succeeded`, `payment_intent.payment_failed`, `payment_intent.canceled`, `charge.refunded`
+
+### 4. Sinkronizacija i pokretanje
 
 1. Otvorite projekt u Android Studiju
 2. Kliknite **Sync Now** za sinkronizaciju Gradle datoteka
 3. Povežite Android uređaj ili pokrenite emulator
 4. Kliknite **Run 'app'** ili koristite `Shift + F10`
+
+Ako pokrećete Gradle iz terminala:
+
+```powershell
+# Windows PowerShell
+.\gradlew.bat :app:assembleDebug
+```
+
+```bash
+# Bash / Git Bash
+./gradlew :app:assembleDebug
+```
 
 ### Detaljne upute
 
@@ -190,6 +224,39 @@ Za detaljnije upute o postavljanju projekta, pogledajte:
 
 ### Sprint 05
 
+#### Refaktoriranje UI komponenti
+- [x] Refaktoriran `AddPage.kt` – validacija u ViewModel, custom state holder, form polja kao zasebne composable komponente
+- [x] Refaktoriran `AuthRepository.kt` – Firestore operacije u zasebnu klasu, `getUserDocument()` helper, konstante za kolekcije
+- [x] Refaktoriran `ProfileScreen.kt` – boje u temu, ekstrahirana `ProfileEditForm` composable, stringovi u resources
+- [x] Refaktoriran `AuthViewModel.kt` – callbackovi zamijenjeni sa StateFlow, pojednostavljen init blok, uklonjeni magic stringovi
+- [x] Kreirane reusable auth komponente (`EmailInputField`, `PasswordInputField`)
+- [x] Refaktoriran `LoginScreen.kt`, `SignupScreen.kt` i `ChangePasswordScreen.kt` – integrirane zajedničke auth komponente, uklonjen duplicirani kod
+
+#### Testna pokrivenost
+- [x] Unit testovi za `AuthViewModel` (19), `AddBookViewModel` (25), `HomeViewModel` (6)
+- [x] Unit testovi za `AuthRepository` (12), `BookRepository` (5), `ProfileRepository` (8), `CartRepository` (5)
+- [x] Unit testovi za `FirestoreUserDataSourceImpl` (4), `Result<T>` (3), `ImageSourceInitializer` (+2)
+- [x] Pokrivenost koda (JaCoCo) povećana s 3.6% na 29.39% (89 novih testova u 10 test klasa)
+
+#### Administratorski pregled korisnika
+- [x] Administratorska navigacija, zaštita ruta i Firestore sigurnosna pravila
+- [x] `AdminRepository` – dohvat, pretraga i filtriranje korisnika po statusu
+- [x] Sučelje – lista korisnika, pretraga i filteri, detaljan prikaz, account status sekcija
+- [x] Unit testovi: `AdminRepositoryTest` (11), `AdminViewModelTest` (3), `AdminUserListViewModelTest` (8), `UserDetailViewModelTest` (4)
+- [x] Instrumentirani testovi: `AdminScreenTest` (4)
+
+#### Suspenzija i reaktivacija korisnika
+- [x] Pozadinska logika suspenzije i reaktivacije korisnika
+- [x] Firestore sigurnosna pravila za suspenziju
+- [x] Sučelje – dijalog, akcije i efekti suspenzije na korisnički račun
+
+#### Narudžbe i košarica
+- [x] `OrderRepository` – ažuriranje statusa knjige u `SOLD` i brisanje iz košarica svih korisnika
+- [x] Validacija nedostupnih knjiga pri dodavanju u košaricu
+- [x] Konverzija valuta (USD u EUR), `HomePage` prikazuje samo dostupne knjige
+- [x] Unit i Instrumented testovi za upravljanje košaricom
+
+
 ### Sprint 06
 
 ### Sprint 07
@@ -263,13 +330,10 @@ CI pipeline pokreće se automatski na svakom `push` i `pull request` prema `mast
 
 ### 6. Kontinuirana isporuka (CD)
 
-> **U planiranju** — CD pipeline još nije implementiran.
-
 Planirane aktivnosti za kontinuiranu isporuku:
-- [ ] Automatsko potpisivanje release APK-a (keystore putem GitHub Secrets)
-- [ ] Distribucija putem Firebase App Distribution za interni QA
-- [ ] Automatski deployment na Google Play (Internal Testing track)
-- [ ] Verzioniranje buildova na temelju Git tagova
+- [x] Automatsko potpisivanje release APK-a (keystore putem GitHub Secrets)
+- [x] Distribucija putem Firebase App Distribution za interni QA
+- [x] Verzioniranje buildova na temelju Git tagova
 
 ### 7. Analiza kvalitete programskog koda
 
@@ -344,7 +408,7 @@ Projekt razvija tim studenata **Fakulteta organizacije i informatike (FOI)**, Va
 
 ---
 
-**Status projekta:** Sprint 05 - U tijeku | Sprint 06 - U planiranju
-**Zadnje ažuriranje:** 13.02.2026.
+**Status projekta:** Sprint 06 - U tijeku | Sprint 07 - U planiranju
+**Zadnje ažuriranje:** 05.03.2026.
 
 </div>

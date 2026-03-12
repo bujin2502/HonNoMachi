@@ -1,4 +1,29 @@
 import org.gradle.api.tasks.compile.JavaCompile
+import java.util.Properties
+
+fun gitVersionName(): String =
+    try {
+        val tag =
+            ProcessBuilder("git", "describe", "--tags", "--abbrev=0")
+                .directory(rootDir)
+                .start()
+                .inputStream
+                .bufferedReader()
+                .readLine()
+                ?.trim()
+                ?: "v1.0.0"
+        if (tag.startsWith("v")) tag.substring(1) else tag
+    } catch (_: Exception) {
+        "1.0.0"
+    }
+
+fun gitVersionCode(): Int {
+    val parts = gitVersionName().split(".")
+    val major = parts.getOrNull(0)?.toIntOrNull() ?: 1
+    val minor = parts.getOrNull(1)?.toIntOrNull() ?: 0
+    val patch = parts.getOrNull(2)?.toIntOrNull() ?: 0
+    return major * 10000 + minor * 100 + patch
+}
 
 plugins {
     alias(libs.plugins.android.application)
@@ -12,6 +37,23 @@ plugins {
     jacoco
 }
 
+private fun String.escapeForBuildConfig(): String = replace("\\", "\\\\").replace("\"", "\\\"")
+
+val localProperties =
+    Properties().apply {
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localPropertiesFile.inputStream().use(::load)
+        }
+    }
+
+val stripePublishableKey =
+    (
+        localProperties.getProperty("STRIPE_PUBLISHABLE_KEY")
+            ?: System.getenv("STRIPE_PUBLISHABLE_KEY")
+            ?: error("STRIPE_PUBLISHABLE_KEY nije postavljen u local.properties ili environment varijablama")
+    ).trim()
+
 ktlint {
     reporters {
         reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.HTML)
@@ -23,21 +65,49 @@ android {
     namespace = "hr.foi.air.honnomachi"
     compileSdk = 36
 
+    signingConfigs {
+        create("release") {
+            val keystorePath = System.getenv("KEYSTORE_PATH")
+            val keystorePassword = System.getenv("KEYSTORE_PASSWORD")
+            val keyAliasValue = System.getenv("KEY_ALIAS")
+            val keyPasswordValue = System.getenv("KEY_PASSWORD")
+            if (keystorePath != null &&
+                keystorePassword != null &&
+                keyAliasValue != null &&
+                keyPasswordValue != null
+            ) {
+                storeFile = file(keystorePath)
+                storePassword = keystorePassword
+                keyAlias = keyAliasValue
+                keyPassword = keyPasswordValue
+            }
+        }
+    }
+
     defaultConfig {
         applicationId = "hr.foi.air.honnomachi"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = gitVersionCode()
+        versionName = gitVersionName()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         manifestPlaceholders["imageUploaderAuthority"] = "hr.foi.air.honnomachi.provider"
+        buildConfigField(
+            "String",
+            "STRIPE_PUBLISHABLE_KEY",
+            "\"${stripePublishableKey.escapeForBuildConfig()}\"",
+        )
 
         multiDexEnabled = true
     }
 
     buildTypes {
         release {
+            val releaseSigningConfig = signingConfigs.getByName("release")
+            if (releaseSigningConfig.storeFile != null) {
+                signingConfig = releaseSigningConfig
+            }
             isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -59,6 +129,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     packaging {
         resources {
@@ -82,6 +153,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.activity.compose)
     implementation(libs.multidex)
+    implementation(libs.androidx.multidex)
     implementation(project(":image_uploader"))
 
     // Compose
@@ -102,6 +174,7 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.functions)
 
     // Auth
     implementation(libs.credentials)
@@ -118,6 +191,7 @@ dependencies {
     implementation(libs.ads.mobile.sdk)
     implementation(libs.coil.compose)
     implementation(libs.accompanist.permissions)
+    implementation(libs.stripe.android)
 
     // Annotation processors
     ksp(libs.hilt.compiler)

@@ -1,5 +1,7 @@
 {
-  "projects": {},
+  "projects": {
+    "default": "izvanredni-d53f3"
+  },
   "targets": {},
   "etags": {}
 }

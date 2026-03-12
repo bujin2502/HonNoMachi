@@ -8,8 +8,10 @@ import {
 } from "firebase-admin/firestore";
 import { logger } from "firebase-functions";
 import { defineSecret } from "firebase-functions/params";
+import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 import { HttpsError, onCall, onRequest } from "firebase-functions/v2/https";
 import { onSchedule } from "firebase-functions/v2/scheduler";
+import { BookData, sendBuyerOrderEmail, sendSellerOrderEmail } from "./emailService";
 import { createHash } from "node:crypto";
 import Stripe from "stripe";
 
@@ -19,6 +21,7 @@ const db = getFirestore();
 const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
 const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
 const stripeWalletWebhookSecret = defineSecret("STRIPE_WALLET_WEBHOOK_SECRET");
+const gmailPass = defineSecret("GMAIL_PASS");
 
 const DEFAULT_RESERVATION_TTL_MINUTES = 15;
 const MAX_RESERVATION_TTL_MINUTES = 60;
@@ -2574,3 +2577,58 @@ function toHttpsError(error: unknown): HttpsError {
 
   return new HttpsError("internal", "Unknown checkout error.");
 }
+
+export const onCheckoutCompleted = onDocumentUpdated(
+  { document: "checkoutSessions/{sessionId}", secrets: [gmailPass] },
+  async (event) => {
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+
+    if (!before || !after) return null;
+    if (before.status === "COMPLETED" || after.status !== "COMPLETED") return null;
+
+    const buyerId: string = after.buyerUid;
+    const reservationIds: string[] = after.reservationIds ?? [];
+
+    if (reservationIds.length === 0) return null;
+
+    const buyerDoc = await db.collection("users").doc(buyerId).get();
+    const buyerEmail: string | null = buyerDoc.exists ? (buyerDoc.data()?.email ?? null) : null;
+
+    const bookDetails: BookData[] = [];
+    const sellerEmails = new Map<string, { email: string; books: BookData[] }>();
+
+    for (const resId of reservationIds) {
+      const resDoc = await db.collection("reservations").doc(resId).get();
+      if (!resDoc.exists) continue;
+
+      const resData = resDoc.data()!;
+      const bookId: string = resData.bookId;
+      const sellerId: string = resData.sellerUid;
+
+      const bookDoc = await db.collection("books").doc(bookId).get();
+      if (!bookDoc.exists) continue;
+
+      const bookData = bookDoc.data() as BookData;
+      bookDetails.push(bookData);
+
+      if (!sellerEmails.has(sellerId)) {
+        const sellerDoc = await db.collection("users").doc(sellerId).get();
+        if (sellerDoc.exists) {
+          sellerEmails.set(sellerId, { email: sellerDoc.data()?.email, books: [] });
+        }
+      }
+      sellerEmails.get(sellerId)?.books.push(bookData);
+    }
+
+    if (buyerEmail) {
+      await sendBuyerOrderEmail(buyerEmail, bookDetails);
+    }
+
+    for (const [, data] of sellerEmails) {
+      await sendSellerOrderEmail(data.email, data.books);
+    }
+
+    return null;
+  },
+);

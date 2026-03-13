@@ -72,7 +72,7 @@ class LogoutFlowTest {
 private class FakeLogoutViewModel(
     authRepository: AuthRepository,
     firebaseAuth: com.google.firebase.auth.FirebaseAuth,
-) : AuthViewModel(authRepository, firebaseAuth) {
+) : AuthViewModel(authRepository, firebaseAuth, mockk(relaxed = true)) {
     var logoutCalled: Boolean = false
 
     override fun signOut() {

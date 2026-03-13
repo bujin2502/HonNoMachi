@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class AdminUserDetailViewModel
+open class AdminUserDetailViewModel
     @Inject
     constructor(
         savedStateHandle: SavedStateHandle,
@@ -28,7 +28,7 @@ class AdminUserDetailViewModel
             loadUser()
         }
 
-        fun loadUser() {
+        open fun loadUser() {
             viewModelScope.launch {
                 _uiState.value = AdminUserDetailUiState.Loading
 

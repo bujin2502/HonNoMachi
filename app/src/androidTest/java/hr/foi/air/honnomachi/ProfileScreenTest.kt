@@ -2,6 +2,8 @@ package hr.foi.air.honnomachi
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -23,24 +25,9 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/**
- * Lažni ViewModel za zaobilaženje Firebase poziva tijekom testiranja.
- *
- *
- * Na ovaj način odvajaš "testiranje UI-a" od "prave baze podataka" (Firebase) te njezine kompleksne "asinkrone logike"...
- *
- * Omogućuje ručno postavljanje stanja ([setState]) i simulaciju poslovne logike bez stvarnih repozitorija.
- *
- */
 class FakeProfileViewModel(
     repository: ProfileRepository,
 ) : ProfileViewModel(repository) {
-    /**
-     * Pomoćna funkcija za postavljanje privatnog stanja ViewModela (`_uiState`) koristeći refleksiju.
-     *
-     * Ovo je nužno jer je `_uiState` privatan, a za testiranje trebamo postaviti
-     * točno određeno početno stanje (npr. [ProfileUiState.Success] s podacima korisnika).
-     */
     fun setState(state: ProfileUiState) {
         val field = ProfileViewModel::class.java.getDeclaredField("_uiState")
         field.isAccessible = true
@@ -65,14 +52,6 @@ class FakeProfileViewModel(
         // No-op
     }
 
-    /**
-     * Simulira logiku spremanja profila.
-     *
-     * Umjesto slanja podataka na server, ova metoda lokalno provjerava validnost
-     * unosa (npr. je li ime prazno) i odmah vraća rezultat.
-     *
-     * @param onResult Callback funkcija koja vraća uspjeh (true) ili neuspjeh (false).
-     */
     override fun saveProfile(onResult: (Boolean, String?) -> Unit) {
         if (formState.value.name.isBlank()) {
             validateName() // ovo ažurira stanje greške (error state)...
@@ -83,12 +62,6 @@ class FakeProfileViewModel(
     }
 }
 
-/**
- * Instrumentirani testovi za [ProfileScreen].
- *
- * Provjeravaju interakciju korisnika s UI elementima ekrana profila,
- * validaciju unosa i prikaz podataka, koristeći [FakeProfileViewModel].
- */
 @RunWith(AndroidJUnit4::class)
 class ProfileScreenTest {
     @get:Rule
@@ -97,46 +70,47 @@ class ProfileScreenTest {
     private lateinit var fakeViewModel: FakeProfileViewModel
     private lateinit var mockRepository: ProfileRepository
 
-    private fun launchScreen() {
-        // Postavi početno stanje korisnika
-        val user =
-            UserModel(
-                name = "Initial Name",
-                email = "test@example.com",
-                uid = "123",
-                phoneNumber = "0912345678",
-                street = "Street 1",
-                city = "City",
-                postNumber = "10000",
-            )
+    private val defaultUser =
+        UserModel(
+            name = "Initial Name",
+            email = "test@example.com",
+            uid = "123",
+            phoneNumber = "0912345678",
+            street = "Street 1",
+            city = "City",
+            postNumber = "10000",
+            suspended = false,
+            admin = false,
+            analyticsEnabled = true,
+            notificationsEnabled = true,
+        )
 
+    private fun launchScreen(
+        user: UserModel = defaultUser,
+        uiState: ProfileUiState = ProfileUiState.Success(user),
+        onLogout: () -> Unit = {},
+        onNavigateToChangePassword: () -> Unit = {},
+        onNavigateToPrivacyPolicy: () -> Unit = {},
+        onNavigateToAdmin: () -> Unit = {},
+    ) {
         mockRepository = mockk(relaxed = true)
         coEvery { mockRepository.getUserProfile() } returns Result.Success(user)
 
         fakeViewModel = FakeProfileViewModel(mockRepository)
-        fakeViewModel.setState(ProfileUiState.Success(user))
+        fakeViewModel.setState(uiState)
 
         composeTestRule.setContent {
             ProfileScreen(
                 paddingValues = PaddingValues(0.dp),
-                onLogout = {},
-                onNavigateToChangePassword = {},
-                onNavigateToPrivacyPolicy = {},
-                onNavigateToAdmin = {},
+                onLogout = onLogout,
+                onNavigateToChangePassword = onNavigateToChangePassword,
+                onNavigateToPrivacyPolicy = onNavigateToPrivacyPolicy,
+                onNavigateToAdmin = onNavigateToAdmin,
                 profileViewModel = fakeViewModel,
             )
         }
     }
 
-    /**
-     * Testira scenarij uspješnog uređivanja profila.
-     *
-     * Koraci:
-     * 1. Prikazuje se ekran s početnim imenom.
-     * 2. Korisnik briše staro ime i upisuje novo.
-     * 3. Korisnik klika na gumb "Spremi".
-     * 4. Očekuje se da nema grešaka (simulacija uspjeha).
-     */
     @Test
     fun successful_profile_edit() {
         launchScreen()
@@ -150,10 +124,8 @@ class ProfileScreenTest {
         val labelName = context.getString(hr.foi.air.honnomachi.R.string.label_name)
         val btnSave = context.getString(hr.foi.air.honnomachi.R.string.button_save)
 
-        // Pronađi polje za unos preko početne vrijednosti, zatim ga očisti
         composeTestRule.onNodeWithText("Initial Name").performTextClearance()
 
-        // Pronađi po oznaci (labeli) sada kada je vrijednost nestala i unesi novu
         composeTestRule
             .onNodeWithText(
                 labelName,
@@ -166,14 +138,6 @@ class ProfileScreenTest {
             .performClick()
     }
 
-    /**
-     * Testira validaciju unosa (neispravan unos).
-     *
-     * Koraci:
-     * 1. Korisnik briše ime (ostavlja prazno polje).
-     * 2. Korisnik klikne na gumb "Spremi".
-     * 3. Očekuje se prikaz poruke o greški (da je ime obavezno).
-     */
     @Test
     fun invalid_input_shows_error() {
         launchScreen()
@@ -200,4 +164,241 @@ class ProfileScreenTest {
         // Potvrdi da je prikazana poruka greške
         composeTestRule.onNodeWithText(errorMsg).assertIsDisplayed()
     }
+
+    // region Prikaz podataka korisnika
+
+    @Test
+    fun displays_user_name() {
+        launchScreen()
+
+        composeTestRule.onNodeWithText("Initial Name").assertIsDisplayed()
+    }
+
+    @Test
+    fun displays_user_email() {
+        launchScreen()
+
+        composeTestRule.onNodeWithText("test@example.com").assertIsDisplayed()
+    }
+
+    @Test
+    fun displays_active_status_for_active_user() {
+        val context =
+            androidx.test.platform.app.InstrumentationRegistry
+                .getInstrumentation()
+                .targetContext
+        launchScreen(user = defaultUser.copy(suspended = false))
+
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.value_active))
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun displays_suspended_status_for_suspended_user() {
+        val context =
+            androidx.test.platform.app.InstrumentationRegistry
+                .getInstrumentation()
+                .targetContext
+        launchScreen(user = defaultUser.copy(suspended = true))
+
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.value_suspended))
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun error_state_shows_error_message() {
+        launchScreen(uiState = ProfileUiState.Error("Firebase nedostupan"))
+
+        composeTestRule.onNodeWithText("Firebase nedostupan").assertIsDisplayed()
+    }
+
+    // endregion
+
+    // region Logout gumb
+
+    @Test
+    fun logout_button_is_displayed() {
+        val context =
+            androidx.test.platform.app.InstrumentationRegistry
+                .getInstrumentation()
+                .targetContext
+        launchScreen()
+
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.label_logout))
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun logout_button_calls_onLogout() {
+        val context =
+            androidx.test.platform.app.InstrumentationRegistry
+                .getInstrumentation()
+                .targetContext
+        var loggedOut = false
+        launchScreen(onLogout = { loggedOut = true })
+
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.label_logout))
+            .performClick()
+        composeTestRule.waitForIdle()
+
+        assert(loggedOut)
+    }
+
+    // endregion
+
+    // region Navigacijski gumbi
+
+    @Test
+    fun change_password_button_calls_onNavigateToChangePassword() {
+        val context =
+            androidx.test.platform.app.InstrumentationRegistry
+                .getInstrumentation()
+                .targetContext
+        var navigated = false
+        launchScreen(onNavigateToChangePassword = { navigated = true })
+
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.button_reset_password))
+            .performScrollTo()
+            .performClick()
+        composeTestRule.waitForIdle()
+
+        assert(navigated)
+    }
+
+    @Test
+    fun privacy_policy_button_calls_onNavigateToPrivacyPolicy() {
+        val context =
+            androidx.test.platform.app.InstrumentationRegistry
+                .getInstrumentation()
+                .targetContext
+        var navigated = false
+        launchScreen(onNavigateToPrivacyPolicy = { navigated = true })
+
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.title_privacy_policy))
+            .performScrollTo()
+            .performClick()
+        composeTestRule.waitForIdle()
+
+        assert(navigated)
+    }
+
+    // endregion
+
+    // region Admin panel gumb
+
+    @Test
+    fun admin_panel_button_shown_for_admin_user() {
+        val context =
+            androidx.test.platform.app.InstrumentationRegistry
+                .getInstrumentation()
+                .targetContext
+        launchScreen(user = defaultUser.copy(admin = true))
+
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.button_admin_panel))
+            .performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun admin_panel_button_not_shown_for_regular_user() {
+        val context =
+            androidx.test.platform.app.InstrumentationRegistry
+                .getInstrumentation()
+                .targetContext
+        launchScreen(user = defaultUser.copy(admin = false))
+
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.button_admin_panel))
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun admin_panel_button_calls_onNavigateToAdmin() {
+        val context =
+            androidx.test.platform.app.InstrumentationRegistry
+                .getInstrumentation()
+                .targetContext
+        var navigated = false
+        launchScreen(user = defaultUser.copy(admin = true), onNavigateToAdmin = { navigated = true })
+
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.button_admin_panel))
+            .performScrollTo()
+            .performClick()
+        composeTestRule.waitForIdle()
+
+        assert(navigated)
+    }
+
+    // endregion
+
+    // region Privacy settings
+
+    @Test
+    fun privacy_settings_section_is_displayed() {
+        val context =
+            androidx.test.platform.app.InstrumentationRegistry
+                .getInstrumentation()
+                .targetContext
+        launchScreen()
+
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.label_privacy_settings))
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.label_analytics_consent))
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.label_notifications_consent))
+            .performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    // endregion
+
+    // region Save gumb
+
+    @Test
+    fun save_button_disabled_when_no_changes() {
+        val context =
+            androidx.test.platform.app.InstrumentationRegistry
+                .getInstrumentation()
+                .targetContext
+        launchScreen()
+
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.button_save))
+            .performScrollTo()
+            .assertIsNotEnabled()
+    }
+
+    @Test
+    fun save_button_enabled_after_name_changed() {
+        val context =
+            androidx.test.platform.app.InstrumentationRegistry
+                .getInstrumentation()
+                .targetContext
+        launchScreen()
+
+        composeTestRule.onNodeWithText("Initial Name").performTextClearance()
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.label_name))
+            .performTextInput("Novo Ime")
+
+        composeTestRule
+            .onNodeWithText(context.getString(R.string.button_save))
+            .performScrollTo()
+            .assertIsEnabled()
+    }
+
+    // endregion
 }

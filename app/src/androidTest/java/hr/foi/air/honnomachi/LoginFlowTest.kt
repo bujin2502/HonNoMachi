@@ -134,7 +134,7 @@ class LoginFlowTest {
 private class FakeLoginViewModel(
     authRepository: AuthRepository,
     firebaseAuth: com.google.firebase.auth.FirebaseAuth,
-) : AuthViewModel(authRepository, firebaseAuth) {
+) : AuthViewModel(authRepository, firebaseAuth, mockk(relaxed = true)) {
     var loginCalled: Boolean = false
     var capturedEmail: String? = null
     var capturedPassword: String? = null

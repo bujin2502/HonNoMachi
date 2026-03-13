@@ -122,7 +122,7 @@ fun CartPage(
             text = stringResource(R.string.cart),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(vertical = 16.dp),
+            modifier = Modifier.padding(vertical = 16.dp).testTag("cart_page_title"),
         )
 
         when (val state = uiState) {

@@ -4,6 +4,8 @@ import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -20,6 +22,7 @@ import hr.foi.air.honnomachi.ui.theme.HonNoMachiTheme
 import hr.foi.air.honnomachi.util.Result
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import org.junit.Before
 import org.junit.Rule
@@ -42,6 +45,14 @@ class FakeCartRepository : CartRepository {
         _cartItems.value = _cartItems.value.filter { it.id != cartItemId }
         return Result.Success(Unit)
     }
+}
+
+class FakeCartRepositoryError : CartRepository {
+    override suspend fun addToCart(book: BookModel): Result<Unit> = Result.Success(Unit)
+
+    override fun getCartItems(): Flow<Result<List<CartItemModel>>> = flowOf(Result.Error(Exception("Greška pri učitavanju")))
+
+    override suspend fun removeFromCart(cartItemId: String): Result<Unit> = Result.Success(Unit)
 }
 
 class FakeCheckoutRepository : CheckoutRepository {
@@ -93,17 +104,26 @@ class CartScreenTest {
         viewModel = CartViewModel(fakeCartRepository, fakeCheckoutRepository)
     }
 
-    @Test
-    fun cartPage_displaysItemsAndCanStartStripeCheckout() {
+    private fun launchCart(vm: CartViewModel = viewModel) {
         composeTestRule.setContent {
             HonNoMachiTheme {
-                CartPage(paddingValues = PaddingValues(), viewModel = viewModel, showImages = false)
+                CartPage(paddingValues = PaddingValues(), viewModel = vm, showImages = false)
             }
         }
+    }
 
+    private fun waitForItems(vararg titles: String) {
         composeTestRule.waitUntil(timeoutMillis = 5000) {
-            composeTestRule.onAllNodesWithText("Oracle-Database").fetchSemanticsNodes().isNotEmpty()
+            composeTestRule.onAllNodesWithText(titles.first()).fetchSemanticsNodes().isNotEmpty()
         }
+    }
+
+    // region Postojeći test
+
+    @Test
+    fun cartPage_displaysItemsAndCanStartStripeCheckout() {
+        launchCart()
+        waitForItems("Oracle-Database")
 
         composeTestRule.onNodeWithText("Oracle-Database").assertIsDisplayed()
         composeTestRule.onNodeWithText("Oracle-ADF").assertIsDisplayed()
@@ -119,4 +139,149 @@ class CartScreenTest {
             fakeCheckoutRepository.createPaymentIntentCallCount == 1
         }
     }
+
+    // endregion
+
+    // region Naslov i opći prikaz
+
+    @Test
+    fun cartPage_showsCartTitle() {
+        launchCart()
+        waitForItems("Oracle-Database")
+
+        composeTestRule.onNodeWithTag("cart_page_title").assertIsDisplayed()
+    }
+
+    // endregion
+
+    // region Stavke košarice
+
+    @Test
+    fun cartPage_showsItemAuthor() {
+        fakeCartRepository.addInitialItems(
+            listOf(CartItemModel(id = "10", title = "Test Book", author = "Autor Autorić", price = 10.0, currency = "EUR")),
+        )
+        val vm = CartViewModel(fakeCartRepository, fakeCheckoutRepository)
+        launchCart(vm)
+        waitForItems("Test Book")
+
+        composeTestRule.onNodeWithText("Autor Autorić").assertIsDisplayed()
+    }
+
+    @Test
+    fun cartPage_showsItemPriceAndCurrency() {
+        fakeCartRepository.addInitialItems(
+            listOf(CartItemModel(id = "11", title = "Skupa Knjiga", author = "A", price = 25.99, currency = "EUR")),
+        )
+        val vm = CartViewModel(fakeCartRepository, fakeCheckoutRepository)
+        launchCart(vm)
+        waitForItems("Skupa Knjiga")
+
+        composeTestRule.onNodeWithText("25.99 EUR").assertIsDisplayed()
+    }
+
+    @Test
+    fun cartPage_removingItem_removesItFromList() {
+        fakeCartRepository.addInitialItems(
+            listOf(
+                CartItemModel(id = "a1", title = "Knjiga za brisanje", author = "A", price = 5.0, currency = "EUR"),
+                CartItemModel(id = "a2", title = "Ova ostaje", author = "B", price = 8.0, currency = "EUR"),
+            ),
+        )
+        val vm = CartViewModel(fakeCartRepository, fakeCheckoutRepository)
+        launchCart(vm)
+        waitForItems("Knjiga za brisanje")
+
+        // Klikni delete na prvu stavku (contentDescription = "Remove")
+        composeTestRule
+            .onAllNodesWithContentDescription("Remove")
+            .get(0)
+            .performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.waitUntil(timeoutMillis = 5000) {
+            composeTestRule.onAllNodesWithText("Knjiga za brisanje").fetchSemanticsNodes().isEmpty()
+        }
+
+        assert(composeTestRule.onAllNodesWithText("Knjiga za brisanje").fetchSemanticsNodes().isEmpty())
+        composeTestRule.onNodeWithText("Ova ostaje").assertIsDisplayed()
+    }
+
+    // endregion
+
+    // region Prazna košarica
+
+    @Test
+    fun cartPage_showsEmptyCartMessage_whenNoItems() {
+        // Pokrenuti s praznom košaricom (default setup bez addInitialItems)
+        val emptyRepo = FakeCartRepository()
+        val vm = CartViewModel(emptyRepo, fakeCheckoutRepository)
+        launchCart(vm)
+
+        composeTestRule.waitUntil(timeoutMillis = 5000) {
+            composeTestRule.onAllNodesWithText("Košarica je prazna.").fetchSemanticsNodes().isNotEmpty()
+        }
+
+        composeTestRule.onNodeWithText("Košarica je prazna.").assertIsDisplayed()
+    }
+
+    @Test
+    fun cartPage_emptyCart_doesNotShowPayButton() {
+        val emptyRepo = FakeCartRepository()
+        val vm = CartViewModel(emptyRepo, fakeCheckoutRepository)
+        launchCart(vm)
+
+        composeTestRule.waitUntil(timeoutMillis = 5000) {
+            composeTestRule.onAllNodesWithText("Košarica je prazna.").fetchSemanticsNodes().isNotEmpty()
+        }
+
+        assert(composeTestRule.onAllNodesWithTag("pay_with_stripe_button").fetchSemanticsNodes().isEmpty())
+    }
+
+    // endregion
+
+    // region Stanje greške
+
+    @Test
+    fun cartPage_showsErrorMessage_whenRepositoryFails() {
+        val errorRepo = FakeCartRepositoryError()
+        val vm = CartViewModel(errorRepo, fakeCheckoutRepository)
+        launchCart(vm)
+
+        composeTestRule.waitUntil(timeoutMillis = 5000) {
+            composeTestRule
+                .onAllNodesWithText("Greška: Greška pri učitavanju")
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+
+        composeTestRule
+            .onNodeWithText("Greška: Greška pri učitavanju")
+            .assertIsDisplayed()
+    }
+
+    // endregion
+
+    // region Checkout dialog
+
+    @Test
+    fun cartPage_showsCheckoutDialog_afterPayButtonClick() {
+        launchCart()
+        waitForItems("Oracle-Database")
+
+        composeTestRule.onNodeWithTag("pay_with_stripe_button").performClick()
+
+        composeTestRule.waitUntil(timeoutMillis = 5000) {
+            composeTestRule
+                .onAllNodesWithText(composeTestRule.activity.getString(R.string.checkout_dialog_title))
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+
+        composeTestRule
+            .onNodeWithText(composeTestRule.activity.getString(R.string.checkout_dialog_title))
+            .assertIsDisplayed()
+    }
+
+    // endregion
 }

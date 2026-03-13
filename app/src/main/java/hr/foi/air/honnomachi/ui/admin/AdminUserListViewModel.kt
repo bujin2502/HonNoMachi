@@ -106,7 +106,7 @@ open class AdminUserListViewModel
             }
         }
 
-        fun refreshUsers() {
+        open fun refreshUsers() {
             viewModelScope.launch {
                 _uiState.update { it.copy(isRefreshing = true, errorMessage = null) }
                 lastDocSnapshot = null

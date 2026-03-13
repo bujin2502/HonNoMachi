@@ -17,6 +17,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -45,13 +46,14 @@ fun SuspensionDialog(
                     text = userName,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
+                    modifier = Modifier.testTag("dialog_user_name"),
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
                     value = reason,
                     onValueChange = { reason = it },
                     label = { Text(stringResource(R.string.admin_suspend_dialog_reason_hint)) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().testTag("field_suspend_reason"),
                     enabled = !isLoading,
                     minLines = 2,
                     maxLines = 4,
@@ -67,6 +69,7 @@ fun SuspensionDialog(
             TextButton(
                 onClick = { onConfirm(reason.trim()) },
                 enabled = reason.isNotBlank() && !isLoading,
+                modifier = Modifier.testTag("btn_suspend_dialog_confirm"),
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(modifier = Modifier.size(20.dp))

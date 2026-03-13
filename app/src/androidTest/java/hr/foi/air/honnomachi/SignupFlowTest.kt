@@ -128,7 +128,7 @@ class SignupFlowTest {
 private class FakeAuthViewModel(
     authRepository: AuthRepository,
     firebaseAuth: com.google.firebase.auth.FirebaseAuth,
-) : AuthViewModel(authRepository, firebaseAuth) {
+) : AuthViewModel(authRepository, firebaseAuth, mockk(relaxed = true)) {
     var lastSignup: Triple<String, String, String>? = null
     var nextResult: Boolean = true
     var nextErrorMessage: String? = null

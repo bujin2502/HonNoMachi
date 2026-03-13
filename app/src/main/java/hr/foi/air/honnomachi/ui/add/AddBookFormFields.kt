@@ -20,6 +20,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -46,7 +47,7 @@ fun TitleField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(stringResource(R.string.field_title)) },
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().testTag("field_title"),
         singleLine = true,
         isError = error != null,
         supportingText = {
@@ -71,7 +72,7 @@ fun AuthorsField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(stringResource(R.string.field_authors)) },
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().testTag("field_authors"),
         singleLine = true,
         isError = error != null,
         supportingText = {
@@ -188,7 +189,7 @@ fun PublisherField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(stringResource(R.string.field_publisher)) },
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().testTag("field_publisher"),
         singleLine = true,
     )
 }
@@ -233,7 +234,7 @@ fun IsbnField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(stringResource(R.string.field_isbn)) },
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().testTag("field_isbn"),
         singleLine = true,
         keyboardOptions =
             KeyboardOptions(
@@ -256,7 +257,8 @@ fun DescriptionField(
         modifier =
             modifier
                 .fillMaxWidth()
-                .height(FormDimensions.DescriptionHeight),
+                .height(FormDimensions.DescriptionHeight)
+                .testTag("field_description"),
     )
 }
 

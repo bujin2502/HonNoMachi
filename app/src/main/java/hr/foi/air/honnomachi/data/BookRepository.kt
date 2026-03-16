@@ -26,7 +26,10 @@ interface BookRepository {
 
     fun getMyListings(userId: String): Flow<Result<List<BookModel>>>
 
-    suspend fun updateListingStatus(bookId: String, newStatus: ItemStatus): Result<Unit>
+    suspend fun updateListingStatus(
+        bookId: String,
+        newStatus: ItemStatus,
+    ): Result<Unit>
 
     suspend fun deleteListing(bookId: String): Result<Unit>
 }

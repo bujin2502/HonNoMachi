@@ -59,7 +59,10 @@ class MyListingsViewModel
             _uiState.update { it.copy(selectedFilter = filter) }
         }
 
-        fun onToggleStatus(bookId: String, currentStatus: ItemStatus) {
+        fun onToggleStatus(
+            bookId: String,
+            currentStatus: ItemStatus,
+        ) {
             val newStatus =
                 if (currentStatus == ItemStatus.INACTIVE) ItemStatus.AVAILABLE else ItemStatus.INACTIVE
             viewModelScope.launch {

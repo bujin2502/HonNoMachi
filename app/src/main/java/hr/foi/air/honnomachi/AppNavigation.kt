@@ -34,8 +34,8 @@ import hr.foi.air.honnomachi.ui.cart.CheckoutCancelScreen
 import hr.foi.air.honnomachi.ui.cart.CheckoutSuccessScreen
 import hr.foi.air.honnomachi.ui.home.HomeScreen
 import hr.foi.air.honnomachi.ui.home.HomeViewModel
-import hr.foi.air.honnomachi.ui.policy.PrivacyPolicyScreen
 import hr.foi.air.honnomachi.ui.listings.MyListingsScreen
+import hr.foi.air.honnomachi.ui.policy.PrivacyPolicyScreen
 import hr.foi.air.honnomachi.ui.suspended.SuspendedAccountScreen
 import hr.foi.air.honnomachi.ui.wallet.WalletScreen
 

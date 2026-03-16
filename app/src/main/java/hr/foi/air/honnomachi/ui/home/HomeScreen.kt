@@ -215,6 +215,9 @@ fun ContentScreen(
                 onNavigateToAdmin = {
                     navController.navigate("admin")
                 },
+                onNavigateToMyListings = {
+                    navController.navigate("myListings")
+                },
                 profileViewModel = profileViewModel,
             )
         }

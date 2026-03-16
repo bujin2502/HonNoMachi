@@ -2,6 +2,7 @@ package hr.foi.air.honnomachi.viewmodel
 
 import hr.foi.air.honnomachi.data.BookRepository
 import hr.foi.air.honnomachi.model.BookModel
+import hr.foi.air.honnomachi.model.ItemStatus
 import hr.foi.air.honnomachi.ui.home.HomeViewModel
 import hr.foi.air.honnomachi.util.Result
 import kotlinx.coroutines.Dispatchers
@@ -48,6 +49,15 @@ class HomeTestBookRepository(
     override fun getSoldBooks(userId: String): Flow<Result<List<BookModel>>> = flowOf(Result.Success(emptyList()))
 
     override fun getPurchasedBooks(userId: String): Flow<Result<List<BookModel>>> = flowOf(Result.Success(emptyList()))
+
+    override fun getMyListings(userId: String): Flow<Result<List<BookModel>>> = flowOf(Result.Success(emptyList()))
+
+    override suspend fun updateListingStatus(
+        bookId: String,
+        newStatus: ItemStatus,
+    ): Result<Unit> = Result.Success(Unit)
+
+    override suspend fun deleteListing(bookId: String): Result<Unit> = Result.Success(Unit)
 }
 
 @ExperimentalCoroutinesApi

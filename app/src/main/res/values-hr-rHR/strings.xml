@@ -252,4 +252,17 @@
     <string name="shelf_sold">Prodano</string>
     <string name="shelf_no_purchased">Još niste kupili nijednu knjigu.</string>
     <string name="shelf_no_sold">Još niste prodali nijednu knjigu.</string>
+    <string name="button_my_listings">Moje ponude</string>
+    <string name="my_listings_title">Moje ponude</string>
+    <string name="my_listings_empty">Nemate nijednu ponudu.</string>
+    <string name="my_listings_filter_all">Sve</string>
+    <string name="my_listings_filter_active">Aktivne</string>
+    <string name="my_listings_filter_inactive">Neaktivne</string>
+    <string name="my_listings_activate">Aktiviraj</string>
+    <string name="my_listings_deactivate">Deaktiviraj</string>
+    <string name="my_listings_delete">Obriši</string>
+    <string name="my_listings_delete_title">Brisanje ponude</string>
+    <string name="my_listings_delete_message">Jeste li sigurni da želite obrisati \"%1$s\"? Ova radnja se ne može poništiti.</string>
+    <string name="my_listings_delete_confirm">Obriši</string>
+    <string name="my_listings_delete_cancel">Odustani</string>
 </resources>

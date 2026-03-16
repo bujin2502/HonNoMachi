@@ -252,4 +252,17 @@
     <string name="shelf_sold">Sold</string>
     <string name="shelf_no_purchased">No purchased books yet.</string>
     <string name="shelf_no_sold">No sold books yet.</string>
+    <string name="button_my_listings">My Listings</string>
+    <string name="my_listings_title">My Listings</string>
+    <string name="my_listings_empty">You have no listings yet.</string>
+    <string name="my_listings_filter_all">All</string>
+    <string name="my_listings_filter_active">Active</string>
+    <string name="my_listings_filter_inactive">Inactive</string>
+    <string name="my_listings_activate">Activate</string>
+    <string name="my_listings_deactivate">Deactivate</string>
+    <string name="my_listings_delete">Delete</string>
+    <string name="my_listings_delete_title">Delete listing</string>
+    <string name="my_listings_delete_message">Are you sure you want to delete \"%1$s\"? This action cannot be undone.</string>
+    <string name="my_listings_delete_confirm">Delete</string>
+    <string name="my_listings_delete_cancel">Cancel</string>
 </resources>

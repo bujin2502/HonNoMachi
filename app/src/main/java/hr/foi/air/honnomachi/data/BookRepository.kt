@@ -23,6 +23,15 @@ interface BookRepository {
     fun getSoldBooks(userId: String): Flow<Result<List<BookModel>>>
 
     fun getPurchasedBooks(userId: String): Flow<Result<List<BookModel>>>
+
+    fun getMyListings(userId: String): Flow<Result<List<BookModel>>>
+
+    suspend fun updateListingStatus(
+        bookId: String,
+        newStatus: ItemStatus,
+    ): Result<Unit>
+
+    suspend fun deleteListing(bookId: String): Result<Unit>
 }
 
 class BookRepositoryImpl
@@ -139,5 +148,61 @@ class BookRepositoryImpl
                         trySend(Result.Success(books))
                     }
                 awaitClose { listener.remove() }
+            }
+
+        override fun getMyListings(userId: String): Flow<Result<List<BookModel>>> =
+            callbackFlow {
+                val listener =
+                    firestore
+                        .collection("books")
+                        .whereEqualTo("userID", userId)
+                        .addSnapshotListener { snapshot, error ->
+                            if (error != null) {
+                                CrashlyticsManager.instance.logException(error)
+                                trySend(Result.Error(error))
+                                return@addSnapshotListener
+                            }
+
+                            if (snapshot != null) {
+                                val resultList =
+                                    snapshot.documents
+                                        .mapNotNull { doc ->
+                                            doc
+                                                .toObject(BookModel::class.java)
+                                                ?.copy(bookId = doc.id)
+                                        }
+                                trySend(Result.Success(resultList))
+                            }
+                        }
+                awaitClose { listener.remove() }
+            }
+
+        override suspend fun updateListingStatus(
+            bookId: String,
+            newStatus: ItemStatus,
+        ): Result<Unit> =
+            try {
+                firestore
+                    .collection("books")
+                    .document(bookId)
+                    .update("status", newStatus.name)
+                    .await()
+                Result.Success(Unit)
+            } catch (e: Exception) {
+                CrashlyticsManager.instance.logException(e)
+                Result.Error(e)
+            }
+
+        override suspend fun deleteListing(bookId: String): Result<Unit> =
+            try {
+                firestore
+                    .collection("books")
+                    .document(bookId)
+                    .delete()
+                    .await()
+                Result.Success(Unit)
+            } catch (e: Exception) {
+                CrashlyticsManager.instance.logException(e)
+                Result.Error(e)
             }
     }

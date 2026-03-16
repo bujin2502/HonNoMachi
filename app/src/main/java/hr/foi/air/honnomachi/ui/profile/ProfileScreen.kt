@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.ManageAccounts
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
@@ -54,6 +55,7 @@ fun ProfileScreen(
     onNavigateToChangePassword: () -> Unit,
     onNavigateToPrivacyPolicy: () -> Unit,
     onNavigateToAdmin: () -> Unit,
+    onNavigateToMyListings: () -> Unit,
     @Suppress("DEPRECATION")
     profileViewModel: ProfileViewModel = hiltViewModel(),
 ) {
@@ -213,6 +215,21 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(24.dp))
             HorizontalDivider()
             Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = onNavigateToMyListings,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Inventory2,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = stringResource(R.string.button_my_listings))
+            }
+            Spacer(modifier = Modifier.height(12.dp))
 
             if (isAdmin) {
                 Button(

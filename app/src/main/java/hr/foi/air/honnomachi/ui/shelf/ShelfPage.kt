@@ -22,6 +22,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.ui.components.BookItemView
+import hr.foi.air.honnomachi.ui.listings.MyListingsContent
 
 @Composable
 fun ShelfPage(
@@ -48,6 +49,7 @@ fun ShelfPage(
                                 when (tab) {
                                     ShelfTab.PURCHASED -> stringResource(R.string.shelf_purchased)
                                     ShelfTab.SOLD -> stringResource(R.string.shelf_sold)
+                                    ShelfTab.MY_LISTINGS -> stringResource(R.string.shelf_my_listings)
                                 },
                         )
                     },
@@ -55,29 +57,36 @@ fun ShelfPage(
             }
         }
 
-        Box(modifier = Modifier.fillMaxSize()) {
-            if (state.isLoading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            } else if (state.errorMessage != null) {
-                Text(
-                    text = state.errorMessage!!,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.align(Alignment.Center).padding(16.dp),
-                )
-            } else {
-                if (state.books.isEmpty()) {
-                    val emptyMsg =
-                        if (state.selectedTab == ShelfTab.PURCHASED) {
-                            stringResource(R.string.shelf_no_purchased)
-                        } else {
-                            stringResource(R.string.shelf_no_sold)
-                        }
+        when (state.selectedTab) {
+            ShelfTab.MY_LISTINGS -> {
+                MyListingsContent(modifier = Modifier.fillMaxSize())
+            }
+            else -> {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    if (state.isLoading) {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    } else if (state.errorMessage != null) {
+                        Text(
+                            text = state.errorMessage!!,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.align(Alignment.Center).padding(16.dp),
+                        )
+                    } else {
+                        if (state.books.isEmpty()) {
+                            val emptyMsg =
+                                if (state.selectedTab == ShelfTab.PURCHASED) {
+                                    stringResource(R.string.shelf_no_purchased)
+                                } else {
+                                    stringResource(R.string.shelf_no_sold)
+                                }
 
-                    Text(text = emptyMsg, modifier = Modifier.align(Alignment.Center))
-                } else {
-                    LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        items(state.books) { book ->
-                            BookItemView(book = book, onBookClick = { /* Navigacija */ })
+                            Text(text = emptyMsg, modifier = Modifier.align(Alignment.Center))
+                        } else {
+                            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                                items(state.books) { book ->
+                                    BookItemView(book = book, onBookClick = { /* Navigacija */ })
+                                }
+                            }
                         }
                     }
                 }

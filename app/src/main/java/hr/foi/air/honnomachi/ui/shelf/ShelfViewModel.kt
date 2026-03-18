@@ -40,6 +40,11 @@ class ShelfViewModel
                 return
             }
 
+            if (_uiState.value.selectedTab == ShelfTab.MY_LISTINGS) {
+                _uiState.update { it.copy(isLoading = false) }
+                return
+            }
+
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoading = true) }
 

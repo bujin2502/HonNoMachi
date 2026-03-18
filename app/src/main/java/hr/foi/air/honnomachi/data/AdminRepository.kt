@@ -199,20 +199,26 @@ class AdminRepositoryImpl
                     ),
                 )
 
-                val previousState = mapOf(
-                    "suspended" to (user.suspended ?: false),
-                    "suspendedAt" to user.suspendedAt,
-                    "suspendedReason" to user.suspendedReason,
-                )
-                val historyEntry = SuspensionHistoryEntry(
-                    action = "USER_SUSPENDED",
-                    adminUserId = adminUid,
-                    reason = reason,
-                    timestamp = now,
-                    previousState = previousState,
-                )
-                val historyRef = firestore.collection("users").document(userId)
-                    .collection("suspension_history").document()
+                val previousState =
+                    mapOf(
+                        "suspended" to (user.suspended ?: false),
+                        "suspendedAt" to user.suspendedAt,
+                        "suspendedReason" to user.suspendedReason,
+                    )
+                val historyEntry =
+                    SuspensionHistoryEntry(
+                        action = "USER_SUSPENDED",
+                        adminUserId = adminUid,
+                        reason = reason,
+                        timestamp = now,
+                        previousState = previousState,
+                    )
+                val historyRef =
+                    firestore
+                        .collection("users")
+                        .document(userId)
+                        .collection("suspension_history")
+                        .document()
                 batch.set(historyRef, historyEntry)
 
                 val booksSnapshot =
@@ -264,20 +270,26 @@ class AdminRepositoryImpl
                     ),
                 )
 
-                val previousState = mapOf(
-                    "suspended" to true,
-                    "suspendedAt" to user.suspendedAt,
-                    "suspendedReason" to user.suspendedReason,
-                    "suspendedBy" to user.suspendedBy,
-                )
-                val historyEntry = SuspensionHistoryEntry(
-                    action = "USER_REACTIVATED",
-                    adminUserId = adminUid,
-                    timestamp = now,
-                    previousState = previousState,
-                )
-                val historyRef = firestore.collection("users").document(userId)
-                    .collection("suspension_history").document()
+                val previousState =
+                    mapOf(
+                        "suspended" to true,
+                        "suspendedAt" to user.suspendedAt,
+                        "suspendedReason" to user.suspendedReason,
+                        "suspendedBy" to user.suspendedBy,
+                    )
+                val historyEntry =
+                    SuspensionHistoryEntry(
+                        action = "USER_REACTIVATED",
+                        adminUserId = adminUid,
+                        timestamp = now,
+                        previousState = previousState,
+                    )
+                val historyRef =
+                    firestore
+                        .collection("users")
+                        .document(userId)
+                        .collection("suspension_history")
+                        .document()
                 batch.set(historyRef, historyEntry)
 
                 val booksSnapshot =

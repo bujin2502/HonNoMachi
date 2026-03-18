@@ -97,171 +97,171 @@ fun ProfileScreen(
                     .verticalScroll(rememberScrollState()),
         ) {
             Column(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(64.dp),
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = stringResource(R.string.label_my_data),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-            )
-            Spacer(modifier = Modifier.height(12.dp))
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(64.dp),
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.label_my_data),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                )
+                Spacer(modifier = Modifier.height(12.dp))
 
-            when (val state = uiState) {
-                is ProfileUiState.Loading -> {
-                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
+                when (val state = uiState) {
+                    is ProfileUiState.Loading -> {
+                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
+                    }
+
+                    is ProfileUiState.Success -> {
+                        val user = state.user
+
+                        ProfileEditForm(
+                            formState = formState,
+                            userEmail = user.email,
+                            callbacks =
+                                ProfileEditFormCallbacks(
+                                    onNameChange = profileViewModel::onNameChange,
+                                    onPhoneChange = profileViewModel::onPhoneChange,
+                                    onStreetChange = profileViewModel::onStreetChange,
+                                    onZipChange = profileViewModel::onZipChange,
+                                    onCityChange = profileViewModel::onCityChange,
+                                    onValidateName = profileViewModel::validateName,
+                                    onValidatePhone = profileViewModel::validatePhone,
+                                    onValidateStreet = profileViewModel::validateStreet,
+                                    onValidateZip = profileViewModel::validateZip,
+                                    onValidateCity = profileViewModel::validateCity,
+                                ),
+                        )
+                    }
+
+                    is ProfileUiState.Error -> {
+                        Text(
+                            text = state.message,
+                            color = MaterialTheme.colorScheme.error,
+                            textAlign = TextAlign.Center,
+                        )
                     }
                 }
 
-                is ProfileUiState.Success -> {
-                    val user = state.user
-
-                    ProfileEditForm(
-                        formState = formState,
-                        userEmail = user.email,
-                        callbacks =
-                            ProfileEditFormCallbacks(
-                                onNameChange = profileViewModel::onNameChange,
-                                onPhoneChange = profileViewModel::onPhoneChange,
-                                onStreetChange = profileViewModel::onStreetChange,
-                                onZipChange = profileViewModel::onZipChange,
-                                onCityChange = profileViewModel::onCityChange,
-                                onValidateName = profileViewModel::validateName,
-                                onValidatePhone = profileViewModel::validatePhone,
-                                onValidateStreet = profileViewModel::validateStreet,
-                                onValidateZip = profileViewModel::validateZip,
-                                onValidateCity = profileViewModel::validateCity,
-                            ),
-                    )
-                }
-
-                is ProfileUiState.Error -> {
-                    Text(
-                        text = state.message,
-                        color = MaterialTheme.colorScheme.error,
-                        textAlign = TextAlign.Center,
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = stringResource(R.string.label_privacy_settings),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.label_analytics_consent),
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Text(
-                        text = stringResource(R.string.desc_analytics_consent),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = LabelGray,
-                    )
-                }
-                Switch(
-                    checked = formState.analyticsEnabled,
-                    onCheckedChange = {
-                        profileViewModel.onAnalyticsToggled(it)
-                    },
+                Spacer(modifier = Modifier.height(24.dp))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(24.dp))
+                Text(
+                    text = stringResource(R.string.label_privacy_settings),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
                 )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.label_notifications_consent),
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Text(
-                        text = stringResource(R.string.desc_notifications_consent),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = LabelGray,
-                    )
-                }
-                Switch(
-                    checked = formState.notificationsEnabled,
-                    onCheckedChange = {
-                        profileViewModel.onNotificationsToggled(it)
-                    },
-                )
-            }
-
-            TextButton(onClick = onNavigateToPrivacyPolicy) {
-                Text(text = stringResource(id = R.string.title_privacy_policy))
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(16.dp))
-
-            if (isAdmin) {
-                Button(
-                    onClick = onNavigateToAdmin,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ManageAccounts,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp),
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = stringResource(R.string.button_admin_panel))
-                }
                 Spacer(modifier = Modifier.height(12.dp))
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                OutlinedButton(
-                    onClick = onNavigateToChangePassword,
-                    shape = RoundedCornerShape(24.dp),
-                    modifier = Modifier.weight(1f).padding(end = 8.dp),
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    Text(text = stringResource(R.string.button_reset_password))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.label_analytics_consent),
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Text(
+                            text = stringResource(R.string.desc_analytics_consent),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = LabelGray,
+                        )
+                    }
+                    Switch(
+                        checked = formState.analyticsEnabled,
+                        onCheckedChange = {
+                            profileViewModel.onAnalyticsToggled(it)
+                        },
+                    )
                 }
 
-                SaveButton(
-                    hasChanges = hasChanges,
-                    isSaving = formState.isSaving,
-                    modifier = Modifier.weight(1f).padding(start = 8.dp),
-                    onClick = onSaveClick,
-                )
-            }
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Spacer(modifier = Modifier.height(16.dp))
-        }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.label_notifications_consent),
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Text(
+                            text = stringResource(R.string.desc_notifications_consent),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = LabelGray,
+                        )
+                    }
+                    Switch(
+                        checked = formState.notificationsEnabled,
+                        onCheckedChange = {
+                            profileViewModel.onNotificationsToggled(it)
+                        },
+                    )
+                }
+
+                TextButton(onClick = onNavigateToPrivacyPolicy) {
+                    Text(text = stringResource(id = R.string.title_privacy_policy))
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (isAdmin) {
+                    Button(
+                        onClick = onNavigateToAdmin,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(24.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ManageAccounts,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = stringResource(R.string.button_admin_panel))
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    OutlinedButton(
+                        onClick = onNavigateToChangePassword,
+                        shape = RoundedCornerShape(24.dp),
+                        modifier = Modifier.weight(1f).padding(end = 8.dp),
+                    ) {
+                        Text(text = stringResource(R.string.button_reset_password))
+                    }
+
+                    SaveButton(
+                        hasChanges = hasChanges,
+                        isSaving = formState.isSaving,
+                        modifier = Modifier.weight(1f).padding(start = 8.dp),
+                        onClick = onSaveClick,
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
         }
     }
 }

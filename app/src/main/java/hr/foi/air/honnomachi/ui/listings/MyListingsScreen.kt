@@ -41,7 +41,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.model.ItemStatus
@@ -49,6 +49,7 @@ import hr.foi.air.honnomachi.model.ItemStatus
 @Composable
 internal fun MyListingsContent(
     modifier: Modifier = Modifier,
+    @Suppress("DEPRECATION")
     viewModel: MyListingsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()

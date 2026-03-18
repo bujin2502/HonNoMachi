@@ -415,16 +415,19 @@ class AdminRepositoryTest {
             val mockHistoryCollection = mockk<CollectionReference>(relaxed = true)
             val mockHistoryDoc = mockk<DocumentReference>(relaxed = true)
             every {
-                firestore.collection("users").document("user-uid")
+                firestore
+                    .collection("users")
+                    .document("user-uid")
                     .collection("suspension_history")
             } returns mockHistoryCollection
             every { mockHistoryCollection.document() } returns mockHistoryDoc
 
             val mockBooksQuery = mockk<Query>(relaxed = true)
             val mockBooksSnapshot = mockk<QuerySnapshot>()
-            every { firestore.collection("books") } returns mockk(relaxed = true) {
-                every { whereEqualTo("userID", "user-uid") } returns mockBooksQuery
-            }
+            every { firestore.collection("books") } returns
+                mockk(relaxed = true) {
+                    every { whereEqualTo("userID", "user-uid") } returns mockBooksQuery
+                }
             val mockBooksTask = mockk<Task<QuerySnapshot>>()
             every { mockBooksQuery.get() } returns mockBooksTask
             coEvery { mockBooksTask.await() } returns mockBooksSnapshot
@@ -451,12 +454,13 @@ class AdminRepositoryTest {
             every { mockAdmin.uid } returns "admin-uid"
             every { auth.currentUser } returns mockAdmin
 
-            val suspendedUser = UserModel(
-                name = "User",
-                email = "user@test.com",
-                suspended = true,
-                suspendedReason = "Kršenje pravila",
-            )
+            val suspendedUser =
+                UserModel(
+                    name = "User",
+                    email = "user@test.com",
+                    suspended = true,
+                    suspendedReason = "Kršenje pravila",
+                )
             val mockSnapshot = mockk<DocumentSnapshot>()
             val mockTask = mockk<Task<DocumentSnapshot>>()
             every { mockDocument.get() } returns mockTask
@@ -471,16 +475,19 @@ class AdminRepositoryTest {
             val mockHistoryCollection = mockk<CollectionReference>(relaxed = true)
             val mockHistoryDoc = mockk<DocumentReference>(relaxed = true)
             every {
-                firestore.collection("users").document("user-uid")
+                firestore
+                    .collection("users")
+                    .document("user-uid")
                     .collection("suspension_history")
             } returns mockHistoryCollection
             every { mockHistoryCollection.document() } returns mockHistoryDoc
 
             val mockBooksQuery = mockk<Query>(relaxed = true)
             val mockBooksSnapshot = mockk<QuerySnapshot>()
-            every { firestore.collection("books") } returns mockk(relaxed = true) {
-                every { whereEqualTo("userID", "user-uid") } returns mockBooksQuery
-            }
+            every { firestore.collection("books") } returns
+                mockk(relaxed = true) {
+                    every { whereEqualTo("userID", "user-uid") } returns mockBooksQuery
+                }
             val mockBooksTask = mockk<Task<QuerySnapshot>>()
             every { mockBooksQuery.get() } returns mockBooksTask
             coEvery { mockBooksTask.await() } returns mockBooksSnapshot
@@ -506,13 +513,14 @@ class AdminRepositoryTest {
             every { mockAdmin.uid } returns "admin-uid"
             every { auth.currentUser } returns mockAdmin
 
-            val activeUser = UserModel(
-                name = "User",
-                email = "user@test.com",
-                suspended = false,
-                suspendedAt = null,
-                suspendedReason = null,
-            )
+            val activeUser =
+                UserModel(
+                    name = "User",
+                    email = "user@test.com",
+                    suspended = false,
+                    suspendedAt = null,
+                    suspendedReason = null,
+                )
             val mockSnapshot = mockk<DocumentSnapshot>()
             val mockTask = mockk<Task<DocumentSnapshot>>()
             every { mockDocument.get() } returns mockTask
@@ -527,16 +535,19 @@ class AdminRepositoryTest {
             val mockHistoryCollection = mockk<CollectionReference>(relaxed = true)
             val mockHistoryDoc = mockk<DocumentReference>(relaxed = true)
             every {
-                firestore.collection("users").document("user-uid")
+                firestore
+                    .collection("users")
+                    .document("user-uid")
                     .collection("suspension_history")
             } returns mockHistoryCollection
             every { mockHistoryCollection.document() } returns mockHistoryDoc
 
             val mockBooksQuery = mockk<Query>(relaxed = true)
             val mockBooksSnapshot = mockk<QuerySnapshot>()
-            every { firestore.collection("books") } returns mockk(relaxed = true) {
-                every { whereEqualTo("userID", "user-uid") } returns mockBooksQuery
-            }
+            every { firestore.collection("books") } returns
+                mockk(relaxed = true) {
+                    every { whereEqualTo("userID", "user-uid") } returns mockBooksQuery
+                }
             val mockBooksTask = mockk<Task<QuerySnapshot>>()
             every { mockBooksQuery.get() } returns mockBooksTask
             coEvery { mockBooksTask.await() } returns mockBooksSnapshot

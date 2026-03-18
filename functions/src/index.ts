@@ -11,7 +11,7 @@ import { defineSecret } from "firebase-functions/params";
 import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 import { HttpsError, onCall, onRequest } from "firebase-functions/v2/https";
 import { onSchedule } from "firebase-functions/v2/scheduler";
-import { BookData, sendBuyerOrderEmail, sendSellerOrderEmail } from "./emailService";
+import { BookData, sendBuyerOrderEmail, sendReactivationEmail, sendSellerOrderEmail, sendSuspensionEmail } from "./emailService";
 import { createHash } from "node:crypto";
 import Stripe from "stripe";
 
@@ -2638,6 +2638,37 @@ export const onCheckoutCompleted = onDocumentUpdated(
       }
     }
 
+    return null;
+  },
+);
+
+export const onUserSuspensionChanged = onDocumentUpdated(
+  { document: "users/{userId}", secrets: [gmailPass] },
+  async (event) => {
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+    if (!before || !after) return null;
+
+    const wasSuspended = before.suspended === true;
+    const isSuspended = after.suspended === true;
+    if (wasSuspended === isSuspended) return null;
+
+    const userEmail: string | null = after.email ?? null;
+    const notificationsEnabled = after.notificationsEnabled !== false;
+
+    if (!userEmail || !notificationsEnabled) {
+      logger.info(`Skip suspension email for ${event.params.userId}`);
+      return null;
+    }
+
+    if (isSuspended) {
+      const reason = after.suspendedReason ?? "Razlog nije naveden / No reason provided";
+      await sendSuspensionEmail(userEmail, reason);
+      logger.info(`Suspension email sent to ${event.params.userId}`);
+    } else {
+      await sendReactivationEmail(userEmail);
+      logger.info(`Reactivation email sent to ${event.params.userId}`);
+    }
     return null;
   },
 );

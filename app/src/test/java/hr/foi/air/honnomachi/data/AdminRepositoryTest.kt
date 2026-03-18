@@ -9,8 +9,10 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
+import com.google.firebase.firestore.WriteBatch
 import hr.foi.air.honnomachi.CrashlyticsManager
 import hr.foi.air.honnomachi.CrashlyticsService
+import hr.foi.air.honnomachi.model.SuspensionHistoryEntry
 import hr.foi.air.honnomachi.model.UserModel
 import hr.foi.air.honnomachi.util.Result
 import io.mockk.coEvery
@@ -18,8 +20,10 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
+import io.mockk.slot
 import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
+import io.mockk.verify
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -387,5 +391,168 @@ class AdminRepositoryTest {
 
             assertTrue(result is Result.Error)
             assertEquals("Korisnik nije suspendiran.", (result as Result.Error).exception.message)
+        }
+
+    @Test
+    fun `suspendUser writes to suspension_history subcollection`() =
+        runTest {
+            val mockAdmin = mockk<FirebaseUser>()
+            every { mockAdmin.uid } returns "admin-uid"
+            every { auth.currentUser } returns mockAdmin
+
+            val activeUser = UserModel(name = "User", email = "user@test.com", suspended = false)
+            val mockSnapshot = mockk<DocumentSnapshot>()
+            val mockTask = mockk<Task<DocumentSnapshot>>()
+            every { mockDocument.get() } returns mockTask
+            coEvery { mockTask.await() } returns mockSnapshot
+            every { mockSnapshot.exists() } returns true
+            every { mockSnapshot.toObject(UserModel::class.java) } returns activeUser
+            every { mockSnapshot.id } returns "user-uid"
+
+            val mockBatch = mockk<WriteBatch>(relaxed = true)
+            every { firestore.batch() } returns mockBatch
+
+            val mockHistoryCollection = mockk<CollectionReference>(relaxed = true)
+            val mockHistoryDoc = mockk<DocumentReference>(relaxed = true)
+            every {
+                firestore.collection("users").document("user-uid")
+                    .collection("suspension_history")
+            } returns mockHistoryCollection
+            every { mockHistoryCollection.document() } returns mockHistoryDoc
+
+            val mockBooksQuery = mockk<Query>(relaxed = true)
+            val mockBooksSnapshot = mockk<QuerySnapshot>()
+            every { firestore.collection("books") } returns mockk(relaxed = true) {
+                every { whereEqualTo("userID", "user-uid") } returns mockBooksQuery
+            }
+            val mockBooksTask = mockk<Task<QuerySnapshot>>()
+            every { mockBooksQuery.get() } returns mockBooksTask
+            coEvery { mockBooksTask.await() } returns mockBooksSnapshot
+            every { mockBooksSnapshot.documents } returns emptyList()
+
+            val mockCommitTask = mockk<Task<Void>>()
+            every { mockBatch.commit() } returns mockCommitTask
+            coEvery { mockCommitTask.await() } returns null
+
+            val result = repository.suspendUser("user-uid", "Kršenje pravila")
+
+            assertTrue(result is Result.Success)
+            val entrySlot = slot<SuspensionHistoryEntry>()
+            verify { mockBatch.set(mockHistoryDoc, capture(entrySlot)) }
+            assertEquals("USER_SUSPENDED", entrySlot.captured.action)
+            assertEquals("admin-uid", entrySlot.captured.adminUserId)
+            assertEquals("Kršenje pravila", entrySlot.captured.reason)
+        }
+
+    @Test
+    fun `reactivateUser writes to suspension_history subcollection`() =
+        runTest {
+            val mockAdmin = mockk<FirebaseUser>()
+            every { mockAdmin.uid } returns "admin-uid"
+            every { auth.currentUser } returns mockAdmin
+
+            val suspendedUser = UserModel(
+                name = "User",
+                email = "user@test.com",
+                suspended = true,
+                suspendedReason = "Kršenje pravila",
+            )
+            val mockSnapshot = mockk<DocumentSnapshot>()
+            val mockTask = mockk<Task<DocumentSnapshot>>()
+            every { mockDocument.get() } returns mockTask
+            coEvery { mockTask.await() } returns mockSnapshot
+            every { mockSnapshot.exists() } returns true
+            every { mockSnapshot.toObject(UserModel::class.java) } returns suspendedUser
+            every { mockSnapshot.id } returns "user-uid"
+
+            val mockBatch = mockk<WriteBatch>(relaxed = true)
+            every { firestore.batch() } returns mockBatch
+
+            val mockHistoryCollection = mockk<CollectionReference>(relaxed = true)
+            val mockHistoryDoc = mockk<DocumentReference>(relaxed = true)
+            every {
+                firestore.collection("users").document("user-uid")
+                    .collection("suspension_history")
+            } returns mockHistoryCollection
+            every { mockHistoryCollection.document() } returns mockHistoryDoc
+
+            val mockBooksQuery = mockk<Query>(relaxed = true)
+            val mockBooksSnapshot = mockk<QuerySnapshot>()
+            every { firestore.collection("books") } returns mockk(relaxed = true) {
+                every { whereEqualTo("userID", "user-uid") } returns mockBooksQuery
+            }
+            val mockBooksTask = mockk<Task<QuerySnapshot>>()
+            every { mockBooksQuery.get() } returns mockBooksTask
+            coEvery { mockBooksTask.await() } returns mockBooksSnapshot
+            every { mockBooksSnapshot.documents } returns emptyList()
+
+            val mockCommitTask = mockk<Task<Void>>()
+            every { mockBatch.commit() } returns mockCommitTask
+            coEvery { mockCommitTask.await() } returns null
+
+            val result = repository.reactivateUser("user-uid")
+
+            assertTrue(result is Result.Success)
+            val entrySlot = slot<SuspensionHistoryEntry>()
+            verify { mockBatch.set(mockHistoryDoc, capture(entrySlot)) }
+            assertEquals("USER_REACTIVATED", entrySlot.captured.action)
+            assertEquals("admin-uid", entrySlot.captured.adminUserId)
+        }
+
+    @Test
+    fun `suspension captures previousState correctly`() =
+        runTest {
+            val mockAdmin = mockk<FirebaseUser>()
+            every { mockAdmin.uid } returns "admin-uid"
+            every { auth.currentUser } returns mockAdmin
+
+            val activeUser = UserModel(
+                name = "User",
+                email = "user@test.com",
+                suspended = false,
+                suspendedAt = null,
+                suspendedReason = null,
+            )
+            val mockSnapshot = mockk<DocumentSnapshot>()
+            val mockTask = mockk<Task<DocumentSnapshot>>()
+            every { mockDocument.get() } returns mockTask
+            coEvery { mockTask.await() } returns mockSnapshot
+            every { mockSnapshot.exists() } returns true
+            every { mockSnapshot.toObject(UserModel::class.java) } returns activeUser
+            every { mockSnapshot.id } returns "user-uid"
+
+            val mockBatch = mockk<WriteBatch>(relaxed = true)
+            every { firestore.batch() } returns mockBatch
+
+            val mockHistoryCollection = mockk<CollectionReference>(relaxed = true)
+            val mockHistoryDoc = mockk<DocumentReference>(relaxed = true)
+            every {
+                firestore.collection("users").document("user-uid")
+                    .collection("suspension_history")
+            } returns mockHistoryCollection
+            every { mockHistoryCollection.document() } returns mockHistoryDoc
+
+            val mockBooksQuery = mockk<Query>(relaxed = true)
+            val mockBooksSnapshot = mockk<QuerySnapshot>()
+            every { firestore.collection("books") } returns mockk(relaxed = true) {
+                every { whereEqualTo("userID", "user-uid") } returns mockBooksQuery
+            }
+            val mockBooksTask = mockk<Task<QuerySnapshot>>()
+            every { mockBooksQuery.get() } returns mockBooksTask
+            coEvery { mockBooksTask.await() } returns mockBooksSnapshot
+            every { mockBooksSnapshot.documents } returns emptyList()
+
+            val mockCommitTask = mockk<Task<Void>>()
+            every { mockBatch.commit() } returns mockCommitTask
+            coEvery { mockCommitTask.await() } returns null
+
+            repository.suspendUser("user-uid", "Spam")
+
+            val entrySlot = slot<SuspensionHistoryEntry>()
+            verify { mockBatch.set(mockHistoryDoc, capture(entrySlot)) }
+            val prev = entrySlot.captured.previousState
+            assertEquals(false, prev["suspended"])
+            assertEquals(null, prev["suspendedAt"])
+            assertEquals(null, prev["suspendedReason"])
         }
 }

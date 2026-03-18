@@ -23,10 +23,13 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -35,6 +38,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -48,6 +52,7 @@ import hr.foi.air.honnomachi.ui.theme.LogoutButtonBackground
 import hr.foi.air.honnomachi.ui.theme.StatusActive
 import hr.foi.air.honnomachi.ui.theme.StatusSuspended
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     paddingValues: PaddingValues,
@@ -80,16 +85,20 @@ fun ProfileScreen(
         }
     }
 
-    Column(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .verticalScroll(rememberScrollState()),
-    ) {
-        ProfileHeaderRow(uiState = uiState, onLogout = onLogout)
-
+    Scaffold(
+        modifier = Modifier.padding(paddingValues),
+        topBar = {
+            ProfileHeaderRow(uiState = uiState, onLogout = onLogout)
+        },
+    ) { innerPadding ->
         Column(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState()),
+        ) {
+            Column(
             modifier =
                 Modifier
                     .fillMaxWidth()
@@ -270,6 +279,7 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
         }
+        }
     }
 }
 
@@ -291,54 +301,56 @@ private fun ProfileHeaderRow(
     uiState: ProfileUiState,
     onLogout: () -> Unit,
 ) {
-    Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (uiState is ProfileUiState.Success) {
-            val isSuspended = uiState.user.suspended == true
-            val statusText =
-                if (isSuspended) stringResource(R.string.value_suspended) else stringResource(R.string.value_active)
-            val statusColor = if (isSuspended) StatusSuspended else StatusActive
-            Column {
-                Text(
-                    text = stringResource(R.string.label_status),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = LabelGray,
-                )
-                Text(
-                    text = statusText,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = statusColor,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
-        } else {
-            Spacer(modifier = Modifier.width(1.dp))
-        }
-
-        Button(
-            onClick = onLogout,
-            colors = ButtonDefaults.buttonColors(containerColor = LogoutButtonBackground),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            shape = RoundedCornerShape(12.dp),
+    Surface {
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, top = 2.dp, bottom = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                    contentDescription = stringResource(R.string.label_logout),
-                    tint = MaterialTheme.colorScheme.onSurface,
-                )
-                Spacer(modifier = Modifier.size(4.dp))
-                Text(
-                    text = stringResource(R.string.label_logout),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                )
+            if (uiState is ProfileUiState.Success) {
+                val isSuspended = uiState.user.suspended == true
+                val statusText =
+                    if (isSuspended) stringResource(R.string.value_suspended) else stringResource(R.string.value_active)
+                val statusColor = if (isSuspended) StatusSuspended else StatusActive
+                Column {
+                    Text(
+                        text = stringResource(R.string.label_status),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = LabelGray,
+                    )
+                    Text(
+                        text = statusText,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = statusColor,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            } else {
+                Spacer(modifier = Modifier.width(1.dp))
+            }
+
+            Button(
+                onClick = onLogout,
+                colors = ButtonDefaults.buttonColors(containerColor = LogoutButtonBackground),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                shape = RoundedCornerShape(12.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                        contentDescription = stringResource(R.string.label_logout),
+                        tint = Color.Black,
+                    )
+                    Spacer(modifier = Modifier.size(4.dp))
+                    Text(
+                        text = stringResource(R.string.label_logout),
+                        color = Color.Black,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    )
+                }
             }
         }
     }

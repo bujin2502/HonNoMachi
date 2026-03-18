@@ -166,7 +166,10 @@ fun AppNavigation(
             "bookDetail/{bookId}",
             arguments = listOf(navArgument("bookId") { type = NavType.StringType }),
         ) { backStackEntry ->
-            BookDetailScreen(bookId = backStackEntry.arguments?.getString("bookId"))
+            BookDetailScreen(
+                bookId = backStackEntry.arguments?.getString("bookId"),
+                onNavigateBack = { navController.popBackStack() },
+            )
         }
 
         composable(ROUTE_SUSPENDED) {

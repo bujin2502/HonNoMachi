@@ -430,7 +430,7 @@ class AdminRepositoryTest {
             coEvery { mockBooksTask.await() } returns mockBooksSnapshot
             every { mockBooksSnapshot.documents } returns emptyList()
 
-            val mockCommitTask = mockk<Task<Void>>()
+            val mockCommitTask = mockk<Task<Void?>>()
             every { mockBatch.commit() } returns mockCommitTask
             coEvery { mockCommitTask.await() } returns null
 
@@ -486,7 +486,7 @@ class AdminRepositoryTest {
             coEvery { mockBooksTask.await() } returns mockBooksSnapshot
             every { mockBooksSnapshot.documents } returns emptyList()
 
-            val mockCommitTask = mockk<Task<Void>>()
+            val mockCommitTask = mockk<Task<Void?>>()
             every { mockBatch.commit() } returns mockCommitTask
             coEvery { mockCommitTask.await() } returns null
 
@@ -542,7 +542,7 @@ class AdminRepositoryTest {
             coEvery { mockBooksTask.await() } returns mockBooksSnapshot
             every { mockBooksSnapshot.documents } returns emptyList()
 
-            val mockCommitTask = mockk<Task<Void>>()
+            val mockCommitTask = mockk<Task<Void?>>()
             every { mockBatch.commit() } returns mockCommitTask
             coEvery { mockCommitTask.await() } returns null
 

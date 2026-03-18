@@ -265,7 +265,7 @@ class AdminRepositoryImpl
                 )
 
                 val previousState = mapOf(
-                    "suspended" to user.suspended,
+                    "suspended" to true,
                     "suspendedAt" to user.suspendedAt,
                     "suspendedReason" to user.suspendedReason,
                     "suspendedBy" to user.suspendedBy,

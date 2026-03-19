@@ -357,8 +357,6 @@ class CartViewModelNewTest {
                 }
             advanceTimeBy(100)
             runCurrent()
-
-            // Ticker fires, detects expired reservation
             advanceTimeBy(1_500)
             runCurrent()
 
@@ -366,8 +364,6 @@ class CartViewModelNewTest {
                 "Rezervacija je istekla. Knjige su uklonjene iz košarice.",
                 viewModel.actionMessage.value,
             )
-
-            // Checkout completes despite expired reservation — no compensation flow exists
             viewModel.onPaymentSheetResult(PaymentSheetResult.Completed)
             advanceTimeBy(100)
             runCurrent()

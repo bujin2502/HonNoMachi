@@ -75,9 +75,9 @@ fun ImageUploaderView(onImagesSelected: (List<Uri>) -> Unit) {
 
     if (showImagePicker) {
         ImagePicker(
-            onDismiss = { showImagePicker = false }, // NOSONAR
+            onDismiss = { showImagePicker = false },
             onSourceSelected = { source ->
-                showImagePicker = false // NOSONAR
+                showImagePicker = false
                 selectedSourceId = source.id
             },
             imageSources = imageSources,
@@ -86,7 +86,7 @@ fun ImageUploaderView(onImagesSelected: (List<Uri>) -> Unit) {
 
     Column(modifier = Modifier.fillMaxWidth()) {
         OutlinedButton(
-            onClick = { showImagePicker = true }, // NOSONAR
+            onClick = { showImagePicker = true },
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(text = "Add Images")

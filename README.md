@@ -61,7 +61,8 @@ HonNoMachi (本の街 - "Grad knjiga") je mobilna platforma koja spaja kupce i p
 | **Jezik**                | Kotlin                                                |
 | **UI Framework**         | Jetpack Compose + Material Design 3                   |
 | **Arhitektura**          | MVVM (Model-View-ViewModel)                           |
-| **Backend**              | Firebase (Authentication, Firestore, Storage)         |
+| **Backend**              | Firebase (Authentication, Firestore, Storage, Cloud Functions) |
+| **Cloud Functions**      | TypeScript / Node.js 22                               |
 | **Plaćanje**             | Stripe Android SDK (simulacija)                       |
 | **Async Operations**     | Kotlin Coroutines + Flow                              |
 | **Dependency Injection** | Hilt                                                  |
@@ -259,7 +260,62 @@ Za detaljnije upute o postavljanju projekta, pogledajte:
 
 ### Sprint 06
 
-### Sprint 07
+#### Plaćanje putem Stripea
+- [x] Integracija Stripe Android SDK-a za simulaciju plaćanja (HNM-101/102)
+- [x] Stripe Checkout flow — kreiranje PaymentIntent-a, Success/Cancel ekrani
+- [x] Cloud Functions backend (TypeScript) — `createCheckoutPaymentIntent`, `stripeWebhook`, `stripeWalletWebhook`
+- [x] Rezervacija knjiga u košarici s automatskim istekom (TTL 15 min, max 60 min)
+- [x] Scheduled Cloud Functions za čišćenje isteklih rezervacija i checkout sesija
+- [x] Konverzija valuta (EUR ↔ USD) na backend i frontend razini
+
+#### Wallet (digitalni novčanik)
+- [x] Implementacija wallet sustava unutar aplikacije (PaymentSheet)
+- [x] Cloud Function `createWalletTopupIntent` za nadopunu novčanika
+- [x] Stripe Wallet webhook za praćenje transakcija (uspjeh, neuspjeh, refund)
+
+#### Obavijesti o kupnji
+- [x] Email servis za obavijesti o kupnji putem Nodemailer-a (HNM-103)
+- [x] Email obavijesti kupcu i prodavaču nakon uspješne transakcije
+- [x] Korisničke postavke za uključivanje/isključivanje obavijesti
+
+#### Portfelj kupljenih i prodanih knjiga
+- [x] ShelfPage s tabovima "Purchased" i "Sold" za pregled povijesti transakcija (HNM-108)
+- [x] Filtriranje i prikaz knjiga po statusu kupnje/prodaje
+
+#### Upravljanje ponudama prodavača
+- [x] My Listings ekran za upravljanje vlastitim ponudama (HNM-109)
+- [x] Filtriranje ponuda po statusu (All/Active/Inactive)
+- [x] Toggle vidljivosti ponude (AVAILABLE ↔ INACTIVE) i brisanje ponuda
+- [x] Integracija My Listings kao treći tab na ShelfPage
+
+#### Email obavijesti za suspenziju
+- [x] Email obavijest korisniku pri suspenziji i reaktivaciji računa (HNM-300)
+- [x] Cloud Function trigger na promjenu statusa korisnika u Firestore-u
+
+#### Poboljšanja UI-a
+- [x] Vizualna poboljšanja AuthScreen, ProfileScreen i BookDetailScreen (HNM-300)
+
+#### DevOps i kontinuirana isporuka
+- [x] Automatsko potpisivanje Release APK-a keystoreom putem GitHub Secrets
+- [x] Distribucija potpisanog APK-a putem Firebase App Distribution za interni QA
+- [x] Automatsko verzioniranje buildova na temelju Git tagova
+- [x] ProGuard obfuskacija u release build konfiguraciji
+- [x] Nadogradnja Node.js runtime-a s v20 na v22 za Cloud Functions
+
+#### Kvaliteta koda
+- [x] Rješavanje SonarQube arhitekturalnih i sigurnosnih nalaza
+- [x] Smanjenje kognitivne kompleksnosti UI metoda
+- [x] Reorganizacija build skripti — grupiranje dependencija, verzije u Version Catalog
+- [x] Zamjena deprecated `hiltViewModel` importa u svim UI komponentama
+- [x] Zamjena ponavljajućih string literala s imenovanim konstantama
+
+### Sprint 07 (Završni sprint)
+
+#### Guard pravila za suspendirane korisnike
+- [ ] Implementacija guard pravila za suspendirane korisnike (HNM-112)
+
+#### Monetizacija putem oglasa
+- [ ] Implementacija monetizacije putem oglasa (HNM-113)
 
 ---
 
@@ -408,7 +464,7 @@ Projekt razvija tim studenata **Fakulteta organizacije i informatike (FOI)**, Va
 
 ---
 
-**Status projekta:** Sprint 06 - U tijeku | Sprint 07 - U planiranju
-**Zadnje ažuriranje:** 05.03.2026.
+**Status projekta:** Sprint 07 (Završni sprint) - U tijeku
+**Zadnje ažuriranje:** 18.03.2026.
 
 </div>

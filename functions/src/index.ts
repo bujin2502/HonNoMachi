@@ -27,8 +27,6 @@ const DEFAULT_RESERVATION_TTL_MINUTES = 15;
 const MAX_RESERVATION_TTL_MINUTES = 60;
 const MAX_CART_SIZE = 20;
 const CENTS_MULTIPLIER = 100;
-// Exchange rates: units of target currency per 1 unit of source currency.
-// Kept in sync with the Android app's USD_TO_EUR_RATE constant (1 EUR = 1.18 USD).
 const EXCHANGE_RATE_TABLE: Record<string, Record<string, number>> = {
   eur: { usd: 1.18, eur: 1.0 },
   usd: { eur: 1.0 / 1.18, usd: 1.0 },
@@ -362,7 +360,6 @@ export const addToCartAndReserve = onCall(
       const imageUrl =
         Array.isArray(imageUrls) ? asString(imageUrls[0]) ?? null : null;
 
-      // Read existing cart items
       const cartRef = db.collection("users").doc(buyerUid).collection("cart");
       const cartSnapshot = await transaction.get(cartRef);
 
@@ -377,7 +374,6 @@ export const addToCartAndReserve = onCall(
         );
       }
 
-      // Read existing cart books for TTL refresh
       const existingBooks: Array<{
         bookRef: DocumentReference;
         reservationId: string | null;
@@ -396,7 +392,6 @@ export const addToCartAndReserve = onCall(
         }
       }
 
-      // Writes
       if (!alreadyReservedByBuyer) {
         const reservationRef = db.collection("reservations").doc();
         transaction.set(reservationRef, {
@@ -429,7 +424,6 @@ export const addToCartAndReserve = onCall(
           addedAt: now,
         });
       } else {
-        // Idempotent re-add: refresh TTL on this book
         const existingReservationId = asString(bookData.reservationId);
         transaction.update(bookRef, {
           reservationExpiresAt: newExpiresAt,
@@ -444,7 +438,6 @@ export const addToCartAndReserve = onCall(
         }
       }
 
-      // Refresh TTL on ALL existing cart items
       for (const existing of existingBooks) {
         transaction.update(existing.bookRef, {
           reservationExpiresAt: newExpiresAt,
@@ -633,7 +626,6 @@ export const createWalletTopupIntent = onCall(
           return;
         }
 
-        // Firestore transactions require all reads to happen before any writes.
         const walletRef = db.collection("wallets").doc(userId);
         const walletSnapshot = await transaction.get(walletRef);
 
@@ -1215,7 +1207,6 @@ async function validateAndExtendCartReservations(
     }
 
     for (const reservation of reservations) {
-      // Extend TTL on both reservation and book after all reads are complete.
       transaction.update(reservation.bookRef, {
         reservationExpiresAt: expiresAt,
       });
@@ -1339,8 +1330,6 @@ async function reserveWalletContributionForCheckout({
       return zero;
     }
 
-    // Convert wallet balance to checkout currency for comparison.
-    // If currencies differ, use EXCHANGE_RATE_TABLE; returns 0 for unsupported pairs.
     const walletBalanceInCheckoutCurrency = convertMinorBetweenCurrencies(
       currentBalanceMinor,
       walletCurrency,
@@ -1350,11 +1339,8 @@ async function reserveWalletContributionForCheckout({
       return zero;
     }
 
-    // How much of the checkout total can the wallet cover (in checkout currency)?
     const contributionMinor = Math.min(walletBalanceInCheckoutCurrency, requestedAmountMinor);
 
-    // How much to deduct from the wallet (in wallet currency)?
-    // Round up so we never under-deduct relative to the discount given.
     const walletDeductionMinor =
       walletCurrency === currency
         ? contributionMinor
@@ -1412,7 +1398,6 @@ async function applyWalletCheckoutRefundInTransaction({
   const currentBalanceMinor = asInteger(walletData.balanceMinor) ?? 0;
   const currentCurrency = asString(walletData.currency);
 
-  // amountMinor is already in wallet currency - add it back directly.
   transaction.set(
     walletRef,
     {
@@ -2291,8 +2276,6 @@ async function releaseCheckoutSession({
 
     const buyerUid = asString(checkoutData.buyerUid) ?? mergedFallbackBuyerUid;
     const walletContributionMinor = asInteger(checkoutData.walletContributionMinor) ?? 0;
-    // walletDeductionMinor is the actual wallet-currency amount deducted. Falls back to
-    // walletContributionMinor for older sessions where currencies always matched.
     const walletDeductionMinor = asInteger(checkoutData.walletDeductionMinor) ?? walletContributionMinor;
     const reservationIds = uniqueStrings([
       ...parseReservationIds(checkoutData.reservationIds),
@@ -2342,7 +2325,6 @@ async function releaseCheckoutSession({
       updatedAt: now,
     });
 
-    // Books stay RESERVED in cart — only clear checkout association on reservations.
     for (const reservationRef of reservationsToRelease) {
       transaction.update(reservationRef, {
         checkoutSessionId: null,

@@ -56,7 +56,6 @@ class FirebaseImageUploader
                             uploadedImageUrls.add(result.data)
                         }
                         is Result.Error -> {
-                            // If one image fails, delete all previously uploaded images
                             for (url in uploadedImageUrls) {
                                 deleteImage(url)
                             }
@@ -66,7 +65,6 @@ class FirebaseImageUploader
                 }
                 return Result.Success(uploadedImageUrls)
             } catch (e: Exception) {
-                // In case of any other exception, also perform a rollback
                 for (url in uploadedImageUrls) {
                     deleteImage(url)
                 }

@@ -7,7 +7,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import hr.foi.air.honnomachi.CrashlyticsManager
-import hr.foi.air.honnomachi.model.AuditLog
+import hr.foi.air.honnomachi.model.SuspensionHistoryEntry
 import hr.foi.air.honnomachi.model.UserModel
 import hr.foi.air.honnomachi.util.Result
 import kotlinx.coroutines.tasks.await
@@ -199,16 +199,27 @@ class AdminRepositoryImpl
                     ),
                 )
 
-                val auditLog =
-                    AuditLog(
+                val previousState =
+                    mapOf(
+                        "suspended" to (user.suspended ?: false),
+                        "suspendedAt" to user.suspendedAt,
+                        "suspendedReason" to user.suspendedReason,
+                    )
+                val historyEntry =
+                    SuspensionHistoryEntry(
                         action = "USER_SUSPENDED",
-                        targetUserId = userId,
                         adminUserId = adminUid,
                         reason = reason,
                         timestamp = now,
+                        previousState = previousState,
                     )
-                val auditRef = firestore.collection("audit_logs").document()
-                batch.set(auditRef, auditLog) // NOSONAR
+                val historyRef =
+                    firestore
+                        .collection("users")
+                        .document(userId)
+                        .collection("suspension_history")
+                        .document()
+                batch.set(historyRef, historyEntry)
 
                 val booksSnapshot =
                     firestore
@@ -259,15 +270,27 @@ class AdminRepositoryImpl
                     ),
                 )
 
-                val auditLog =
-                    AuditLog(
+                val previousState =
+                    mapOf(
+                        "suspended" to true,
+                        "suspendedAt" to user.suspendedAt,
+                        "suspendedReason" to user.suspendedReason,
+                        "suspendedBy" to user.suspendedBy,
+                    )
+                val historyEntry =
+                    SuspensionHistoryEntry(
                         action = "USER_REACTIVATED",
-                        targetUserId = userId,
                         adminUserId = adminUid,
                         timestamp = now,
+                        previousState = previousState,
                     )
-                val auditRef = firestore.collection("audit_logs").document()
-                batch.set(auditRef, auditLog) // NOSONAR
+                val historyRef =
+                    firestore
+                        .collection("users")
+                        .document(userId)
+                        .collection("suspension_history")
+                        .document()
+                batch.set(historyRef, historyEntry)
 
                 val booksSnapshot =
                     firestore

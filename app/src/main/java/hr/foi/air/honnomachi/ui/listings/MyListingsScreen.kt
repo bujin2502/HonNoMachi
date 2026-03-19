@@ -15,21 +15,17 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -50,10 +46,9 @@ import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.model.ItemStatus
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MyListingsScreen(
-    onNavigateBack: () -> Unit,
+internal fun MyListingsContent(
+    modifier: Modifier = Modifier,
     @Suppress("DEPRECATION")
     viewModel: MyListingsViewModel = hiltViewModel(),
 ) {
@@ -75,28 +70,8 @@ fun MyListingsScreen(
         )
     }
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text(text = stringResource(R.string.my_listings_title)) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.desc_navigate_back),
-                        )
-                    }
-                },
-            )
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-    ) { paddingValues ->
-        Column(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-        ) {
+    Box(modifier = modifier) {
+        Column(modifier = Modifier.fillMaxSize()) {
             FilterRow(
                 selectedFilter = uiState.selectedFilter,
                 onFilterChange = viewModel::onFilterChange,
@@ -159,11 +134,16 @@ fun MyListingsScreen(
                 }
             }
         }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
     }
 }
 
 @Composable
-private fun FilterRow(
+internal fun FilterRow(
     selectedFilter: ListingsFilter,
     onFilterChange: (ListingsFilter) -> Unit,
 ) {
@@ -194,7 +174,7 @@ private fun FilterRow(
 }
 
 @Composable
-private fun ListingCard(
+internal fun ListingCard(
     book: BookModel,
     onToggleStatus: () -> Unit,
     onDelete: () -> Unit,
@@ -279,7 +259,7 @@ private fun ListingCard(
 }
 
 @Composable
-private fun DeleteConfirmationDialog(
+internal fun DeleteConfirmationDialog(
     bookTitle: String,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
@@ -308,7 +288,7 @@ private fun DeleteConfirmationDialog(
     )
 }
 
-private fun filterListings(
+internal fun filterListings(
     listings: List<BookModel>,
     filter: ListingsFilter,
 ): List<BookModel> =

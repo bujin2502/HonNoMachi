@@ -34,7 +34,6 @@ import hr.foi.air.honnomachi.ui.cart.CheckoutCancelScreen
 import hr.foi.air.honnomachi.ui.cart.CheckoutSuccessScreen
 import hr.foi.air.honnomachi.ui.home.HomeScreen
 import hr.foi.air.honnomachi.ui.home.HomeViewModel
-import hr.foi.air.honnomachi.ui.listings.MyListingsScreen
 import hr.foi.air.honnomachi.ui.policy.PrivacyPolicyScreen
 import hr.foi.air.honnomachi.ui.suspended.SuspendedAccountScreen
 import hr.foi.air.honnomachi.ui.wallet.WalletScreen
@@ -156,17 +155,14 @@ fun AppNavigation(
             )
         }
 
-        composable(route = ROUTE_MY_LISTINGS) {
-            MyListingsScreen(
-                onNavigateBack = { navController.navigateUp() },
-            )
-        }
-
         composable(
             "bookDetail/{bookId}",
             arguments = listOf(navArgument("bookId") { type = NavType.StringType }),
         ) { backStackEntry ->
-            BookDetailScreen(bookId = backStackEntry.arguments?.getString("bookId"))
+            BookDetailScreen(
+                bookId = backStackEntry.arguments?.getString("bookId"),
+                onNavigateBack = { navController.popBackStack() },
+            )
         }
 
         composable(ROUTE_SUSPENDED) {
@@ -266,4 +262,3 @@ private const val ROUTE_CHECKOUT_SUCCESS = "checkout/success"
 private const val ROUTE_CHECKOUT_CANCEL = "checkout/cancel"
 private const val ROUTE_SUSPENDED = "suspended"
 private const val ROUTE_WALLET = "wallet"
-private const val ROUTE_MY_LISTINGS = "myListings"

@@ -81,6 +81,7 @@ fun HomeScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
+                expandedHeight = 48.dp,
                 title = {
                     Text(text = navItemList[selectedIndex].label)
                 },
@@ -214,9 +215,6 @@ fun ContentScreen(
                 },
                 onNavigateToAdmin = {
                     navController.navigate("admin")
-                },
-                onNavigateToMyListings = {
-                    navController.navigate("myListings")
                 },
                 profileViewModel = profileViewModel,
             )

@@ -197,6 +197,22 @@ class ShelfViewModelTest {
         }
 
     @Test
+    fun `selectTab MY_LISTINGS skips loadBooks and sets isLoading false`() =
+        runTest(testDispatcher) {
+            every { auth.currentUser } returns mockUser
+
+            val viewModel = ShelfViewModel(ShelfTestBookRepository(), auth)
+            viewModel.selectTab(ShelfTab.MY_LISTINGS)
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            assertEquals(ShelfTab.MY_LISTINGS, state.selectedTab)
+            assertFalse(state.isLoading)
+            assertTrue(state.books.isEmpty())
+            assertNull(state.errorMessage)
+        }
+
+    @Test
     fun `selectTab to PURCHASED after SOLD loads purchased books`() =
         runTest(testDispatcher) {
             every { auth.currentUser } returns mockUser

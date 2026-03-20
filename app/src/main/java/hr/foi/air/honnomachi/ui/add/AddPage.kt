@@ -1,6 +1,7 @@
 package hr.foi.air.honnomachi.ui.add
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -12,7 +13,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -20,10 +20,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -57,6 +60,15 @@ fun AddPage(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
+    val lastSnackbarTime = remember { mutableLongStateOf(0L) }
+    val showSuspendedSnackbar: () -> Unit = {
+        val now = System.currentTimeMillis()
+        if (now - lastSnackbarTime.longValue > 4000L) {
+            lastSnackbarTime.longValue = now
+            scope.launch { snackbarHostState.showSnackbar(suspendedMessage) }
+        }
+    }
+
     LaunchedEffect(uiState) {
         when (val state = uiState) {
             AddBookUiState.Success -> {
@@ -71,15 +83,27 @@ fun AddPage(
         }
     }
 
-    Scaffold(
-        modifier = Modifier.padding(paddingValues),
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-    ) { innerPadding ->
+    Box(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .pointerInput(isSuspended) {
+                    if (!isSuspended) return@pointerInput
+                    awaitPointerEventScope {
+                        while (true) {
+                            val event = awaitPointerEvent(PointerEventPass.Initial)
+                            if (event.changes.any { it.pressed && !it.previousPressed }) {
+                                showSuspendedSnackbar()
+                            }
+                        }
+                    }
+                },
+    ) {
         Column(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
                     .padding(horizontal = AddPageDimensions.HorizontalPadding)
                     .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(AddPageDimensions.FieldSpacing),
@@ -157,9 +181,7 @@ fun AddPage(
             SubmitButton(
                 isSubmitting = uiState == AddBookUiState.Submitting,
                 onClick = {
-                    if (isSuspended) {
-                        scope.launch { snackbarHostState.showSnackbar(suspendedMessage) }
-                    } else {
+                    if (!isSuspended) {
                         viewModel.submitForm()
                     }
                 },
@@ -175,6 +197,11 @@ fun AddPage(
                 Spacer(modifier = Modifier.height(AddPageDimensions.BottomSpacing))
             }
         }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
     }
 }
 

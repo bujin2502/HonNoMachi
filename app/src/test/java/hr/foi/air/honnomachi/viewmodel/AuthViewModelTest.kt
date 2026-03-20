@@ -319,7 +319,7 @@ class AuthViewModelTest {
         }
 
     @Test
-    fun `login suspended user sets isSuspended and signs out`() =
+    fun `login suspended user sets isSuspended and stays logged in`() =
         runTest {
             val suspendedUser =
                 UserModel(
@@ -337,13 +337,12 @@ class AuthViewModelTest {
             val uiState = authViewModel.uiState.first()
             assertTrue(uiState.isSuspended)
             assertEquals("Kršenje pravila", uiState.suspendedReason)
-            assertFalse(uiState.isUserLoggedIn)
+            assertTrue(uiState.isUserLoggedIn)
             assertFalse(uiState.isLoading)
-            coVerify { mockAuthRepository.signOut() }
         }
 
     @Test
-    fun `loginWithGoogle suspended user sets isSuspended`() =
+    fun `loginWithGoogle suspended user sets isSuspended and stays logged in`() =
         runTest {
             val suspendedUser =
                 UserModel(
@@ -361,12 +360,11 @@ class AuthViewModelTest {
             val uiState = authViewModel.uiState.first()
             assertTrue(uiState.isSuspended)
             assertEquals("Spam", uiState.suspendedReason)
-            assertFalse(uiState.isUserLoggedIn)
-            coVerify { mockAuthRepository.signOut() }
+            assertTrue(uiState.isUserLoggedIn)
         }
 
     @Test
-    fun `checkSession suspended user sets isSuspended`() =
+    fun `checkSession suspended user sets isSuspended and stays logged in`() =
         runTest {
             val suspendedUser =
                 UserModel(
@@ -384,12 +382,11 @@ class AuthViewModelTest {
             val uiState = authViewModel.uiState.first()
             assertTrue(uiState.isSuspended)
             assertEquals("Neaktivnost", uiState.suspendedReason)
-            assertFalse(uiState.isUserLoggedIn)
-            coVerify { mockAuthRepository.signOut() }
+            assertTrue(uiState.isUserLoggedIn)
         }
 
     @Test
-    fun `consumeSuspendedState resets suspension state`() =
+    fun `suspension monitor clears suspension on reactivation`() =
         runTest {
             val suspendedUser =
                 UserModel(
@@ -399,14 +396,20 @@ class AuthViewModelTest {
                     suspended = true,
                     suspendedReason = "Razlog",
                 )
+            val reactivatedUser =
+                UserModel(
+                    uid = "123",
+                    email = testEmail,
+                    isVerified = true,
+                    suspended = false,
+                    suspendedReason = null,
+                )
             coEvery { mockAuthRepository.login(testEmail, testPassword) } returns Result.Success(suspendedUser)
+            coEvery { mockUserDataSource.observeUser("123") } returns
+                kotlinx.coroutines.flow.flowOf(suspendedUser, reactivatedUser)
 
             authViewModel.login(testEmail, testPassword)
             testDispatcher.scheduler.advanceUntilIdle()
-
-            assertTrue(authViewModel.uiState.first().isSuspended)
-
-            authViewModel.consumeSuspendedState()
 
             val uiState = authViewModel.uiState.first()
             assertFalse(uiState.isSuspended)

@@ -3,6 +3,7 @@ package hr.foi.air.honnomachi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -35,7 +36,7 @@ import hr.foi.air.honnomachi.ui.cart.CheckoutSuccessScreen
 import hr.foi.air.honnomachi.ui.home.HomeScreen
 import hr.foi.air.honnomachi.ui.home.HomeViewModel
 import hr.foi.air.honnomachi.ui.policy.PrivacyPolicyScreen
-import hr.foi.air.honnomachi.ui.suspended.SuspendedAccountScreen
+import hr.foi.air.honnomachi.ui.suspension.LocalIsSuspended
 import hr.foi.air.honnomachi.ui.wallet.WalletScreen
 
 @Composable
@@ -51,10 +52,9 @@ fun AppNavigation(
 
     val uiState by authViewModel.uiState.collectAsState()
 
-    LaunchedEffect(uiState.isUserLoggedIn, uiState.needsVerification, uiState.isSuspended) {
+    LaunchedEffect(uiState.isUserLoggedIn, uiState.needsVerification) {
         val route =
             when {
-                uiState.isSuspended -> ROUTE_SUSPENDED
                 uiState.isUserLoggedIn -> ROUTE_HOME
                 uiState.needsVerification -> ROUTE_VERIFICATION
                 else -> ROUTE_AUTH
@@ -87,6 +87,7 @@ fun AppNavigation(
         onDispose { }
     }
 
+    CompositionLocalProvider(LocalIsSuspended provides uiState.isSuspended) {
     NavHost(navController = navController, startDestination = ROUTE_AUTH) {
         composable(ROUTE_AUTH) {
             AuthScreen(modifier, navController, authViewModel)
@@ -165,16 +166,6 @@ fun AppNavigation(
             )
         }
 
-        composable(ROUTE_SUSPENDED) {
-            SuspendedAccountScreen(
-                reason = uiState.suspendedReason,
-                onSignOut = {
-                    authViewModel.consumeSuspendedState()
-                    authViewModel.signOut()
-                },
-            )
-        }
-
         composable(ROUTE_ADMIN) {
             @Suppress("DEPRECATION")
             val adminViewModel: AdminViewModel = hiltViewModel()
@@ -247,6 +238,7 @@ fun AppNavigation(
             }
         }
     }
+    }
 }
 
 private const val ROUTE_AUTH = "auth"
@@ -260,5 +252,4 @@ private const val ROUTE_PRIVACY_POLICY = "privacyPolicy"
 private const val ROUTE_ADMIN = "admin"
 private const val ROUTE_CHECKOUT_SUCCESS = "checkout/success"
 private const val ROUTE_CHECKOUT_CANCEL = "checkout/cancel"
-private const val ROUTE_SUSPENDED = "suspended"
 private const val ROUTE_WALLET = "wallet"

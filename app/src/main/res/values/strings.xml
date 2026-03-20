@@ -244,6 +244,12 @@
     <string name="suspended_contact_message">If you believe this is a mistake, please contact support.</string>
     <string name="suspended_sign_out">Sign Out</string>
     <string name="error_suspended_cannot_add_book">Suspended accounts cannot create new offers.</string>
+    <string name="suspended_cannot_add_to_cart">Your account is suspended. You cannot add items to cart.</string>
+    <string name="suspended_cannot_checkout">Your account is suspended. Checkout is disabled.</string>
+    <string name="suspended_cannot_topup">Your account is suspended. Wallet top-up is disabled.</string>
+    <string name="suspended_cannot_edit_profile">Your account is suspended. Profile editing is disabled.</string>
+    <string name="suspended_cannot_add_book">Your account is suspended. Creating new listings is disabled.</string>
+    <string name="suspended_cart_cleared">Your cart has been cleared due to account suspension.</string>
     <string name="label_notifications_consent">E-mail Notifications</string>
     <string name="desc_notifications_consent">Receive e-mail notifications from app.</string>
     <string name="title_email_notifications">E-mail Notifications</string>

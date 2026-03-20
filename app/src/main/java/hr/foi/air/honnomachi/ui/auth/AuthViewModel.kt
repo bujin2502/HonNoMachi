@@ -54,16 +54,12 @@ open class AuthViewModel
                     if (isVerified) {
                         val userData = userDataSource.getUser(freshUser.uid)
                         if (userData?.suspended == true) {
-                            authRepository.signOut()
                             _uiState.update {
                                 it.copy(
-                                    isUserLoggedIn = false,
-                                    needsVerification = false,
                                     isSuspended = true,
                                     suspendedReason = userData.suspendedReason,
                                 )
                             }
-                            return
                         }
                         startSuspensionMonitor(freshUser.uid)
                     }
@@ -129,16 +125,12 @@ open class AuthViewModel
                     is Result.Success -> {
                         val isVerified = result.data.isVerified
                         if (isVerified && result.data.suspended == true) {
-                            authRepository.signOut()
                             _uiState.update {
                                 it.copy(
-                                    isLoading = false,
                                     isSuspended = true,
                                     suspendedReason = result.data.suspendedReason,
-                                    isUserLoggedIn = false,
                                 )
                             }
-                            return@launch
                         }
                         if (isVerified) {
                             startSuspensionMonitor(result.data.uid)
@@ -206,16 +198,12 @@ open class AuthViewModel
                 when (result) {
                     is Result.Success -> {
                         if (result.data.suspended == true) {
-                            authRepository.signOut()
                             _uiState.update {
                                 it.copy(
-                                    isLoading = false,
                                     isSuspended = true,
                                     suspendedReason = result.data.suspendedReason,
-                                    isUserLoggedIn = false,
                                 )
                             }
-                            return@launch
                         }
                         startSuspensionMonitor(result.data.uid)
                         _uiState.update {
@@ -274,16 +262,12 @@ open class AuthViewModel
                     is Result.Success -> {
                         val isVerified = result.data.isVerified
                         if (result.data.suspended == true) {
-                            authRepository.signOut()
                             _uiState.update {
                                 it.copy(
-                                    isLoading = false,
                                     isSuspended = true,
                                     suspendedReason = result.data.suspendedReason,
-                                    isUserLoggedIn = false,
                                 )
                             }
-                            return@launch
                         }
                         startSuspensionMonitor(result.data.uid)
                         _uiState.update {
@@ -391,25 +375,25 @@ open class AuthViewModel
             _uiState.update { it.copy(verificationStatusResult = null) }
         }
 
-        fun consumeSuspendedState() {
-            _uiState.update { it.copy(isSuspended = false, suspendedReason = null) }
-        }
-
         private fun startSuspensionMonitor(userId: String) {
             suspensionMonitorJob?.cancel()
             suspensionMonitorJob =
                 viewModelScope.launch {
                     userDataSource.observeUser(userId).collect { userData ->
                         if (userData?.suspended == true) {
-                            authRepository.signOut()
                             _uiState.update {
                                 it.copy(
                                     isSuspended = true,
                                     suspendedReason = userData.suspendedReason,
-                                    isUserLoggedIn = false,
                                 )
                             }
-                            suspensionMonitorJob?.cancel()
+                        } else {
+                            _uiState.update {
+                                it.copy(
+                                    isSuspended = false,
+                                    suspendedReason = null,
+                                )
+                            }
                         }
                     }
                 }

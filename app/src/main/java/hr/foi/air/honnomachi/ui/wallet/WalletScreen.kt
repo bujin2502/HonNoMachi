@@ -27,12 +27,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -50,11 +54,13 @@ import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.data.WalletHistoryItemModel
 import hr.foi.air.honnomachi.data.WalletHistoryType
 import hr.foi.air.honnomachi.data.WalletTopupStatus
+import hr.foi.air.honnomachi.ui.suspension.LocalIsSuspended
 import java.text.DateFormat
 import java.util.Date
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.roundToInt
+import kotlinx.coroutines.launch
 
 private const val MIN_TOPUP_AMOUNT_MINOR = 100
 private const val MAX_TOPUP_AMOUNT_MINOR = 100000
@@ -66,9 +72,13 @@ fun WalletScreen(
     onNavigateBack: () -> Unit,
     viewModel: WalletViewModel = hiltViewModel(),
 ) {
+    val isSuspended = LocalIsSuspended.current
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     val actionMessage by viewModel.actionMessage.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val suspendedTopupMessage = stringResource(R.string.suspended_cannot_topup)
 
     var customAmountInput by rememberSaveable { mutableStateOf("") }
     var customAmountError by rememberSaveable { mutableStateOf<String?>(null) }
@@ -137,6 +147,7 @@ fun WalletScreen(
                 },
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -187,6 +198,7 @@ fun WalletScreen(
                                     customAmountError = null
                                     viewModel.selectTopupAmount(amountMinor)
                                 },
+                                enabled = !isSuspended,
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(16.dp),
                             ) {
@@ -199,6 +211,7 @@ fun WalletScreen(
                                     customAmountError = null
                                     viewModel.selectTopupAmount(amountMinor)
                                 },
+                                enabled = !isSuspended,
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(16.dp),
                             ) {
@@ -216,6 +229,7 @@ fun WalletScreen(
                         customAmountInput = it
                         customAmountError = null
                     },
+                    enabled = !isSuspended,
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text(text = stringResource(R.string.wallet_custom_amount_label)) },
                     placeholder = { Text(text = stringResource(R.string.wallet_custom_amount_placeholder)) },
@@ -243,6 +257,10 @@ fun WalletScreen(
                 }
                 Button(
                     onClick = {
+                        if (isSuspended) {
+                            scope.launch { snackbarHostState.showSnackbar(suspendedTopupMessage) }
+                            return@Button
+                        }
                         val customMinor = customAmountInput.toMinorAmount()
                         if (customAmountInput.isNotBlank()) {
                             if (customMinor == null) {
@@ -258,7 +276,7 @@ fun WalletScreen(
                         customAmountError = null
                         viewModel.startTopup()
                     },
-                    enabled = !isBusy,
+                    enabled = !isBusy && !isSuspended,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
                 ) {

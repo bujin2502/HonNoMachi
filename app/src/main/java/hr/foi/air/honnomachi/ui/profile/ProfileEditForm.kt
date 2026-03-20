@@ -27,13 +27,14 @@ data class ProfileEditFormCallbacks(
 fun ProfileEditForm(
     formState: ProfileFormState,
     userEmail: String,
+    isEditable: Boolean = true,
     callbacks: ProfileEditFormCallbacks,
 ) {
     ProfileItem(
         label = stringResource(R.string.label_name),
         value = formState.name,
         onValueChange = callbacks.onNameChange,
-        isEditable = true,
+        isEditable = isEditable,
         keyboardOptions =
             KeyboardOptions(
                 capitalization = KeyboardCapitalization.Words,
@@ -53,7 +54,7 @@ fun ProfileEditForm(
         label = stringResource(R.string.label_phone),
         value = formState.phone,
         onValueChange = callbacks.onPhoneChange,
-        isEditable = true,
+        isEditable = isEditable,
         keyboardOptions =
             KeyboardOptions(
                 keyboardType = KeyboardType.Phone,
@@ -67,7 +68,7 @@ fun ProfileEditForm(
         label = stringResource(R.string.label_street),
         value = formState.street,
         onValueChange = callbacks.onStreetChange,
-        isEditable = true,
+        isEditable = isEditable,
         keyboardOptions =
             KeyboardOptions(
                 capitalization = KeyboardCapitalization.Sentences,
@@ -81,7 +82,7 @@ fun ProfileEditForm(
         label = stringResource(R.string.label_zip),
         value = formState.zip,
         onValueChange = callbacks.onZipChange,
-        isEditable = true,
+        isEditable = isEditable,
         keyboardOptions =
             KeyboardOptions(
                 keyboardType = KeyboardType.Number,
@@ -95,7 +96,7 @@ fun ProfileEditForm(
         label = stringResource(R.string.label_city),
         value = formState.city,
         onValueChange = callbacks.onCityChange,
-        isEditable = true,
+        isEditable = isEditable,
         keyboardOptions =
             KeyboardOptions(
                 capitalization = KeyboardCapitalization.Words,

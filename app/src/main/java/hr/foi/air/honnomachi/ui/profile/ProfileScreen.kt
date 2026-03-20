@@ -28,6 +28,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -35,6 +37,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,8 +52,10 @@ import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.ui.theme.LabelGray
 import hr.foi.air.honnomachi.ui.theme.LogoutButtonBackground
+import hr.foi.air.honnomachi.ui.suspension.LocalIsSuspended
 import hr.foi.air.honnomachi.ui.theme.StatusActive
 import hr.foi.air.honnomachi.ui.theme.StatusSuspended
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,9 +68,13 @@ fun ProfileScreen(
     @Suppress("DEPRECATION")
     profileViewModel: ProfileViewModel = hiltViewModel(),
 ) {
+    val isSuspended = LocalIsSuspended.current
     val context = LocalContext.current
     val uiState by profileViewModel.uiState.collectAsState()
     val formState by profileViewModel.formState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val suspendedEditMessage = stringResource(R.string.suspended_cannot_edit_profile)
 
     val successState = uiState as? ProfileUiState.Success
     val isAdmin = successState?.user?.admin == true
@@ -74,11 +84,15 @@ fun ProfileScreen(
     val successMessage = stringResource(R.string.profile_update_success)
     val errorMessageFormat = stringResource(R.string.profile_update_error)
     val onSaveClick: () -> Unit = {
-        profileViewModel.saveProfile { success, message ->
-            if (success) {
-                AppUtil.showToast(context, successMessage)
-            } else {
-                AppUtil.showToast(context, String.format(errorMessageFormat, message))
+        if (isSuspended) {
+            scope.launch { snackbarHostState.showSnackbar(suspendedEditMessage) }
+        } else {
+            profileViewModel.saveProfile { success, message ->
+                if (success) {
+                    AppUtil.showToast(context, successMessage)
+                } else {
+                    AppUtil.showToast(context, String.format(errorMessageFormat, message))
+                }
             }
         }
     }
@@ -88,6 +102,7 @@ fun ProfileScreen(
         topBar = {
             ProfileHeaderRow(uiState = uiState, onLogout = onLogout)
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { innerPadding ->
         Column(
             modifier =
@@ -129,6 +144,7 @@ fun ProfileScreen(
                         ProfileEditForm(
                             formState = formState,
                             userEmail = user.email,
+                            isEditable = !isSuspended,
                             callbacks =
                                 ProfileEditFormCallbacks(
                                     onNameChange = profileViewModel::onNameChange,
@@ -185,6 +201,7 @@ fun ProfileScreen(
                         onCheckedChange = {
                             profileViewModel.onAnalyticsToggled(it)
                         },
+                        enabled = !isSuspended,
                     )
                 }
 
@@ -212,6 +229,7 @@ fun ProfileScreen(
                         onCheckedChange = {
                             profileViewModel.onNotificationsToggled(it)
                         },
+                        enabled = !isSuspended,
                     )
                 }
 
@@ -245,7 +263,14 @@ fun ProfileScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     OutlinedButton(
-                        onClick = onNavigateToChangePassword,
+                        onClick = {
+                            if (isSuspended) {
+                                scope.launch { snackbarHostState.showSnackbar(suspendedEditMessage) }
+                            } else {
+                                onNavigateToChangePassword()
+                            }
+                        },
+                        enabled = !isSuspended,
                         shape = RoundedCornerShape(24.dp),
                         modifier = Modifier.weight(1f).padding(end = 8.dp),
                     ) {
@@ -253,7 +278,7 @@ fun ProfileScreen(
                     }
 
                     SaveButton(
-                        hasChanges = hasChanges,
+                        hasChanges = hasChanges && !isSuspended,
                         isSaving = formState.isSaving,
                         modifier = Modifier.weight(1f).padding(start = 8.dp),
                         onClick = onSaveClick,

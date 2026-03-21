@@ -1,5 +1,6 @@
 package hr.foi.air.honnomachi.ui.profile
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,7 +21,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.ManageAccounts
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -56,9 +56,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.R
+import hr.foi.air.honnomachi.ui.suspension.LocalIsSuspended
 import hr.foi.air.honnomachi.ui.theme.LabelGray
 import hr.foi.air.honnomachi.ui.theme.LogoutButtonBackground
-import hr.foi.air.honnomachi.ui.suspension.LocalIsSuspended
 import hr.foi.air.honnomachi.ui.theme.StatusActive
 import hr.foi.air.honnomachi.ui.theme.StatusSuspended
 import kotlinx.coroutines.launch
@@ -145,8 +145,7 @@ fun ProfileScreen(
                                 }
                             }
                         }
-                    }
-                    .verticalScroll(rememberScrollState()),
+                    }.verticalScroll(rememberScrollState()),
         ) {
             Column(
                 modifier =
@@ -308,7 +307,7 @@ fun ProfileScreen(
                         },
                         shape = RoundedCornerShape(24.dp),
                         modifier = Modifier.weight(1f).padding(end = 8.dp),
-                        border = suspendedBorder ?: ButtonDefaults.outlinedButtonBorder,
+                        border = suspendedBorder ?: ButtonDefaults.outlinedButtonBorder(enabled = true),
                     ) {
                         Text(text = stringResource(R.string.button_reset_password))
                     }

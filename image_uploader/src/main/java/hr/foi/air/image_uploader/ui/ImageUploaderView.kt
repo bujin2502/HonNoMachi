@@ -1,6 +1,7 @@
 package hr.foi.air.image_uploader.ui
 
 import android.net.Uri
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,10 +14,9 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import coil.compose.AsyncImage
 import hr.foi.air.image_uploader.ImageSourceInitializer
 import hr.foi.air.image_uploader.model.ImageSourceRegistry
@@ -47,7 +48,7 @@ fun ImageUploaderView(
     val uriListSaver =
         listSaver<List<Uri>, String>(
             save = { uris -> uris.map { it.toString() } },
-            restore = { strings -> strings.map { Uri.parse(it) } },
+            restore = { strings -> strings.map { it.toUri() } },
         )
 
     var imageUris by rememberSaveable(stateSaver = uriListSaver) { mutableStateOf(emptyList()) }
@@ -94,7 +95,7 @@ fun ImageUploaderView(
         OutlinedButton(
             onClick = { if (isInteractionEnabled) showImagePicker = true },
             modifier = Modifier.fillMaxWidth(),
-            border = border ?: ButtonDefaults.outlinedButtonBorder,
+            border = border ?: ButtonDefaults.outlinedButtonBorder(enabled = true),
         ) {
             Text(text = "Add Images")
         }

@@ -9,9 +9,9 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -65,12 +65,12 @@ import hr.foi.air.honnomachi.data.WalletHistoryType
 import hr.foi.air.honnomachi.data.WalletTopupStatus
 import hr.foi.air.honnomachi.ui.suspension.LocalIsSuspended
 import hr.foi.air.honnomachi.ui.theme.StatusSuspended
+import kotlinx.coroutines.launch
 import java.text.DateFormat
 import java.util.Date
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.roundToInt
-import kotlinx.coroutines.launch
 
 private const val MIN_TOPUP_AMOUNT_MINOR = 100
 private const val MAX_TOPUP_AMOUNT_MINOR = 100000
@@ -205,194 +205,194 @@ fun WalletScreen(
                     ),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-            item {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = stringResource(R.string.wallet_balance, balanceText),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
-
-            item {
-                Text(
-                    text = stringResource(R.string.wallet_topup_select_amount),
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-            }
-
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    PREDEFINED_TOPUP_AMOUNTS_MINOR.forEach { amountMinor ->
-                        val isSelected =
-                            customAmountInput.isBlank() && amountMinor == uiState.selectedTopupAmountMinor
-                        val label =
-                            String.format(
-                                Locale.getDefault(),
-                                "%.2f %s",
-                                amountMinor / 100.0,
-                                currencyCode,
-                            )
-                        if (isSelected) {
-                            Button(
-                                onClick = {
-                                    if (!isSuspended) {
-                                        customAmountInput = ""
-                                        customAmountError = null
-                                        viewModel.selectTopupAmount(amountMinor)
-                                    }
-                                },
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(16.dp),
-                                border = suspendedBorder,
-                            ) {
-                                Text(text = label)
-                            }
-                        } else {
-                            OutlinedButton(
-                                onClick = {
-                                    if (!isSuspended) {
-                                        customAmountInput = ""
-                                        customAmountError = null
-                                        viewModel.selectTopupAmount(amountMinor)
-                                    }
-                                },
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(16.dp),
-                                border = suspendedBorder ?: ButtonDefaults.outlinedButtonBorder,
-                            ) {
-                                Text(text = label)
-                            }
-                        }
-                    }
-                }
-            }
-
-            item {
-                OutlinedTextField(
-                    value = customAmountInput,
-                    onValueChange = {
-                        if (isSuspended) {
-                            showSuspendedSnackbar()
-                        } else {
-                            customAmountInput = it
-                            customAmountError = null
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text(text = stringResource(R.string.wallet_custom_amount_label)) },
-                    placeholder = { Text(text = stringResource(R.string.wallet_custom_amount_placeholder)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    singleLine = true,
-                    isError = customAmountError != null,
-                    colors =
-                        if (isSuspended) {
-                            OutlinedTextFieldDefaults.colors(
-                                unfocusedBorderColor = StatusSuspended,
-                                focusedBorderColor = StatusSuspended,
-                            )
-                        } else {
-                            OutlinedTextFieldDefaults.colors()
-                        },
-                )
-                if (customAmountError != null) {
+                item {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = customAmountError.orEmpty(),
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
+                        text = stringResource(R.string.wallet_balance, balanceText),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.SemiBold,
                     )
                 }
-            }
 
-            item {
-                if (uiState.activeTopupStatus == WalletTopupStatus.PENDING || uiState.isCreatingTopup) {
-                    Text(
-                        text = stringResource(R.string.wallet_topup_pending_status),
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-                Button(
-                    onClick = {
-                        if (isSuspended) return@Button
-                        val customMinor = customAmountInput.toMinorAmount()
-                        if (customAmountInput.isNotBlank()) {
-                            if (customMinor == null) {
-                                customAmountError = customAmountInvalidText
-                                return@Button
-                            }
-                            if (customMinor !in MIN_TOPUP_AMOUNT_MINOR..MAX_TOPUP_AMOUNT_MINOR) {
-                                customAmountError = customAmountRangeText
-                                return@Button
-                            }
-                            viewModel.selectTopupAmount(customMinor)
-                        }
-                        customAmountError = null
-                        viewModel.startTopup()
-                    },
-                    enabled = !isBusy,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    border = suspendedBorder,
-                ) {
-                    if (uiState.isCreatingTopup) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(18.dp),
-                            strokeWidth = 2.dp,
-                        )
-                    } else {
-                        val ctaAmount =
-                            if (customAmountInput.isNotBlank() && customAmountInput.toMinorAmount() != null) {
-                                formatAmount(
-                                    amountMinor = customAmountInput.toMinorAmount() ?: uiState.selectedTopupAmountMinor,
-                                    currency = uiState.currency,
-                                    includeSign = false,
-                                )
-                            } else {
-                                selectedAmountText
-                            }
-                        Text(text = stringResource(R.string.wallet_add_funds_cta, ctaAmount))
-                    }
-                }
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
-                HorizontalDivider()
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = stringResource(R.string.wallet_history_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
-
-            if (uiState.isHistoryLoading && uiState.history.isEmpty()) {
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-            } else if (uiState.history.isEmpty()) {
                 item {
                     Text(
-                        text = stringResource(R.string.wallet_history_empty),
+                        text = stringResource(R.string.wallet_topup_select_amount),
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }
-            } else {
-                items(uiState.history, key = { it.id }) { entry ->
-                    WalletHistoryRow(entry = entry)
-                    HorizontalDivider()
+
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        PREDEFINED_TOPUP_AMOUNTS_MINOR.forEach { amountMinor ->
+                            val isSelected =
+                                customAmountInput.isBlank() && amountMinor == uiState.selectedTopupAmountMinor
+                            val label =
+                                String.format(
+                                    Locale.getDefault(),
+                                    "%.2f %s",
+                                    amountMinor / 100.0,
+                                    currencyCode,
+                                )
+                            if (isSelected) {
+                                Button(
+                                    onClick = {
+                                        if (!isSuspended) {
+                                            customAmountInput = ""
+                                            customAmountError = null
+                                            viewModel.selectTopupAmount(amountMinor)
+                                        }
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(16.dp),
+                                    border = suspendedBorder,
+                                ) {
+                                    Text(text = label)
+                                }
+                            } else {
+                                OutlinedButton(
+                                    onClick = {
+                                        if (!isSuspended) {
+                                            customAmountInput = ""
+                                            customAmountError = null
+                                            viewModel.selectTopupAmount(amountMinor)
+                                        }
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(16.dp),
+                                    border = suspendedBorder ?: ButtonDefaults.outlinedButtonBorder(enabled = true),
+                                ) {
+                                    Text(text = label)
+                                }
+                            }
+                        }
+                    }
                 }
-            }
+
+                item {
+                    OutlinedTextField(
+                        value = customAmountInput,
+                        onValueChange = {
+                            if (isSuspended) {
+                                showSuspendedSnackbar()
+                            } else {
+                                customAmountInput = it
+                                customAmountError = null
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text(text = stringResource(R.string.wallet_custom_amount_label)) },
+                        placeholder = { Text(text = stringResource(R.string.wallet_custom_amount_placeholder)) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        singleLine = true,
+                        isError = customAmountError != null,
+                        colors =
+                            if (isSuspended) {
+                                OutlinedTextFieldDefaults.colors(
+                                    unfocusedBorderColor = StatusSuspended,
+                                    focusedBorderColor = StatusSuspended,
+                                )
+                            } else {
+                                OutlinedTextFieldDefaults.colors()
+                            },
+                    )
+                    if (customAmountError != null) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = customAmountError.orEmpty(),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                }
+
+                item {
+                    if (uiState.activeTopupStatus == WalletTopupStatus.PENDING || uiState.isCreatingTopup) {
+                        Text(
+                            text = stringResource(R.string.wallet_topup_pending_status),
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                    Button(
+                        onClick = {
+                            if (isSuspended) return@Button
+                            val customMinor = customAmountInput.toMinorAmount()
+                            if (customAmountInput.isNotBlank()) {
+                                if (customMinor == null) {
+                                    customAmountError = customAmountInvalidText
+                                    return@Button
+                                }
+                                if (customMinor !in MIN_TOPUP_AMOUNT_MINOR..MAX_TOPUP_AMOUNT_MINOR) {
+                                    customAmountError = customAmountRangeText
+                                    return@Button
+                                }
+                                viewModel.selectTopupAmount(customMinor)
+                            }
+                            customAmountError = null
+                            viewModel.startTopup()
+                        },
+                        enabled = !isBusy,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(24.dp),
+                        border = suspendedBorder,
+                    ) {
+                        if (uiState.isCreatingTopup) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                strokeWidth = 2.dp,
+                            )
+                        } else {
+                            val ctaAmount =
+                                if (customAmountInput.isNotBlank() && customAmountInput.toMinorAmount() != null) {
+                                    formatAmount(
+                                        amountMinor = customAmountInput.toMinorAmount() ?: uiState.selectedTopupAmountMinor,
+                                        currency = uiState.currency,
+                                        includeSign = false,
+                                    )
+                                } else {
+                                    selectedAmountText
+                                }
+                            Text(text = stringResource(R.string.wallet_add_funds_cta, ctaAmount))
+                        }
+                    }
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    HorizontalDivider()
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(R.string.wallet_history_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+
+                if (uiState.isHistoryLoading && uiState.history.isEmpty()) {
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                } else if (uiState.history.isEmpty()) {
+                    item {
+                        Text(
+                            text = stringResource(R.string.wallet_history_empty),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                } else {
+                    items(uiState.history, key = { it.id }) { entry ->
+                        WalletHistoryRow(entry = entry)
+                        HorizontalDivider()
+                    }
+                }
             }
         }
     }

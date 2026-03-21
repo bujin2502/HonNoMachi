@@ -59,7 +59,7 @@ fun HomePage(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(top = 24.dp, bottom = 2.dp)
+                    .padding(top = 8.dp, bottom = 2.dp)
                     .testTag("search_field"),
             leadingIcon = {
                 Icon(Icons.Default.Search, contentDescription = "Search Icon")

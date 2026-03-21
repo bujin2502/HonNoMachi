@@ -22,6 +22,8 @@ interface CartRepository {
     fun getCartItems(): Flow<Result<List<CartItemModel>>>
 
     suspend fun removeFromCart(cartItemId: String): Result<Unit>
+
+    suspend fun clearCart(): Result<Unit>
 }
 
 class CartRepositoryImpl
@@ -151,6 +153,29 @@ class CartRepositoryImpl
             } catch (e: Exception) {
                 CrashlyticsManager.instance.logException(e)
                 Result.Error(mapFunctionsAuthError(e))
+            }
+
+        override suspend fun clearCart(): Result<Unit> =
+            try {
+                val currentUser = auth.currentUser
+                if (currentUser != null) {
+                    val snapshot =
+                        firestore
+                            .collection("users")
+                            .document(currentUser.uid)
+                            .collection("cart")
+                            .get()
+                            .await()
+                    snapshot.documents.forEach { doc ->
+                        removeFromCart(doc.id)
+                    }
+                    Result.Success(Unit)
+                } else {
+                    Result.Error(Exception("Korisnik nije prijavljen."))
+                }
+            } catch (e: Exception) {
+                CrashlyticsManager.instance.logException(e)
+                Result.Error(e)
             }
 
         private fun mapFunctionsAuthError(exception: Exception): Exception {

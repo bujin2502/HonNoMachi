@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -35,7 +36,8 @@ import hr.foi.air.honnomachi.ui.cart.CheckoutSuccessScreen
 import hr.foi.air.honnomachi.ui.home.HomeScreen
 import hr.foi.air.honnomachi.ui.home.HomeViewModel
 import hr.foi.air.honnomachi.ui.policy.PrivacyPolicyScreen
-import hr.foi.air.honnomachi.ui.suspended.SuspendedAccountScreen
+import hr.foi.air.honnomachi.ui.suspension.LocalIsSuspended
+import hr.foi.air.honnomachi.ui.suspension.LocalSuspendedReason
 import hr.foi.air.honnomachi.ui.wallet.WalletScreen
 
 @Composable
@@ -51,10 +53,9 @@ fun AppNavigation(
 
     val uiState by authViewModel.uiState.collectAsState()
 
-    LaunchedEffect(uiState.isUserLoggedIn, uiState.needsVerification, uiState.isSuspended) {
+    LaunchedEffect(uiState.isUserLoggedIn, uiState.needsVerification) {
         val route =
             when {
-                uiState.isSuspended -> ROUTE_SUSPENDED
                 uiState.isUserLoggedIn -> ROUTE_HOME
                 uiState.needsVerification -> ROUTE_VERIFICATION
                 else -> ROUTE_AUTH
@@ -87,162 +88,157 @@ fun AppNavigation(
         onDispose { }
     }
 
-    NavHost(navController = navController, startDestination = ROUTE_AUTH) {
-        composable(ROUTE_AUTH) {
-            AuthScreen(modifier, navController, authViewModel)
-        }
+    CompositionLocalProvider(
+        LocalIsSuspended provides uiState.isSuspended,
+        LocalSuspendedReason provides uiState.suspendedReason,
+    ) {
+        NavHost(navController = navController, startDestination = ROUTE_AUTH) {
+            composable(ROUTE_AUTH) {
+                AuthScreen(modifier, navController, authViewModel)
+            }
 
-        composable(ROUTE_LOGIN) {
-            LoginScreen(modifier, navController, authViewModel)
-        }
+            composable(ROUTE_LOGIN) {
+                LoginScreen(modifier, navController, authViewModel)
+            }
 
-        composable(ROUTE_SIGNUP) {
-            SignupScreen(modifier, navController, authViewModel)
-        }
+            composable(ROUTE_SIGNUP) {
+                SignupScreen(modifier, navController, authViewModel)
+            }
 
-        composable(ROUTE_VERIFICATION) {
-            EmailVerificationScreen(
-                onNavigateToLogin = {
-                    navController.navigate(ROUTE_LOGIN) {
-                        popUpTo(ROUTE_AUTH) { inclusive = true }
-                    }
-                },
-                authViewModel = authViewModel,
-            )
-        }
+            composable(ROUTE_VERIFICATION) {
+                EmailVerificationScreen(
+                    onNavigateToLogin = {
+                        navController.navigate(ROUTE_LOGIN) {
+                            popUpTo(ROUTE_AUTH) { inclusive = true }
+                        }
+                    },
+                    authViewModel = authViewModel,
+                )
+            }
 
-        composable(ROUTE_FORGOT_PASSWORD) {
-            ForgotPasswordScreen(navController, authViewModel)
-        }
+            composable(ROUTE_FORGOT_PASSWORD) {
+                ForgotPasswordScreen(navController, authViewModel)
+            }
 
-        composable(ROUTE_HOME) {
-            HomeScreen(navController, authViewModel, homeViewModel)
-        }
+            composable(ROUTE_HOME) {
+                HomeScreen(navController, authViewModel, homeViewModel)
+            }
 
-        composable(ROUTE_CHANGE_PASSWORD) {
-            ChangePasswordScreen(navController = navController)
-        }
+            composable(ROUTE_CHANGE_PASSWORD) {
+                ChangePasswordScreen(navController = navController)
+            }
 
-        composable(ROUTE_PRIVACY_POLICY) {
-            PrivacyPolicyScreen(onNavigateBack = { navController.navigateUp() })
-        }
+            composable(ROUTE_PRIVACY_POLICY) {
+                PrivacyPolicyScreen(onNavigateBack = { navController.navigateUp() })
+            }
 
-        composable(route = ROUTE_CHECKOUT_SUCCESS) {
-            CheckoutSuccessScreen(
-                onNavigateHome = {
-                    navController.navigate(ROUTE_HOME) {
-                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
-                        launchSingleTop = true
-                    }
-                },
-            )
-        }
-
-        composable(route = ROUTE_CHECKOUT_CANCEL) {
-            CheckoutCancelScreen(
-                onNavigateHome = {
-                    navController.navigate(ROUTE_HOME) {
-                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
-                        launchSingleTop = true
-                    }
-                },
-            )
-        }
-
-        composable(route = ROUTE_WALLET) {
-            WalletScreen(
-                onNavigateBack = { navController.navigateUp() },
-            )
-        }
-
-        composable(
-            "bookDetail/{bookId}",
-            arguments = listOf(navArgument("bookId") { type = NavType.StringType }),
-        ) { backStackEntry ->
-            BookDetailScreen(
-                bookId = backStackEntry.arguments?.getString("bookId"),
-                onNavigateBack = { navController.popBackStack() },
-            )
-        }
-
-        composable(ROUTE_SUSPENDED) {
-            SuspendedAccountScreen(
-                reason = uiState.suspendedReason,
-                onSignOut = {
-                    authViewModel.consumeSuspendedState()
-                    authViewModel.signOut()
-                },
-            )
-        }
-
-        composable(ROUTE_ADMIN) {
-            @Suppress("DEPRECATION")
-            val adminViewModel: AdminViewModel = hiltViewModel()
-            val isAdmin by adminViewModel.isAdminChecked.collectAsState()
-            val context = LocalContext.current
-
-            when (isAdmin) {
-                null -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-                false -> {
-                    val accessDeniedMsg = stringResource(R.string.error_admin_access_denied)
-                    LaunchedEffect(Unit) {
-                        AppUtil.showToast(context, accessDeniedMsg)
+            composable(route = ROUTE_CHECKOUT_SUCCESS) {
+                CheckoutSuccessScreen(
+                    onNavigateHome = {
                         navController.navigate(ROUTE_HOME) {
-                            popUpTo(ROUTE_HOME) { inclusive = true }
+                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
                             launchSingleTop = true
                         }
+                    },
+                )
+            }
+
+            composable(route = ROUTE_CHECKOUT_CANCEL) {
+                CheckoutCancelScreen(
+                    onNavigateHome = {
+                        navController.navigate(ROUTE_HOME) {
+                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
+                )
+            }
+
+            composable(route = ROUTE_WALLET) {
+                WalletScreen(
+                    onNavigateBack = { navController.navigateUp() },
+                )
+            }
+
+            composable(
+                "bookDetail/{bookId}",
+                arguments = listOf(navArgument("bookId") { type = NavType.StringType }),
+            ) { backStackEntry ->
+                BookDetailScreen(
+                    bookId = backStackEntry.arguments?.getString("bookId"),
+                    onNavigateBack = { navController.popBackStack() },
+                )
+            }
+
+            composable(ROUTE_ADMIN) {
+                @Suppress("DEPRECATION")
+                val adminViewModel: AdminViewModel = hiltViewModel()
+                val isAdmin by adminViewModel.isAdminChecked.collectAsState()
+                val context = LocalContext.current
+
+                when (isAdmin) {
+                    null -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            CircularProgressIndicator()
+                        }
                     }
-                }
-                true -> {
-                    AdminUserListScreen(
-                        onNavigateBack = { navController.navigateUp() },
-                        onNavigateToUserDetail = { userId ->
-                            navController.navigate("admin/userDetail/$userId")
-                        },
-                    )
+                    false -> {
+                        val accessDeniedMsg = stringResource(R.string.error_admin_access_denied)
+                        LaunchedEffect(Unit) {
+                            AppUtil.showToast(context, accessDeniedMsg)
+                            navController.navigate(ROUTE_HOME) {
+                                popUpTo(ROUTE_HOME) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+                    }
+                    true -> {
+                        AdminUserListScreen(
+                            onNavigateBack = { navController.navigateUp() },
+                            onNavigateToUserDetail = { userId ->
+                                navController.navigate("admin/userDetail/$userId")
+                            },
+                        )
+                    }
                 }
             }
-        }
 
-        composable(
-            "admin/userDetail/{userId}",
-            arguments = listOf(navArgument("userId") { type = NavType.StringType }),
-        ) {
-            @Suppress("DEPRECATION")
-            val adminViewModel: AdminViewModel = hiltViewModel()
-            val isAdmin by adminViewModel.isAdminChecked.collectAsState()
-            val context = LocalContext.current
+            composable(
+                "admin/userDetail/{userId}",
+                arguments = listOf(navArgument("userId") { type = NavType.StringType }),
+            ) {
+                @Suppress("DEPRECATION")
+                val adminViewModel: AdminViewModel = hiltViewModel()
+                val isAdmin by adminViewModel.isAdminChecked.collectAsState()
+                val context = LocalContext.current
 
-            when (isAdmin) {
-                null -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-                false -> {
-                    val accessDeniedMsg = stringResource(R.string.error_admin_access_denied)
-                    LaunchedEffect(Unit) {
-                        AppUtil.showToast(context, accessDeniedMsg)
-                        navController.navigate(ROUTE_HOME) {
-                            popUpTo(ROUTE_HOME) { inclusive = true }
-                            launchSingleTop = true
+                when (isAdmin) {
+                    null -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            CircularProgressIndicator()
                         }
                     }
-                }
-                true -> {
-                    AdminUserDetailScreen(
-                        onNavigateBack = { navController.navigateUp() },
-                    )
+                    false -> {
+                        val accessDeniedMsg = stringResource(R.string.error_admin_access_denied)
+                        LaunchedEffect(Unit) {
+                            AppUtil.showToast(context, accessDeniedMsg)
+                            navController.navigate(ROUTE_HOME) {
+                                popUpTo(ROUTE_HOME) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+                    }
+                    true -> {
+                        AdminUserDetailScreen(
+                            onNavigateBack = { navController.navigateUp() },
+                        )
+                    }
                 }
             }
         }
@@ -260,5 +256,4 @@ private const val ROUTE_PRIVACY_POLICY = "privacyPolicy"
 private const val ROUTE_ADMIN = "admin"
 private const val ROUTE_CHECKOUT_SUCCESS = "checkout/success"
 private const val ROUTE_CHECKOUT_CANCEL = "checkout/cancel"
-private const val ROUTE_SUSPENDED = "suspended"
 private const val ROUTE_WALLET = "wallet"

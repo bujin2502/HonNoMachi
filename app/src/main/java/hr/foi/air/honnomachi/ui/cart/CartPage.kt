@@ -49,6 +49,7 @@ import com.stripe.android.paymentsheet.rememberPaymentSheet
 import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.model.CartItemModel
+import hr.foi.air.honnomachi.ui.suspension.LocalIsSuspended
 import java.util.Locale
 
 @Composable
@@ -60,12 +61,14 @@ fun CartPage(
     onCheckoutSuccess: () -> Unit = {},
     onCheckoutCancel: () -> Unit = {},
 ) {
+    val isSuspended = LocalIsSuspended.current
     val uiState by viewModel.uiState.collectAsState()
     val actionMessage by viewModel.actionMessage.collectAsState()
     val isCheckoutInProgress by viewModel.isCheckoutInProgress.collectAsState()
     val secondsUntilExpiry by viewModel.secondsUntilExpiry.collectAsState()
     val pendingCheckout by viewModel.pendingCheckout.collectAsState()
     val context = LocalContext.current
+    val suspendedCheckoutMessage = stringResource(R.string.suspended_cannot_checkout)
 
     val paymentSheet =
         rememberPaymentSheet { result ->
@@ -147,9 +150,16 @@ fun CartPage(
                         totalPrice = state.totalPrice,
                         isCheckoutInProgress = isCheckoutInProgress,
                         onRemoveItem = { viewModel.removeFromCart(it) },
-                        onCheckout = { viewModel.checkoutWithStripe() },
+                        onCheckout = {
+                            if (isSuspended) {
+                                AppUtil.showToast(context, suspendedCheckoutMessage)
+                            } else {
+                                viewModel.checkoutWithStripe()
+                            }
+                        },
                         showImages = showImages,
                         ticker = secondsUntilExpiry,
+                        isSuspended = isSuspended,
                     )
                 }
             }
@@ -174,6 +184,7 @@ fun CartContent(
     onCheckout: () -> Unit,
     showImages: Boolean,
     ticker: Long? = null,
+    isSuspended: Boolean = false,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         ticker?.let { seconds ->
@@ -248,7 +259,7 @@ fun CartContent(
         Spacer(modifier = Modifier.height(8.dp))
         Button(
             onClick = onCheckout,
-            enabled = !isCheckoutInProgress,
+            enabled = !isCheckoutInProgress && !isSuspended,
             modifier =
                 Modifier
                     .fillMaxWidth()

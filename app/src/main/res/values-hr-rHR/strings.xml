@@ -244,6 +244,12 @@
     <string name="suspended_contact_message">Ako smatrate da je ovo greška, molimo kontaktirajte podršku.</string>
     <string name="suspended_sign_out">Odjava</string>
     <string name="error_suspended_cannot_add_book">Suspendirani računi ne mogu kreirati nove ponude.</string>
+    <string name="suspended_cannot_add_to_cart">Vaš račun je suspendiran. Ne možete dodavati stavke u košaricu.</string>
+    <string name="suspended_cannot_checkout">Vaš račun je suspendiran. Plaćanje je onemogućeno.</string>
+    <string name="suspended_cannot_topup">Vaš račun je suspendiran. Nadopuna novčanika je onemogućena.</string>
+    <string name="suspended_cannot_edit_profile">Vaš račun je suspendiran. Uređivanje profila je onemogućeno.</string>
+    <string name="suspended_cannot_add_book">Vaš račun je suspendiran. Kreiranje novih ponuda je onemogućeno.</string>
+    <string name="suspended_cart_cleared">Vaša košarica je ispražnjena zbog suspenzije računa.</string>
     <string name="label_notifications_consent">E-mail notifikacija</string>
     <string name="desc_notifications_consent">Primajte obavijesti putem e-maila iz aplikacije.</string>
     <string name="title_email_notifications">E-mail obavijesti</string>
@@ -264,4 +270,6 @@
     <string name="my_listings_delete_message">Jeste li sigurni da želite obrisati \"%1$s\"? Ova radnja se ne može poništiti.</string>
     <string name="my_listings_delete_confirm">Obriši</string>
     <string name="my_listings_delete_cancel">Odustani</string>
+    <string name="status_suspended">Suspendirano</string>
+    <string name="suspended_cannot_manage_listings">Vaš račun je suspendiran. Upravljanje ponudama je onemogućeno.</string>
 </resources>

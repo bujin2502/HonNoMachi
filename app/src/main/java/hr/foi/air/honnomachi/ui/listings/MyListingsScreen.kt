@@ -34,7 +34,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -45,6 +47,9 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.model.ItemStatus
+import hr.foi.air.honnomachi.ui.suspension.LocalIsSuspended
+import hr.foi.air.honnomachi.ui.theme.StatusSuspended
+import kotlinx.coroutines.launch
 
 @Composable
 internal fun MyListingsContent(
@@ -52,8 +57,20 @@ internal fun MyListingsContent(
     @Suppress("DEPRECATION")
     viewModel: MyListingsViewModel = hiltViewModel(),
 ) {
+    val isSuspended = LocalIsSuspended.current
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val suspendedMessage = stringResource(R.string.suspended_cannot_manage_listings)
+
+    val lastSnackbarTime = remember { mutableLongStateOf(0L) }
+    val showSuspendedSnackbar: () -> Unit = {
+        val now = System.currentTimeMillis()
+        if (now - lastSnackbarTime.longValue > 4000L) {
+            lastSnackbarTime.longValue = now
+            scope.launch { snackbarHostState.showSnackbar(suspendedMessage) }
+        }
+    }
 
     LaunchedEffect(uiState.snackbarMessage) {
         uiState.snackbarMessage?.let { message ->
@@ -121,12 +138,23 @@ internal fun MyListingsContent(
                             ) { book ->
                                 ListingCard(
                                     book = book,
+                                    isSuspended = isSuspended,
                                     onToggleStatus = {
-                                        book.bookId?.let { id ->
-                                            viewModel.onToggleStatus(id, book.status)
+                                        if (isSuspended) {
+                                            showSuspendedSnackbar()
+                                        } else {
+                                            book.bookId?.let { id ->
+                                                viewModel.onToggleStatus(id, book.status)
+                                            }
                                         }
                                     },
-                                    onDelete = { viewModel.onRequestDelete(book) },
+                                    onDelete = {
+                                        if (isSuspended) {
+                                            showSuspendedSnackbar()
+                                        } else {
+                                            viewModel.onRequestDelete(book)
+                                        }
+                                    },
                                 )
                             }
                         }
@@ -178,10 +206,11 @@ internal fun ListingCard(
     book: BookModel,
     onToggleStatus: () -> Unit,
     onDelete: () -> Unit,
+    isSuspended: Boolean = false,
 ) {
     val isActive = book.status == ItemStatus.AVAILABLE
-    val canToggle = book.status == ItemStatus.AVAILABLE || book.status == ItemStatus.INACTIVE
-    val canDelete = book.status == ItemStatus.AVAILABLE || book.status == ItemStatus.INACTIVE
+    val canToggle = !isSuspended && (book.status == ItemStatus.AVAILABLE || book.status == ItemStatus.INACTIVE)
+    val canDelete = !isSuspended && (book.status == ItemStatus.AVAILABLE || book.status == ItemStatus.INACTIVE)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -213,10 +242,17 @@ internal fun ListingCard(
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = stringResource(book.status.resourceId),
+                        text =
+                            if (isSuspended) {
+                                stringResource(R.string.status_suspended)
+                            } else {
+                                stringResource(book.status.resourceId)
+                            },
                         style = MaterialTheme.typography.labelMedium,
                         color =
-                            if (isActive) {
+                            if (isSuspended) {
+                                StatusSuspended
+                            } else if (isActive) {
                                 MaterialTheme.colorScheme.primary
                             } else {
                                 MaterialTheme.colorScheme.outline

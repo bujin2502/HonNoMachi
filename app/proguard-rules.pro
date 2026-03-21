@@ -24,3 +24,14 @@
 -keep class androidx.credentials.playservices.** {
     *;
 }
+
+# Keep Firestore model classes (data classes + enums) for reflection-based deserialization.
+# Without this, R8 strips no-arg constructors and renames fields, causing:
+#   RuntimeException: Could not deserialize object. Class does not define a no-argument constructor.
+-keep class hr.foi.air.honnomachi.model.** {
+    *;
+}
+
+# Preserve Crashlytics mapping for readable stack traces
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile

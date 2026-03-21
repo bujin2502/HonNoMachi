@@ -1,6 +1,7 @@
 package hr.foi.air.honnomachi.ui.profile
 
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -27,13 +28,15 @@ data class ProfileEditFormCallbacks(
 fun ProfileEditForm(
     formState: ProfileFormState,
     userEmail: String,
+    isEditable: Boolean = true,
     callbacks: ProfileEditFormCallbacks,
+    colors: TextFieldColors? = null,
 ) {
     ProfileItem(
         label = stringResource(R.string.label_name),
         value = formState.name,
         onValueChange = callbacks.onNameChange,
-        isEditable = true,
+        isEditable = isEditable,
         keyboardOptions =
             KeyboardOptions(
                 capitalization = KeyboardCapitalization.Words,
@@ -41,19 +44,21 @@ fun ProfileEditForm(
             ),
         errorText = formState.nameError?.let { stringResource(errorMessageFor(it)) },
         onFocusLost = callbacks.onValidateName,
+        colors = colors,
     )
 
     ProfileItem(
         label = stringResource(R.string.label_email),
         value = userEmail,
         isEditable = false,
+        colors = colors,
     )
 
     ProfileItem(
         label = stringResource(R.string.label_phone),
         value = formState.phone,
         onValueChange = callbacks.onPhoneChange,
-        isEditable = true,
+        isEditable = isEditable,
         keyboardOptions =
             KeyboardOptions(
                 keyboardType = KeyboardType.Phone,
@@ -61,13 +66,14 @@ fun ProfileEditForm(
             ),
         errorText = formState.phoneError?.let { stringResource(errorMessageFor(it)) },
         onFocusLost = callbacks.onValidatePhone,
+        colors = colors,
     )
 
     ProfileItem(
         label = stringResource(R.string.label_street),
         value = formState.street,
         onValueChange = callbacks.onStreetChange,
-        isEditable = true,
+        isEditable = isEditable,
         keyboardOptions =
             KeyboardOptions(
                 capitalization = KeyboardCapitalization.Sentences,
@@ -75,13 +81,14 @@ fun ProfileEditForm(
             ),
         errorText = formState.streetError?.let { stringResource(errorMessageFor(it)) },
         onFocusLost = callbacks.onValidateStreet,
+        colors = colors,
     )
 
     ProfileItem(
         label = stringResource(R.string.label_zip),
         value = formState.zip,
         onValueChange = callbacks.onZipChange,
-        isEditable = true,
+        isEditable = isEditable,
         keyboardOptions =
             KeyboardOptions(
                 keyboardType = KeyboardType.Number,
@@ -89,13 +96,14 @@ fun ProfileEditForm(
             ),
         errorText = formState.zipError?.let { stringResource(errorMessageFor(it)) },
         onFocusLost = callbacks.onValidateZip,
+        colors = colors,
     )
 
     ProfileItem(
         label = stringResource(R.string.label_city),
         value = formState.city,
         onValueChange = callbacks.onCityChange,
-        isEditable = true,
+        isEditable = isEditable,
         keyboardOptions =
             KeyboardOptions(
                 capitalization = KeyboardCapitalization.Words,
@@ -103,5 +111,6 @@ fun ProfileEditForm(
             ),
         errorText = formState.cityError?.let { stringResource(errorMessageFor(it)) },
         onFocusLost = callbacks.onValidateCity,
+        colors = colors,
     )
 }

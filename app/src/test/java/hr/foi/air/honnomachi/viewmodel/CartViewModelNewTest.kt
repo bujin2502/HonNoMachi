@@ -397,4 +397,26 @@ class CartViewModelNewTest {
             assertFalse(viewModel.isCheckoutInProgress.value)
             viewModel.viewModelScope.cancel()
         }
+
+    @Test
+    fun `clearCart empties cart items via repository`() =
+        runTest(testDispatcher) {
+            val book = BookModel(bookId = "1", title = "Test", price = 10.0, priceCurrency = Currency.EUR)
+            fakeCartRepository.addToCart(book)
+            advanceTimeBy(500)
+            runCurrent()
+
+            val stateBefore = viewModel.uiState.value
+            assertTrue(stateBefore is CartUiState.Success)
+            assertEquals(1, (stateBefore as CartUiState.Success).items.size)
+
+            viewModel.clearCart()
+            advanceTimeBy(500)
+            runCurrent()
+
+            val stateAfter = viewModel.uiState.value
+            assertTrue(stateAfter is CartUiState.Success)
+            assertEquals(0, (stateAfter as CartUiState.Success).items.size)
+            viewModel.viewModelScope.cancel()
+        }
 }

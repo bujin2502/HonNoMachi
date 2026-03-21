@@ -1,5 +1,6 @@
 package hr.foi.air.honnomachi.ui.book
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -29,11 +30,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,6 +56,9 @@ import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.ui.cart.CartUiState
 import hr.foi.air.honnomachi.ui.cart.CartViewModel
+import hr.foi.air.honnomachi.ui.suspension.LocalIsSuspended
+import hr.foi.air.honnomachi.ui.theme.StatusSuspended
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,7 +86,11 @@ fun BookDetailScreen(
         } else {
             false
         }
+    val isSuspended = LocalIsSuspended.current
     val isAddingToCart = bookId != null && addingBookId == bookId
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val suspendedMessage = stringResource(R.string.suspended_cannot_add_to_cart)
 
     LaunchedEffect(actionMessage) {
         actionMessage?.let {
@@ -106,6 +118,7 @@ fun BookDetailScreen(
                 },
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
             when (uiState) {
@@ -124,7 +137,14 @@ fun BookDetailScreen(
                         book = book,
                         isItemInCart = isItemInCart,
                         isAddingToCart = isAddingToCart,
-                        onAddToCart = { cartViewModel.addToCart(book) },
+                        isSuspended = isSuspended,
+                        onAddToCart = {
+                            if (isSuspended) {
+                                scope.launch { snackbarHostState.showSnackbar(suspendedMessage) }
+                            } else {
+                                cartViewModel.addToCart(book)
+                            }
+                        },
                     )
                 }
 
@@ -178,6 +198,7 @@ fun BookDetailContent(
     book: BookModel,
     isItemInCart: Boolean,
     isAddingToCart: Boolean,
+    isSuspended: Boolean = false,
     onAddToCart: () -> Unit,
 ) {
     Column(
@@ -285,6 +306,7 @@ fun BookDetailContent(
                 ButtonDefaults.buttonColors(
                     containerColor = colorResource(id = R.color.blue),
                 ),
+            border = if (isSuspended) BorderStroke(1.dp, StatusSuspended) else null,
         ) {
             if (isAddingToCart) {
                 Row(

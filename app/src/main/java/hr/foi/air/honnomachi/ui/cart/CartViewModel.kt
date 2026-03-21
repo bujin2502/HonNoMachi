@@ -304,6 +304,12 @@ class CartViewModel
             }
         }
 
+        fun clearCart() {
+            viewModelScope.launch {
+                cartRepository.clearCart()
+            }
+        }
+
         fun consumeMessage() {
             _actionMessage.value = null
         }

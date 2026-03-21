@@ -55,8 +55,9 @@ class FakeCartRepository : CartRepository {
         return Result.Success(Unit)
     }
 
-    fun clearCart() {
+    override suspend fun clearCart(): Result<Unit> {
         _cartItems.value = emptyList()
+        return Result.Success(Unit)
     }
 
     fun setItems(items: List<CartItemModel>) {

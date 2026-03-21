@@ -386,6 +386,53 @@ class AuthViewModelTest {
         }
 
     @Test
+    fun `login non-suspended user does not set isSuspended`() =
+        runTest {
+            val activeUser =
+                UserModel(
+                    uid = "123",
+                    email = testEmail,
+                    isVerified = true,
+                    suspended = false,
+                )
+            coEvery { mockAuthRepository.login(testEmail, testPassword) } returns Result.Success(activeUser)
+
+            authViewModel.login(testEmail, testPassword)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            val uiState = authViewModel.uiState.first()
+            assertFalse(uiState.isSuspended)
+            assertNull(uiState.suspendedReason)
+            assertTrue(uiState.isUserLoggedIn)
+        }
+
+    @Test
+    fun `signOut resets suspension state`() =
+        runTest {
+            val suspendedUser =
+                UserModel(
+                    uid = "123",
+                    email = testEmail,
+                    isVerified = true,
+                    suspended = true,
+                    suspendedReason = "Razlog",
+                )
+            coEvery { mockAuthRepository.login(testEmail, testPassword) } returns Result.Success(suspendedUser)
+
+            authViewModel.login(testEmail, testPassword)
+            testDispatcher.scheduler.advanceUntilIdle()
+            assertTrue(authViewModel.uiState.first().isSuspended)
+
+            authViewModel.signOut()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            val uiState = authViewModel.uiState.first()
+            assertFalse(uiState.isSuspended)
+            assertNull(uiState.suspendedReason)
+            assertFalse(uiState.isUserLoggedIn)
+        }
+
+    @Test
     fun `suspension monitor clears suspension on reactivation`() =
         runTest {
             val suspendedUser =

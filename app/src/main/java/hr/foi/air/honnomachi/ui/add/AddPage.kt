@@ -11,8 +11,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -35,6 +37,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import hr.foi.air.honnomachi.AppUtil
 import hr.foi.air.honnomachi.R
 import hr.foi.air.honnomachi.ui.suspension.LocalIsSuspended
+import hr.foi.air.honnomachi.ui.theme.StatusSuspended
 import hr.foi.air.image_uploader.ui.ImageUploaderView
 import kotlinx.coroutines.launch
 
@@ -68,6 +71,16 @@ fun AddPage(
             scope.launch { snackbarHostState.showSnackbar(suspendedMessage) }
         }
     }
+
+    val suspendedFieldColors =
+        if (isSuspended) {
+            OutlinedTextFieldDefaults.colors(
+                unfocusedBorderColor = StatusSuspended,
+                focusedBorderColor = StatusSuspended,
+            )
+        } else {
+            null
+        }
 
     LaunchedEffect(uiState) {
         when (val state = uiState) {
@@ -118,63 +131,81 @@ fun AddPage(
 
             TitleField(
                 value = formState.title,
-                onValueChange = viewModel::onTitleChange,
+                onValueChange = { if (isSuspended) showSuspendedSnackbar() else viewModel.onTitleChange(it) },
                 error = formState.titleError,
+                colors = suspendedFieldColors,
             )
 
             AuthorsField(
                 value = formState.authors,
-                onValueChange = viewModel::onAuthorsChange,
+                onValueChange = { if (isSuspended) showSuspendedSnackbar() else viewModel.onAuthorsChange(it) },
                 error = formState.authorsError,
+                colors = suspendedFieldColors,
             )
 
             PriceWithCurrencyRow(
                 price = formState.price,
-                onPriceChange = viewModel::onPriceChange,
+                onPriceChange = { if (isSuspended) showSuspendedSnackbar() else viewModel.onPriceChange(it) },
                 priceError = formState.priceError,
                 selectedCurrency = formState.selectedCurrency,
-                onCurrencyChange = viewModel::onCurrencyChange,
+                onCurrencyChange = { if (!isSuspended) viewModel.onCurrencyChange(it) },
+                colors = suspendedFieldColors,
+                isSuspended = isSuspended,
             )
 
             GenreField(
                 selectedGenre = formState.selectedGenre,
-                onGenreChange = viewModel::onGenreChange,
+                onGenreChange = { if (!isSuspended) viewModel.onGenreChange(it) },
+                colors = suspendedFieldColors,
+                isSuspended = isSuspended,
             )
 
             ConditionField(
                 selectedCondition = formState.selectedCondition,
-                onConditionChange = viewModel::onConditionChange,
+                onConditionChange = { if (!isSuspended) viewModel.onConditionChange(it) },
+                colors = suspendedFieldColors,
+                isSuspended = isSuspended,
             )
 
             LanguageField(
                 selectedLanguage = formState.selectedLanguage,
-                onLanguageChange = viewModel::onLanguageChange,
+                onLanguageChange = { if (!isSuspended) viewModel.onLanguageChange(it) },
+                colors = suspendedFieldColors,
+                isSuspended = isSuspended,
             )
 
             PublisherField(
                 value = formState.publisher,
-                onValueChange = viewModel::onPublisherChange,
+                onValueChange = { if (isSuspended) showSuspendedSnackbar() else viewModel.onPublisherChange(it) },
+                colors = suspendedFieldColors,
             )
 
             PublicationYearField(
                 value = formState.publicationYear,
-                onValueChange = viewModel::onPublicationYearChange,
+                onValueChange = { if (isSuspended) showSuspendedSnackbar() else viewModel.onPublicationYearChange(it) },
                 error = formState.yearError,
+                colors = suspendedFieldColors,
             )
 
             IsbnField(
                 value = formState.isbn,
-                onValueChange = viewModel::onIsbnChange,
+                onValueChange = { if (isSuspended) showSuspendedSnackbar() else viewModel.onIsbnChange(it) },
+                colors = suspendedFieldColors,
             )
 
             DescriptionField(
                 value = formState.description,
-                onValueChange = viewModel::onDescriptionChange,
+                onValueChange = { if (isSuspended) showSuspendedSnackbar() else viewModel.onDescriptionChange(it) },
+                colors = suspendedFieldColors,
             )
 
             Spacer(modifier = Modifier.height(AddPageDimensions.SmallSpacing))
 
-            ImageUploaderView(onImagesSelected = viewModel::onImageUrisChange)
+            ImageUploaderView(
+                onImagesSelected = if (isSuspended) { _ -> } else viewModel::onImageUrisChange,
+                border = if (isSuspended) BorderStroke(1.dp, StatusSuspended) else null,
+                isInteractionEnabled = !isSuspended,
+            )
 
             Spacer(modifier = Modifier.height(AddPageDimensions.SmallSpacing))
 
@@ -185,6 +216,7 @@ fun AddPage(
                         viewModel.submitForm()
                     }
                 },
+                border = if (isSuspended) BorderStroke(1.dp, StatusSuspended) else null,
             )
 
             if (uiState is AddBookUiState.Error) {
@@ -210,11 +242,13 @@ private fun SubmitButton(
     isSubmitting: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    border: BorderStroke? = null,
 ) {
     Button(
         onClick = onClick,
         enabled = !isSubmitting,
         modifier = modifier.fillMaxWidth(),
+        border = border,
     ) {
         val buttonText =
             if (isSubmitting) {

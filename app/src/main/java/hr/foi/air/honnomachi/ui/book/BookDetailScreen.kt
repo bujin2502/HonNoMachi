@@ -1,5 +1,6 @@
 package hr.foi.air.honnomachi.ui.book
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -56,6 +57,7 @@ import hr.foi.air.honnomachi.model.BookModel
 import hr.foi.air.honnomachi.ui.cart.CartUiState
 import hr.foi.air.honnomachi.ui.cart.CartViewModel
 import hr.foi.air.honnomachi.ui.suspension.LocalIsSuspended
+import hr.foi.air.honnomachi.ui.theme.StatusSuspended
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -135,6 +137,7 @@ fun BookDetailScreen(
                         book = book,
                         isItemInCart = isItemInCart,
                         isAddingToCart = isAddingToCart,
+                        isSuspended = isSuspended,
                         onAddToCart = {
                             if (isSuspended) {
                                 scope.launch { snackbarHostState.showSnackbar(suspendedMessage) }
@@ -195,6 +198,7 @@ fun BookDetailContent(
     book: BookModel,
     isItemInCart: Boolean,
     isAddingToCart: Boolean,
+    isSuspended: Boolean = false,
     onAddToCart: () -> Unit,
 ) {
     Column(
@@ -302,6 +306,7 @@ fun BookDetailContent(
                 ButtonDefaults.buttonColors(
                     containerColor = colorResource(id = R.color.blue),
                 ),
+            border = if (isSuspended) BorderStroke(1.dp, StatusSuspended) else null,
         ) {
             if (isAddingToCart) {
                 Row(

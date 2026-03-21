@@ -1,6 +1,7 @@
 package hr.foi.air.honnomachi.ui.profile
 
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -29,6 +30,7 @@ fun ProfileEditForm(
     userEmail: String,
     isEditable: Boolean = true,
     callbacks: ProfileEditFormCallbacks,
+    colors: TextFieldColors? = null,
 ) {
     ProfileItem(
         label = stringResource(R.string.label_name),
@@ -42,12 +44,14 @@ fun ProfileEditForm(
             ),
         errorText = formState.nameError?.let { stringResource(errorMessageFor(it)) },
         onFocusLost = callbacks.onValidateName,
+        colors = colors,
     )
 
     ProfileItem(
         label = stringResource(R.string.label_email),
         value = userEmail,
         isEditable = false,
+        colors = colors,
     )
 
     ProfileItem(
@@ -62,6 +66,7 @@ fun ProfileEditForm(
             ),
         errorText = formState.phoneError?.let { stringResource(errorMessageFor(it)) },
         onFocusLost = callbacks.onValidatePhone,
+        colors = colors,
     )
 
     ProfileItem(
@@ -76,6 +81,7 @@ fun ProfileEditForm(
             ),
         errorText = formState.streetError?.let { stringResource(errorMessageFor(it)) },
         onFocusLost = callbacks.onValidateStreet,
+        colors = colors,
     )
 
     ProfileItem(
@@ -90,6 +96,7 @@ fun ProfileEditForm(
             ),
         errorText = formState.zipError?.let { stringResource(errorMessageFor(it)) },
         onFocusLost = callbacks.onValidateZip,
+        colors = colors,
     )
 
     ProfileItem(
@@ -104,5 +111,6 @@ fun ProfileEditForm(
             ),
         errorText = formState.cityError?.let { stringResource(errorMessageFor(it)) },
         onFocusLost = callbacks.onValidateCity,
+        colors = colors,
     )
 }

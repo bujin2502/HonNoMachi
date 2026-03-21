@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.ManageAccounts
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -28,6 +29,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -93,6 +95,18 @@ fun ProfileScreen(
             scope.launch { snackbarHostState.showSnackbar(suspendedEditMessage) }
         }
     }
+
+    val suspendedFieldColors =
+        if (isSuspended) {
+            OutlinedTextFieldDefaults.colors(
+                unfocusedBorderColor = StatusSuspended,
+                focusedBorderColor = StatusSuspended,
+            )
+        } else {
+            null
+        }
+    val suspendedBorder =
+        if (isSuspended) BorderStroke(1.dp, StatusSuspended) else null
 
     val successMessage = stringResource(R.string.profile_update_success)
     val errorMessageFormat = stringResource(R.string.profile_update_error)
@@ -170,17 +184,18 @@ fun ProfileScreen(
                             isEditable = true,
                             callbacks =
                                 ProfileEditFormCallbacks(
-                                    onNameChange = profileViewModel::onNameChange,
-                                    onPhoneChange = profileViewModel::onPhoneChange,
-                                    onStreetChange = profileViewModel::onStreetChange,
-                                    onZipChange = profileViewModel::onZipChange,
-                                    onCityChange = profileViewModel::onCityChange,
+                                    onNameChange = { if (isSuspended) showSuspendedSnackbar() else profileViewModel.onNameChange(it) },
+                                    onPhoneChange = { if (isSuspended) showSuspendedSnackbar() else profileViewModel.onPhoneChange(it) },
+                                    onStreetChange = { if (isSuspended) showSuspendedSnackbar() else profileViewModel.onStreetChange(it) },
+                                    onZipChange = { if (isSuspended) showSuspendedSnackbar() else profileViewModel.onZipChange(it) },
+                                    onCityChange = { if (isSuspended) showSuspendedSnackbar() else profileViewModel.onCityChange(it) },
                                     onValidateName = profileViewModel::validateName,
                                     onValidatePhone = profileViewModel::validatePhone,
                                     onValidateStreet = profileViewModel::validateStreet,
                                     onValidateZip = profileViewModel::validateZip,
                                     onValidateCity = profileViewModel::validateCity,
                                 ),
+                            colors = suspendedFieldColors,
                         )
                     }
 
@@ -293,6 +308,7 @@ fun ProfileScreen(
                         },
                         shape = RoundedCornerShape(24.dp),
                         modifier = Modifier.weight(1f).padding(end = 8.dp),
+                        border = suspendedBorder ?: ButtonDefaults.outlinedButtonBorder,
                     ) {
                         Text(text = stringResource(R.string.button_reset_password))
                     }
@@ -302,6 +318,7 @@ fun ProfileScreen(
                         isSaving = formState.isSaving,
                         modifier = Modifier.weight(1f).padding(start = 8.dp),
                         onClick = onSaveClick,
+                        border = suspendedBorder,
                     )
                 }
 
@@ -390,12 +407,14 @@ private fun SaveButton(
     isSaving: Boolean,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
+    border: BorderStroke? = null,
 ) {
     Button(
         enabled = hasChanges && !isSaving,
         onClick = onClick,
         shape = RoundedCornerShape(24.dp),
         modifier = modifier,
+        border = border,
     ) {
         if (isSaving) {
             CircularProgressIndicator(

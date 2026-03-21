@@ -1,11 +1,15 @@
 package hr.foi.air.honnomachi.ui.wallet
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -17,6 +21,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,6 +31,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -34,12 +40,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -55,6 +64,7 @@ import hr.foi.air.honnomachi.data.WalletHistoryItemModel
 import hr.foi.air.honnomachi.data.WalletHistoryType
 import hr.foi.air.honnomachi.data.WalletTopupStatus
 import hr.foi.air.honnomachi.ui.suspension.LocalIsSuspended
+import hr.foi.air.honnomachi.ui.theme.StatusSuspended
 import java.text.DateFormat
 import java.util.Date
 import java.util.Locale
@@ -128,6 +138,18 @@ fun WalletScreen(
 
     val isBusy = uiState.isCreatingTopup || uiState.activeTopupId != null
 
+    val lastSnackbarTime = remember { mutableLongStateOf(0L) }
+    val showSuspendedSnackbar: () -> Unit = {
+        val now = System.currentTimeMillis()
+        if (now - lastSnackbarTime.longValue > 4000L) {
+            lastSnackbarTime.longValue = now
+            scope.launch { snackbarHostState.showSnackbar(suspendedTopupMessage) }
+        }
+    }
+
+    val suspendedBorder =
+        if (isSuspended) BorderStroke(1.dp, StatusSuspended) else null
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -149,17 +171,40 @@ fun WalletScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding =
-                PaddingValues(
-                    start = 16.dp,
-                    end = 16.dp,
-                    top = paddingValues.calculateTopPadding(),
-                    bottom = paddingValues.calculateBottomPadding() + 16.dp,
-                ),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
+        Column(modifier = Modifier.padding(paddingValues)) {
+            if (isSuspended) {
+                Box(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(3.dp)
+                            .background(StatusSuspended),
+                )
+            }
+            LazyColumn(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .pointerInput(isSuspended) {
+                            if (!isSuspended) return@pointerInput
+                            awaitPointerEventScope {
+                                while (true) {
+                                    val event = awaitPointerEvent(PointerEventPass.Initial)
+                                    if (event.changes.any { it.pressed && !it.previousPressed }) {
+                                        showSuspendedSnackbar()
+                                    }
+                                }
+                            }
+                        },
+                contentPadding =
+                    PaddingValues(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 8.dp,
+                        bottom = 16.dp,
+                    ),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
             item {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
@@ -194,26 +239,30 @@ fun WalletScreen(
                         if (isSelected) {
                             Button(
                                 onClick = {
-                                    customAmountInput = ""
-                                    customAmountError = null
-                                    viewModel.selectTopupAmount(amountMinor)
+                                    if (!isSuspended) {
+                                        customAmountInput = ""
+                                        customAmountError = null
+                                        viewModel.selectTopupAmount(amountMinor)
+                                    }
                                 },
-                                enabled = !isSuspended,
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(16.dp),
+                                border = suspendedBorder,
                             ) {
                                 Text(text = label)
                             }
                         } else {
                             OutlinedButton(
                                 onClick = {
-                                    customAmountInput = ""
-                                    customAmountError = null
-                                    viewModel.selectTopupAmount(amountMinor)
+                                    if (!isSuspended) {
+                                        customAmountInput = ""
+                                        customAmountError = null
+                                        viewModel.selectTopupAmount(amountMinor)
+                                    }
                                 },
-                                enabled = !isSuspended,
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(16.dp),
+                                border = suspendedBorder ?: ButtonDefaults.outlinedButtonBorder,
                             ) {
                                 Text(text = label)
                             }
@@ -226,16 +275,28 @@ fun WalletScreen(
                 OutlinedTextField(
                     value = customAmountInput,
                     onValueChange = {
-                        customAmountInput = it
-                        customAmountError = null
+                        if (isSuspended) {
+                            showSuspendedSnackbar()
+                        } else {
+                            customAmountInput = it
+                            customAmountError = null
+                        }
                     },
-                    enabled = !isSuspended,
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text(text = stringResource(R.string.wallet_custom_amount_label)) },
                     placeholder = { Text(text = stringResource(R.string.wallet_custom_amount_placeholder)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                     isError = customAmountError != null,
+                    colors =
+                        if (isSuspended) {
+                            OutlinedTextFieldDefaults.colors(
+                                unfocusedBorderColor = StatusSuspended,
+                                focusedBorderColor = StatusSuspended,
+                            )
+                        } else {
+                            OutlinedTextFieldDefaults.colors()
+                        },
                 )
                 if (customAmountError != null) {
                     Spacer(modifier = Modifier.height(4.dp))
@@ -257,10 +318,7 @@ fun WalletScreen(
                 }
                 Button(
                     onClick = {
-                        if (isSuspended) {
-                            scope.launch { snackbarHostState.showSnackbar(suspendedTopupMessage) }
-                            return@Button
-                        }
+                        if (isSuspended) return@Button
                         val customMinor = customAmountInput.toMinorAmount()
                         if (customAmountInput.isNotBlank()) {
                             if (customMinor == null) {
@@ -276,9 +334,10 @@ fun WalletScreen(
                         customAmountError = null
                         viewModel.startTopup()
                     },
-                    enabled = !isBusy && !isSuspended,
+                    enabled = !isBusy,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
+                    border = suspendedBorder,
                 ) {
                     if (uiState.isCreatingTopup) {
                         CircularProgressIndicator(
@@ -333,6 +392,7 @@ fun WalletScreen(
                     WalletHistoryRow(entry = entry)
                     HorizontalDivider()
                 }
+            }
             }
         }
     }

@@ -13,7 +13,9 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,6 +44,7 @@ fun TitleField(
     onValueChange: (String) -> Unit,
     error: Int?,
     modifier: Modifier = Modifier,
+    colors: TextFieldColors? = null,
 ) {
     OutlinedTextField(
         value = value,
@@ -58,6 +61,7 @@ fun TitleField(
                 )
             }
         },
+        colors = colors ?: OutlinedTextFieldDefaults.colors(),
     )
 }
 
@@ -67,6 +71,7 @@ fun AuthorsField(
     onValueChange: (String) -> Unit,
     error: Int?,
     modifier: Modifier = Modifier,
+    colors: TextFieldColors? = null,
 ) {
     OutlinedTextField(
         value = value,
@@ -85,6 +90,7 @@ fun AuthorsField(
                 Text(text = stringResource(R.string.hint_authors))
             }
         },
+        colors = colors ?: OutlinedTextFieldDefaults.colors(),
     )
 }
 
@@ -96,6 +102,8 @@ fun PriceWithCurrencyRow(
     selectedCurrency: Currency,
     onCurrencyChange: (Currency) -> Unit,
     modifier: Modifier = Modifier,
+    colors: TextFieldColors? = null,
+    isSuspended: Boolean = false,
 ) {
     Row(modifier = modifier.fillMaxWidth()) {
         OutlinedTextField(
@@ -118,6 +126,7 @@ fun PriceWithCurrencyRow(
                     )
                 }
             },
+            colors = colors ?: OutlinedTextFieldDefaults.colors(),
         )
         Spacer(modifier = Modifier.width(FormDimensions.FieldSpacing))
         DropdownField(
@@ -127,6 +136,8 @@ fun PriceWithCurrencyRow(
             optionLabel = { stringResource(it.resourceId) },
             onOptionSelected = onCurrencyChange,
             modifier = Modifier.weight(1f),
+            colors = colors,
+            isSuspended = isSuspended,
         )
     }
 }
@@ -136,6 +147,8 @@ fun GenreField(
     selectedGenre: BookGenre,
     onGenreChange: (BookGenre) -> Unit,
     modifier: Modifier = Modifier,
+    colors: TextFieldColors? = null,
+    isSuspended: Boolean = false,
 ) {
     DropdownField(
         label = stringResource(R.string.field_genre),
@@ -144,6 +157,8 @@ fun GenreField(
         optionLabel = { stringResource(it.resourceId) },
         onOptionSelected = onGenreChange,
         modifier = modifier,
+        colors = colors,
+        isSuspended = isSuspended,
     )
 }
 
@@ -152,6 +167,8 @@ fun ConditionField(
     selectedCondition: BookCondition,
     onConditionChange: (BookCondition) -> Unit,
     modifier: Modifier = Modifier,
+    colors: TextFieldColors? = null,
+    isSuspended: Boolean = false,
 ) {
     DropdownField(
         label = stringResource(R.string.field_condition),
@@ -160,6 +177,8 @@ fun ConditionField(
         optionLabel = { stringResource(it.resourceId) },
         onOptionSelected = onConditionChange,
         modifier = modifier,
+        colors = colors,
+        isSuspended = isSuspended,
     )
 }
 
@@ -168,6 +187,8 @@ fun LanguageField(
     selectedLanguage: Language,
     onLanguageChange: (Language) -> Unit,
     modifier: Modifier = Modifier,
+    colors: TextFieldColors? = null,
+    isSuspended: Boolean = false,
 ) {
     DropdownField(
         label = stringResource(R.string.field_language),
@@ -176,6 +197,8 @@ fun LanguageField(
         optionLabel = { stringResource(it.resourceId) },
         onOptionSelected = onLanguageChange,
         modifier = modifier,
+        colors = colors,
+        isSuspended = isSuspended,
     )
 }
 
@@ -184,6 +207,7 @@ fun PublisherField(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
+    colors: TextFieldColors? = null,
 ) {
     OutlinedTextField(
         value = value,
@@ -191,6 +215,7 @@ fun PublisherField(
         label = { Text(stringResource(R.string.field_publisher)) },
         modifier = modifier.fillMaxWidth().testTag("field_publisher"),
         singleLine = true,
+        colors = colors ?: OutlinedTextFieldDefaults.colors(),
     )
 }
 
@@ -200,6 +225,7 @@ fun PublicationYearField(
     onValueChange: (String) -> Unit,
     error: Int?,
     modifier: Modifier = Modifier,
+    colors: TextFieldColors? = null,
 ) {
     OutlinedTextField(
         value = value,
@@ -221,6 +247,7 @@ fun PublicationYearField(
                 )
             }
         },
+        colors = colors ?: OutlinedTextFieldDefaults.colors(),
     )
 }
 
@@ -229,6 +256,7 @@ fun IsbnField(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
+    colors: TextFieldColors? = null,
 ) {
     OutlinedTextField(
         value = value,
@@ -241,6 +269,7 @@ fun IsbnField(
                 keyboardType = KeyboardType.Number,
                 imeAction = ImeAction.Next,
             ),
+        colors = colors ?: OutlinedTextFieldDefaults.colors(),
     )
 }
 
@@ -249,6 +278,7 @@ fun DescriptionField(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
+    colors: TextFieldColors? = null,
 ) {
     OutlinedTextField(
         value = value,
@@ -259,6 +289,7 @@ fun DescriptionField(
                 .fillMaxWidth()
                 .height(FormDimensions.DescriptionHeight)
                 .testTag("field_description"),
+        colors = colors ?: OutlinedTextFieldDefaults.colors(),
     )
 }
 
@@ -271,12 +302,14 @@ fun <T> DropdownField(
     optionLabel: @Composable (T) -> String,
     onOptionSelected: (T) -> Unit,
     modifier: Modifier = Modifier,
+    colors: TextFieldColors? = null,
+    isSuspended: Boolean = false,
 ) {
     var expanded by remember { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
-        onExpandedChange = { expanded = !expanded },
+        onExpandedChange = { if (!isSuspended) expanded = !expanded },
         modifier = modifier,
     ) {
         OutlinedTextField(
@@ -290,6 +323,7 @@ fun <T> DropdownField(
                     .fillMaxWidth()
                     .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, enabled = true),
             singleLine = true,
+            colors = colors ?: OutlinedTextFieldDefaults.colors(),
         )
 
         ExposedDropdownMenu(

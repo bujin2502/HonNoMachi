@@ -15,6 +15,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,7 +35,11 @@ import hr.foi.air.image_uploader.ImageSourceInitializer
 import hr.foi.air.image_uploader.model.ImageSourceRegistry
 
 @Composable
-fun ImageUploaderView(onImagesSelected: (List<Uri>) -> Unit) {
+fun ImageUploaderView(
+    onImagesSelected: (List<Uri>) -> Unit,
+    border: BorderStroke? = null,
+    isInteractionEnabled: Boolean = true,
+) {
     LaunchedEffect(Unit) {
         ImageSourceInitializer.initialize()
     }
@@ -86,8 +92,9 @@ fun ImageUploaderView(onImagesSelected: (List<Uri>) -> Unit) {
 
     Column(modifier = Modifier.fillMaxWidth()) {
         OutlinedButton(
-            onClick = { showImagePicker = true },
+            onClick = { if (isInteractionEnabled) showImagePicker = true },
             modifier = Modifier.fillMaxWidth(),
+            border = border ?: ButtonDefaults.outlinedButtonBorder,
         ) {
             Text(text = "Add Images")
         }

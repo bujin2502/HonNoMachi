@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextFieldColors
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -24,6 +26,7 @@ fun ProfileItem(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     errorText: String? = null,
     onFocusLost: () -> Unit = {},
+    colors: TextFieldColors? = null,
 ) {
     var hasFocus by remember { mutableStateOf(false) }
 
@@ -53,5 +56,6 @@ fun ProfileItem(
                 )
             }
         },
+        colors = colors ?: OutlinedTextFieldDefaults.colors(),
     )
 }

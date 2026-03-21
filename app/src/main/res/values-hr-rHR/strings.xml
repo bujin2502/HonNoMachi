@@ -270,4 +270,6 @@
     <string name="my_listings_delete_message">Jeste li sigurni da želite obrisati \"%1$s\"? Ova radnja se ne može poništiti.</string>
     <string name="my_listings_delete_confirm">Obriši</string>
     <string name="my_listings_delete_cancel">Odustani</string>
+    <string name="status_suspended">Suspendirano</string>
+    <string name="suspended_cannot_manage_listings">Vaš račun je suspendiran. Upravljanje ponudama je onemogućeno.</string>
 </resources>

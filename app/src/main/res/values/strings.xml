@@ -270,4 +270,6 @@
     <string name="my_listings_delete_message">Are you sure you want to delete \"%1$s\"? This action cannot be undone.</string>
     <string name="my_listings_delete_confirm">Delete</string>
     <string name="my_listings_delete_cancel">Cancel</string>
+    <string name="status_suspended">Suspended</string>
+    <string name="suspended_cannot_manage_listings">Your account is suspended. Managing listings is disabled.</string>
 </resources>

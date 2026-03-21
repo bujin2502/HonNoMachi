@@ -37,6 +37,7 @@ import hr.foi.air.honnomachi.ui.home.HomeScreen
 import hr.foi.air.honnomachi.ui.home.HomeViewModel
 import hr.foi.air.honnomachi.ui.policy.PrivacyPolicyScreen
 import hr.foi.air.honnomachi.ui.suspension.LocalIsSuspended
+import hr.foi.air.honnomachi.ui.suspension.LocalSuspendedReason
 import hr.foi.air.honnomachi.ui.wallet.WalletScreen
 
 @Composable
@@ -87,7 +88,10 @@ fun AppNavigation(
         onDispose { }
     }
 
-    CompositionLocalProvider(LocalIsSuspended provides uiState.isSuspended) {
+    CompositionLocalProvider(
+        LocalIsSuspended provides uiState.isSuspended,
+        LocalSuspendedReason provides uiState.suspendedReason,
+    ) {
     NavHost(navController = navController, startDestination = ROUTE_AUTH) {
         composable(ROUTE_AUTH) {
             AuthScreen(modifier, navController, authViewModel)

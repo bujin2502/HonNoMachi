@@ -355,28 +355,6 @@ private fun ProfileHeaderRow(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (uiState is ProfileUiState.Success) {
-                val isSuspended = uiState.user.suspended == true
-                val statusText =
-                    if (isSuspended) stringResource(R.string.value_suspended) else stringResource(R.string.value_active)
-                val statusColor = if (isSuspended) StatusSuspended else StatusActive
-                Column {
-                    Text(
-                        text = stringResource(R.string.label_status),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = LabelGray,
-                    )
-                    Text(
-                        text = statusText,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = statusColor,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-            } else {
-                Spacer(modifier = Modifier.width(1.dp))
-            }
-
             Button(
                 onClick = onLogout,
                 colors = ButtonDefaults.buttonColors(containerColor = LogoutButtonBackground),
@@ -396,6 +374,28 @@ private fun ProfileHeaderRow(
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     )
                 }
+            }
+
+            if (uiState is ProfileUiState.Success) {
+                val isSuspended = LocalIsSuspended.current
+                val statusText =
+                    if (isSuspended) stringResource(R.string.value_suspended) else stringResource(R.string.value_active)
+                val statusColor = if (isSuspended) StatusSuspended else StatusActive
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = stringResource(R.string.label_status),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = LabelGray,
+                    )
+                    Text(
+                        text = statusText,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = statusColor,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            } else {
+                Spacer(modifier = Modifier.width(1.dp))
             }
         }
     }

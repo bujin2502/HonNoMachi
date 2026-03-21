@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.ManageAccounts
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -54,6 +55,7 @@ import hr.foi.air.honnomachi.ui.profile.ProfileUiState
 import hr.foi.air.honnomachi.ui.profile.ProfileViewModel
 import hr.foi.air.honnomachi.ui.shelf.ShelfPage
 import hr.foi.air.honnomachi.ui.suspension.LocalIsSuspended
+import hr.foi.air.honnomachi.ui.suspension.LocalSuspendedReason
 import hr.foi.air.honnomachi.ui.theme.StatusSuspended
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,15 +70,39 @@ fun HomeScreen(
     cartViewModel: CartViewModel = hiltViewModel(),
 ) {
     val isSuspended = LocalIsSuspended.current
+    val suspendedReason = LocalSuspendedReason.current
     val profileUiState by profileViewModel.uiState.collectAsState()
     val cartUiState by cartViewModel.uiState.collectAsState()
 
-    var wasSuspended by rememberSaveable { mutableStateOf(false) }
+    var wasSuspended by rememberSaveable { mutableStateOf(isSuspended) }
+    var showSuspensionDialog by rememberSaveable { mutableStateOf(isSuspended) }
     LaunchedEffect(isSuspended) {
         if (isSuspended && !wasSuspended) {
             cartViewModel.clearCart()
+            showSuspensionDialog = true
         }
         wasSuspended = isSuspended
+    }
+
+    if (showSuspensionDialog) {
+        AlertDialog(
+            onDismissRequest = { showSuspensionDialog = false },
+            title = { Text(text = stringResource(R.string.suspended_title)) },
+            text = {
+                Column {
+                    if (!suspendedReason.isNullOrBlank()) {
+                        Text(text = stringResource(R.string.suspended_reason_label, suspendedReason))
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                    Text(text = stringResource(R.string.suspended_contact_message))
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showSuspensionDialog = false }) {
+                    Text(text = stringResource(android.R.string.ok))
+                }
+            },
+        )
     }
 
     val profileIcon =

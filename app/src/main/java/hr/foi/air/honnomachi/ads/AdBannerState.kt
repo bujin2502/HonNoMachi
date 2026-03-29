@@ -5,7 +5,9 @@ sealed interface AdBannerState {
 
     data object Loaded : AdBannerState
 
-    data class Failed(val reason: String) : AdBannerState
+    data class Failed(
+        val reason: String,
+    ) : AdBannerState
 
     data object Capped : AdBannerState
 }

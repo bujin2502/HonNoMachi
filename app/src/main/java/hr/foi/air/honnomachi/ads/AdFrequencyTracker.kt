@@ -36,13 +36,15 @@ class AdFrequencyTrackerImpl
         private fun getRecentTimestamps(): List<Long> {
             val raw = prefs.getString(KEY_IMPRESSIONS, null) ?: return emptyList()
             val cutoff = System.currentTimeMillis() - WINDOW_MILLIS
-            return raw.split(",")
+            return raw
+                .split(",")
                 .mapNotNull { it.toLongOrNull() }
                 .filter { it > cutoff }
         }
 
         private fun saveTimestamps(timestamps: List<Long>) {
-            prefs.edit()
+            prefs
+                .edit()
                 .putString(KEY_IMPRESSIONS, timestamps.joinToString(","))
                 .apply()
         }

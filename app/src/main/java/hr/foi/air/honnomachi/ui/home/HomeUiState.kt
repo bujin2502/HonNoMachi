@@ -1,5 +1,6 @@
 package hr.foi.air.honnomachi.ui.home
 
+import hr.foi.air.honnomachi.ads.AdBannerState
 import hr.foi.air.honnomachi.model.BookModel
 
 data class HomeUiState(
@@ -7,4 +8,5 @@ data class HomeUiState(
     val books: List<BookModel> = emptyList(),
     val errorMessage: String? = null,
     val searchQuery: String = "",
+    val adState: AdBannerState = AdBannerState.Loading,
 )

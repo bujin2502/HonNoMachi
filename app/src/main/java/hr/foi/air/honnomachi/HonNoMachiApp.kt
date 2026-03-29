@@ -1,6 +1,7 @@
 package hr.foi.air.honnomachi
 
 import android.app.Application
+import com.google.android.gms.ads.MobileAds
 import com.stripe.android.PaymentConfiguration
 import dagger.hilt.android.HiltAndroidApp
 
@@ -9,5 +10,6 @@ class HonNoMachiApp : Application() {
     override fun onCreate() {
         super.onCreate()
         PaymentConfiguration.init(this, BuildConfig.STRIPE_PUBLISHABLE_KEY)
+        MobileAds.initialize(this) {}
     }
 }

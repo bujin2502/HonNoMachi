@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
@@ -29,10 +29,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import hr.foi.air.honnomachi.R
+import hr.foi.air.honnomachi.ads.AdBannerState
 import hr.foi.air.honnomachi.model.ItemStatus
+import hr.foi.air.honnomachi.ui.components.AdBannerView
 import hr.foi.air.honnomachi.ui.components.BookItemView
 
 private const val SHOW_DEBUG_BUTTON = false
+private const val AD_POSITION = 2
 
 @Composable
 fun HomePage(
@@ -123,7 +126,15 @@ fun HomePage(
                                 .testTag("book_list"),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        items(filteredBookList) { item ->
+                        itemsIndexed(filteredBookList) { index, item ->
+                            if (index == AD_POSITION && uiState.adState !is AdBannerState.Capped) {
+                                AdBannerView(
+                                    adManager = viewModel.adManager,
+                                    adState = uiState.adState,
+                                    onAdLoaded = { viewModel.onAdLoaded() },
+                                    onAdFailed = { reason -> viewModel.onAdFailed(reason) },
+                                )
+                            }
                             BookItemView(
                                 book = item,
                                 onBookClick = { bookId ->

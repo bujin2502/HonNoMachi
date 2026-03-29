@@ -272,4 +272,6 @@
     <string name="my_listings_delete_cancel">Cancel</string>
     <string name="status_suspended">Suspended</string>
     <string name="suspended_cannot_manage_listings">Your account is suspended. Managing listings is disabled.</string>
+    <string name="ad_label">Oglas</string>
+    <string name="ad_fallback_text">Oglas nije dostupan</string>
 </resources>

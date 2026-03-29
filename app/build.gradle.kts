@@ -54,6 +54,20 @@ val stripePublishableKey =
             ?: error("STRIPE_PUBLISHABLE_KEY nije postavljen u local.properties ili environment varijablama")
     ).trim()
 
+val admobAppId =
+    (
+        localProperties.getProperty("ADMOB_APP_ID")
+            ?: System.getenv("ADMOB_APP_ID")
+            ?: "ca-app-pub-3940256099942544~3347511713"
+    ).trim()
+
+val admobBannerAdUnitId =
+    (
+        localProperties.getProperty("ADMOB_BANNER_AD_UNIT_ID")
+            ?: System.getenv("ADMOB_BANNER_AD_UNIT_ID")
+            ?: "ca-app-pub-3940256099942544/6300978111"
+    ).trim()
+
 ktlint {
     reporters {
         reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.HTML)
@@ -98,6 +112,12 @@ android {
             "STRIPE_PUBLISHABLE_KEY",
             "\"${stripePublishableKey.escapeForBuildConfig()}\"",
         )
+        buildConfigField(
+            "String",
+            "ADMOB_BANNER_AD_UNIT_ID",
+            "\"${admobBannerAdUnitId.escapeForBuildConfig()}\"",
+        )
+        resValue("string", "admob_app_id", admobAppId)
 
         multiDexEnabled = true
     }
@@ -188,7 +208,7 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
 
     // Other
-    implementation(libs.ads.mobile.sdk)
+    implementation(libs.play.services.ads)
     implementation(libs.coil.compose)
     implementation(libs.accompanist.permissions)
     implementation(libs.stripe.android)

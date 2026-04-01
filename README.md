@@ -312,10 +312,10 @@ Za detaljnije upute o postavljanju projekta, pogledajte:
 ### Sprint 07 (Završni sprint)
 
 #### Guard pravila za suspendirane korisnike
-- [ ] Implementacija guard pravila za suspendirane korisnike (HNM-112)
+- [x] Implementacija guard pravila za suspendirane korisnike (HNM-112)
 
 #### Monetizacija putem oglasa
-- [ ] Implementacija monetizacije putem oglasa (HNM-113)
+- [x] Implementacija monetizacije putem oglasa (HNM-113)
 
 ---
 
@@ -418,10 +418,6 @@ Implementirani alati:
 - [x] **Firebase Analytics** — praćenje korisničkih događaja i ponašanja unutar aplikacije
 - [x] **Firebase Crashlytics** — automatsko prikupljanje i analiza crash izvještaja
 
-Planirano:
-- [ ] Integracija Firebase Performance Monitoring za praćenje vremena pokretanja aplikacije, mrežnih zahtjeva i sporog renderiranja
-- [ ] Postavljanje alertova za kritične performansne metrike (ANR rate, crash rate)
-
 ---
 
 ## Dokumentacija
@@ -464,7 +460,7 @@ Projekt razvija tim studenata **Fakulteta organizacije i informatike (FOI)**, Va
 
 ---
 
-**Status projekta:** Sprint 07 (Završni sprint) - U tijeku
-**Zadnje ažuriranje:** 18.03.2026.
+**Status projekta:** Dovršeni svi sprintovi
+**Zadnje ažuriranje:** 02.02.2026.
 
 </div>

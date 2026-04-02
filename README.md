@@ -461,6 +461,6 @@ Projekt razvija tim studenata **Fakulteta organizacije i informatike (FOI)**, Va
 ---
 
 **Status projekta:** Dovršeni svi sprintovi
-**Zadnje ažuriranje:** 02.02.2026.
+**Zadnje ažuriranje:** 02.04.2026.
 
 </div>
